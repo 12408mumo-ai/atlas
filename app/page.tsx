@@ -10,8 +10,8 @@ export default function Index() {
     router.replace(getSession() ? "/hub" : "/login");
   }, [router]);
   return (
-    <main className="grid min-h-screen place-items-center bg-night">
-      <p className="eyebrow animate-pulse">Awakening the Titan…</p>
+    <main className="grid min-h-screen place-items-center bg-marble">
+      <p className="eyebrow">Awakening the Titan…</p>
     </main>
   );
 }
