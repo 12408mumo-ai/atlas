@@ -37,6 +37,25 @@ Work and Study are the same pillar's two chambers — linked both ways.
 - **Stage**: `components/AtlasStage.tsx` — orbit math, canvas rings, DOM-driven
   sphere animation (no animation library), doorway transition.
 
+## Atlas AI — the awakened Titan
+
+The world now has a mind and a body.
+
+- **`/atlas`** — the assistant temple. A marble **Greek-god body**
+  (`public/assets/atlas-god.png`) stands at the left; the oracle chat at the right.
+  Atlas can **analyse** the whole world, **add** to it (tasks, habits, people,
+  journal, ledger, assignments), **remove** from it, and **lay plans** (staircases
+  of steps kept in `state.plans`). Commands come back as ```atlas action edicts
+  that `lib/atlas-ai.ts` parses and executes against the store.
+- **Voice** — touch the disc on his body and *speak* (Web Speech recognition);
+  with the voice switch on, Atlas reads every reply aloud, pitched low like
+  moving stone. Voice choice lives in settings.
+- **`/atlas/settings`** — Atlas Assistant Settings. **Bring your own key**:
+  OpenAI, Anthropic (Claude), Google Gemini, or any OpenAI-compatible endpoint
+  (Groq, OpenRouter, Ollama…). Pick a model, hit **Test the key** to probe which
+  model answers, and the key powers every reply. The key lives only in this
+  browser's localStorage; calls go straight from browser to provider.
+
 ## State
 
 Local-first. Everything (session, projects, ledger, people, habits, journal…)

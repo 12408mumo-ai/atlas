@@ -74,6 +74,14 @@ export type JournalEntry = {
   pillar?: string;
 };
 
+export type Plan = {
+  id: string;
+  title: string;
+  created: string;
+  byAtlas: boolean;
+  steps: { id: string; text: string; done: boolean }[];
+};
+
 export type AtlasState = {
   session: Session | null;
   projects: Project[];
@@ -88,6 +96,7 @@ export type AtlasState = {
   money: { spend: number; savings: number; subscriptions: { id: string; name: string; cost: number; renew: string }[] };
   mood: { day: string; score: number }[];
   journal: JournalEntry[];
+  plans: Plan[];
 };
 
 const KEY = "atlas.world.v1";
@@ -243,6 +252,19 @@ export const seed = (): AtlasState => ({
     { day: "Fri", score: 3 },
     { day: "Sat", score: 4 },
     { day: "Sun", score: 4 },
+  ],
+  plans: [
+    {
+      id: "pl1",
+      title: "Finish the Kavala identity by the full moon",
+      created: dayOffset(-2),
+      byAtlas: false,
+      steps: [
+        { id: "s1", text: "Ship wordmark refinement v3 to the client", done: false },
+        { id: "s2", text: "Build the type specimen sheet", done: false },
+        { id: "s3", text: "Book the review call with Kavala", done: false },
+      ],
+    },
   ],
   journal: [
     {
@@ -424,4 +446,35 @@ export function touchPerson(id: string) {
   setState((s) => ({
     people: s.people.map((p) => (p.id === id ? { ...p, lastSeen: todayISO() } : p)),
   }));
+}
+
+/* ------------------------------ plans ------------------------------ */
+
+export function addPlan(title: string, steps: string[], byAtlas = true) {
+  setState((s) => ({
+    plans: [
+      {
+        id: `pl${Date.now()}`,
+        title,
+        created: todayISO(),
+        byAtlas,
+        steps: steps.map((text, i) => ({ id: `st${Date.now()}${i}`, text, done: false })),
+      },
+      ...s.plans,
+    ],
+  }));
+}
+
+export function togglePlanStep(planId: string, stepId: string) {
+  setState((s) => ({
+    plans: s.plans.map((p) =>
+      p.id !== planId
+        ? p
+        : { ...p, steps: p.steps.map((st) => (st.id === stepId ? { ...st, done: !st.done } : st)) }
+    ),
+  }));
+}
+
+export function removePlan(id: string) {
+  setState((s) => ({ plans: s.plans.filter((p) => p.id !== id) }));
 }
