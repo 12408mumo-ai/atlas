@@ -246,8 +246,8 @@ export default function AtlasAssistantPage() {
               </div>
             </div>
             <div className="absolute inset-x-0 bottom-0 bg-wine px-5 py-4">
-              <p className="font-ui text-[9px] uppercase tracking-[0.3em] text-gold">The body of Atlas · v1.0 mind</p>
-              <p className="mt-1.5 font-body text-[14px] italic leading-snug text-marble opacity-85">{statusLine[status]}</p>
+              <p className="font-ui text-[13px] uppercase tracking-[0.3em] text-gold">The body of Atlas · v1.0 mind</p>
+              <p className="mt-1.5 font-body text-[16px] italic leading-snug text-marble opacity-85">{statusLine[status]}</p>
               <div className="mt-3 flex items-center gap-2">
                 {/* mic */}
                 {micSupported && (
@@ -291,8 +291,8 @@ export default function AtlasAssistantPage() {
                   )}
                 </button>
                 <div className="ml-auto text-right">
-                  <p className="font-ui text-[8.5px] uppercase tracking-[0.24em] text-gold opacity-80">powered by</p>
-                  <p className="font-ui text-[10px] uppercase tracking-[0.18em] text-marble">
+                  <p className="font-ui text-[12.5px] uppercase tracking-[0.24em] text-gold opacity-80">powered by</p>
+                  <p className="font-ui text-[14px] uppercase tracking-[0.18em] text-marble">
                     {configured ? `${providerLabel} · ${model}` : "no key laid"}
                   </p>
                 </div>
@@ -305,8 +305,8 @@ export default function AtlasAssistantPage() {
         <Panel title="The oracle" hint="Type, or touch the disc and speak" tone="marble" className="flex flex-col">
           {!configured && (
             <div className="mb-3 rounded-xl border-2 border-gold bg-marbleDim px-4 py-3">
-              <p className="font-ui text-[10px] uppercase tracking-[0.22em] text-wine">No API key laid</p>
-              <p className="mt-1 font-body text-[13px] leading-snug text-wine opacity-80">
+              <p className="font-ui text-[14px] uppercase tracking-[0.22em] text-wine">No API key laid</p>
+              <p className="mt-1 font-body text-[16px] leading-snug text-wine opacity-80">
                 Atlas has a body but no mind yet. Open{" "}
                 <Link href="/atlas/settings" className="underline underline-offset-2">
                   Atlas Assistant Settings
@@ -320,8 +320,8 @@ export default function AtlasAssistantPage() {
             {msgs.length === 0 && (
               <div className="grid h-full min-h-[220px] place-items-center">
                 <div className="text-center">
-                  <p className="font-display text-[15px] tracking-[0.3em] text-wine opacity-60">Ἐρώτησις</p>
-                  <p className="mt-2 font-body text-[13.5px] italic text-wine opacity-60">
+                  <p className="font-display text-[17px] tracking-[0.3em] text-wine opacity-60">Ἐρώτησις</p>
+                  <p className="mt-2 font-body text-[16.5px] italic text-wine opacity-60">
                     Ask and it is weighed. Command and it is carved.
                   </p>
                 </div>
@@ -334,18 +334,18 @@ export default function AtlasAssistantPage() {
                     m.role === "user" ? "border-wine bg-wine text-marble" : "border-gold bg-marbleDim text-wine"
                   }`}
                 >
-                  <p className="whitespace-pre-wrap font-body text-[14px] leading-relaxed">{m.content}</p>
+                  <p className="whitespace-pre-wrap font-body text-[16px] leading-relaxed">{m.content}</p>
                   {m.actions && m.actions.length > 0 && (
                     <div className="mt-2 space-y-1 border-t-2 border-gold/40 pt-2">
                       {m.actions.map((a, i) => (
-                        <p key={i} className="font-ui text-[9.5px] uppercase tracking-[0.14em]">
+                        <p key={i} className="font-ui text-[13.5px] uppercase tracking-[0.14em]">
                           {a.ok ? "⚒ " : "✕ "}
                           {a.label}
                         </p>
                       ))}
                     </div>
                   )}
-                  <p className={`mt-1.5 font-ui text-[8px] uppercase tracking-[0.2em] ${m.role === "user" ? "text-gold" : "text-wine opacity-50"}`}>
+                  <p className={`mt-1.5 font-ui text-[12px] uppercase tracking-[0.2em] ${m.role === "user" ? "text-gold" : "text-wine opacity-50"}`}>
                     {m.role === "assistant" ? "Atlas · " : ""}
                     {m.time}
                   </p>
@@ -355,7 +355,7 @@ export default function AtlasAssistantPage() {
             {status === "thinking" && (
               <div className="flex justify-start">
                 <div className="rounded-2xl border-2 border-gold bg-marbleDim px-4 py-3">
-                  <p className="font-body text-[14px] italic text-wine opacity-70">The sphere shifts on his shoulders…</p>
+                  <p className="font-body text-[16px] italic text-wine opacity-70">The sphere shifts on his shoulders…</p>
                 </div>
               </div>
             )}
@@ -386,7 +386,7 @@ export default function AtlasAssistantPage() {
                 key={q.label}
                 onClick={() => void send(q.prompt)}
                 disabled={status === "thinking"}
-                className="rounded-pill border-2 border-wine px-3 py-1.5 font-ui text-[9px] uppercase tracking-[0.16em] text-wine transition-colors hover:bg-wine hover:text-marble disabled:opacity-40"
+                className="rounded-pill border-2 border-wine px-3 py-1.5 font-ui text-[13px] uppercase tracking-[0.16em] text-wine transition-colors hover:bg-wine hover:text-marble disabled:opacity-40"
               >
                 {q.label}
               </button>
@@ -398,7 +398,7 @@ export default function AtlasAssistantPage() {
                   localStorage.removeItem(CHAT_KEY);
                 } catch {}
               }}
-              className="ml-auto rounded-pill border-2 border-transparent px-3 py-1.5 font-ui text-[9px] uppercase tracking-[0.16em] text-wine opacity-50 transition-opacity hover:opacity-100"
+              className="ml-auto rounded-pill border-2 border-transparent px-3 py-1.5 font-ui text-[13px] uppercase tracking-[0.16em] text-wine opacity-50 transition-opacity hover:opacity-100"
             >
               Clear memory
             </button>
@@ -419,14 +419,14 @@ export default function AtlasAssistantPage() {
                   <div key={p.id} className="rounded-xl border-2 border-wine bg-marbleDim p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="font-body text-[15px] font-semibold text-wine">{p.title}</p>
-                        <p className="mt-0.5 font-ui text-[8.5px] uppercase tracking-[0.2em] text-wine opacity-60">
+                        <p className="font-body text-[17px] font-semibold text-wine">{p.title}</p>
+                        <p className="mt-0.5 font-ui text-[12.5px] uppercase tracking-[0.2em] text-wine opacity-60">
                           laid {prettyDate(p.created)} · {done}/{p.steps.length} climbed {p.byAtlas ? "· by the Titan" : ""}
                         </p>
                       </div>
                       <button
                         onClick={() => removePlan(p.id)}
-                        className="font-ui text-[9px] uppercase tracking-[0.18em] text-wine opacity-40 transition-opacity hover:opacity-100"
+                        className="font-ui text-[13px] uppercase tracking-[0.18em] text-wine opacity-40 transition-opacity hover:opacity-100"
                         aria-label="Remove plan"
                       >
                         ×
@@ -444,9 +444,9 @@ export default function AtlasAssistantPage() {
                               st.done ? "bg-wine text-marble" : "bg-marble"
                             }`}
                           >
-                            {st.done && <span className="text-[9px]">✓</span>}
+                            {st.done && <span className="text-[13px]">✓</span>}
                           </span>
-                          <span className={`font-body text-[13.5px] ${st.done ? "text-wine line-through opacity-50" : "text-wine"}`}>
+                          <span className={`font-body text-[16.5px] ${st.done ? "text-wine line-through opacity-50" : "text-wine"}`}>
                             {st.text}
                           </span>
                         </button>
@@ -469,8 +469,8 @@ export default function AtlasAssistantPage() {
               ["Φωνή", "Voice — speak to him; he answers aloud, low, like stone moving."],
             ].map(([greek, line]) => (
               <li key={greek} className="flex gap-3">
-                <span className="mt-0.5 w-24 shrink-0 font-display text-[12px] tracking-[0.08em] text-gold">{greek}</span>
-                <span className="font-body text-[13px] leading-snug text-marble opacity-85">{line}</span>
+                <span className="mt-0.5 w-24 shrink-0 font-display text-[15px] tracking-[0.08em] text-gold">{greek}</span>
+                <span className="font-body text-[16px] leading-snug text-marble opacity-85">{line}</span>
               </li>
             ))}
           </ul>

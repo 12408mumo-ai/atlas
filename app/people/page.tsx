@@ -29,11 +29,11 @@ export default function PeoplePage() {
 
       {drifting.length > 0 && (
         <div className="mt-6 rounded-2xl border-2 border-wine bg-gold p-4">
-          <p className="font-ui text-[10px] uppercase tracking-[0.3em] text-wine">The drifting</p>
-          <p className="mt-2 font-body text-[13.5px] text-wine">
+          <p className="font-ui text-[14px] uppercase tracking-[0.3em] text-wine">The drifting</p>
+          <p className="mt-2 font-body text-[16.5px] text-wine">
             {drifting.map((p) => `${p.name} — ${daysSince(p.lastSeen)} days`).join("  ·  ")}
           </p>
-          <p className="mt-1 font-body text-[12px] italic text-wine opacity-70">
+          <p className="mt-1 font-body text-[15px] italic text-wine opacity-70">
             A message costs nothing and holds a great deal.
           </p>
         </div>
@@ -59,17 +59,17 @@ export default function PeoplePage() {
                 <div key={p.id} className={`rounded-2xl border-2 bg-marble p-5 transition-colors ${open ? "border-gold" : "border-wine"}`}>
                   <div className="flex items-start gap-4">
                     <span
-                      className="grid h-12 w-12 shrink-0 place-items-center rounded-full font-display text-[16px] text-[#1a1206]"
+                      className="grid h-12 w-12 shrink-0 place-items-center rounded-full font-display text-[18px] text-[#1a1206]"
 
                     >
                       {p.name.slice(0, 1)}
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="truncate font-display text-[18px] tracking-[0.03em] text-wine">{p.name}</p>
+                        <p className="truncate font-display text-[20px] tracking-[0.03em] text-wine">{p.name}</p>
                         <Badge tone="dim">{p.relation}</Badge>
                       </div>
-                      <p className="mt-1 font-body text-[12px] italic text-wine opacity-60">
+                      <p className="mt-1 font-body text-[15px] italic text-wine opacity-60">
                         Last spoke {since === 0 ? "today" : `${since} days ago`} · cadence {p.cadenceDays}d
                       </p>
                       <div className="mt-2.5">
@@ -82,7 +82,7 @@ export default function PeoplePage() {
                       <Row k="Birthday" v={prettyDate(`2025-${p.birthday}`)} />
                       <Row k="Promise" v={p.promise} />
                       <Row k="Gift idea" v={p.gift} />
-                      <p className="font-body text-[12.5px] leading-relaxed text-wine opacity-75">{p.notes}</p>
+                      <p className="font-body text-[15.5px] leading-relaxed text-wine opacity-75">{p.notes}</p>
                     </div>
                   )}
                   <div className="mt-4 flex gap-2">
@@ -104,10 +104,10 @@ export default function PeoplePage() {
             <ul className="divide-y-2 divide-gold">
               {upcoming.map((p) => (
                 <li key={p.id} className="flex items-center gap-4 py-3">
-                  <span className="w-14 font-display text-[15px] text-wine">{daysToBirthday(p.birthday)}<span className="ml-1 font-ui text-[8px] tracking-[0.14em] text-wine opacity-55">DAYS</span></span>
+                  <span className="w-14 font-display text-[17px] text-wine">{daysToBirthday(p.birthday)}<span className="ml-1 font-ui text-[12px] tracking-[0.14em] text-wine opacity-55">DAYS</span></span>
                   <div className="min-w-0 flex-1">
-                    <p className="font-body text-[14px] text-wine">{p.name}</p>
-                    <p className="font-ui text-[9px] uppercase tracking-[0.18em] text-wine opacity-55">{p.relation} · {prettyDate(`2025-${p.birthday}`)}</p>
+                    <p className="font-body text-[16px] text-wine">{p.name}</p>
+                    <p className="font-ui text-[13px] uppercase tracking-[0.18em] text-wine opacity-55">{p.relation} · {prettyDate(`2025-${p.birthday}`)}</p>
                   </div>
                   <Badge tone="gold">gift: {p.gift.split(",")[0]}</Badge>
                 </li>
@@ -122,8 +122,8 @@ export default function PeoplePage() {
               <ul className="space-y-3">
                 {s.people.filter((p) => p.promise).map((p) => (
                   <li key={p.id} className="border-l-4 border-gold pl-3">
-                    <p className="font-body text-[13.5px] text-wine">“{p.promise}”</p>
-                    <p className="mt-1 font-ui text-[9px] uppercase tracking-[0.18em] text-wine opacity-55">to {p.name}</p>
+                    <p className="font-body text-[16.5px] text-wine">“{p.promise}”</p>
+                    <p className="mt-1 font-ui text-[13px] uppercase tracking-[0.18em] text-wine opacity-55">to {p.name}</p>
                   </li>
                 ))}
               </ul>
@@ -132,8 +132,8 @@ export default function PeoplePage() {
               <ul className="space-y-3">
                 {s.people.filter((p) => p.gift && p.gift !== "—").map((p) => (
                   <li key={p.id} className="flex items-center justify-between rounded-pill border-2 border-wine px-3 py-2">
-                    <span className="font-body text-[13px] text-wine">{p.gift}</span>
-                    <span className="font-ui text-[9px] uppercase tracking-[0.16em] text-wine opacity-55">{p.name.split(" ")[0]}</span>
+                    <span className="font-body text-[16px] text-wine">{p.gift}</span>
+                    <span className="font-ui text-[13px] uppercase tracking-[0.16em] text-wine opacity-55">{p.name.split(" ")[0]}</span>
                   </li>
                 ))}
               </ul>
@@ -163,8 +163,8 @@ export default function PeoplePage() {
 function Row({ k, v }: { k: string; v: string }) {
   return (
     <div className="flex items-baseline justify-between gap-4">
-      <span className="font-ui text-[9px] uppercase tracking-[0.2em] text-wine opacity-55">{k}</span>
-      <span className="text-right font-body text-[13px] text-wine">{v}</span>
+      <span className="font-ui text-[13px] uppercase tracking-[0.2em] text-wine opacity-55">{k}</span>
+      <span className="text-right font-body text-[16px] text-wine">{v}</span>
     </div>
   );
 }

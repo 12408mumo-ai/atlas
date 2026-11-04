@@ -46,11 +46,11 @@ export default function HubPage() {
         <section className="mx-auto max-w-[1180px] px-5 pt-9 sm:px-8">
           <div className="flex flex-col items-center text-center anim-fade-up">
             <p className="eyebrow">Ἄτλας · the bearer</p>
-            <h1 className="mt-3 font-display text-[clamp(25px,3.4vw,42px)] leading-tight tracking-[0.04em] text-wine">
+            <h1 className="mt-3 font-display text-[clamp(27px,3.4vw,44px)] leading-tight tracking-[0.04em] text-wine">
               {greeting}
               {session?.name ? <span className="text-gold">, {session.name.split(" ")[0]}</span> : null}
             </h1>
-            <p className="mt-2 max-w-[560px] font-body text-[14.5px] leading-relaxed text-wine opacity-70">
+            <p className="mt-2 max-w-[560px] font-body text-[16.5px] leading-relaxed text-wine opacity-70">
               Five worlds orbit the one you carry. Touch a sphere and it opens into itself.
             </p>
           </div>
@@ -99,15 +99,15 @@ export default function HubPage() {
             {/* mood */}
             <div className="rounded-2xl border-2 border-wine bg-marble p-5 sm:p-6">
               <div className="flex items-baseline justify-between">
-                <h2 className="font-ui text-[10px] uppercase tracking-[0.28em] text-wine">How heavy is today?</h2>
-                <span className="font-body text-[12px] italic text-wine opacity-55">1 light · 5 crushing</span>
+                <h2 className="font-ui text-[14px] uppercase tracking-[0.28em] text-wine">How heavy is today?</h2>
+                <span className="font-body text-[15px] italic text-wine opacity-55">1 light · 5 crushing</span>
               </div>
               <div className="mt-5 flex flex-wrap items-center gap-3">
                 {[1, 2, 3, 4, 5].map((n) => (
                   <button
                     key={n}
                     onClick={() => setMoodToday(n)}
-                    className={`grid h-11 w-11 place-items-center rounded-full border-2 font-display text-[15px] transition-colors ${
+                    className={`grid h-11 w-11 place-items-center rounded-full border-2 font-display text-[17px] transition-colors ${
                       moodToday >= n ? "border-wine bg-wine text-marble" : "border-wine bg-marble text-wine hover:bg-gold"
                     }`}
                     aria-label={`Mood ${n} of 5`}
@@ -121,7 +121,7 @@ export default function HubPage() {
                       <div className="flex h-16 w-4 items-end overflow-hidden rounded-pill border border-wine bg-marbleDim">
                         <div className="w-full rounded-pill bg-wine" style={{ height: `${(m.score / 5) * 100}%` }} />
                       </div>
-                      <span className="font-ui text-[8px] uppercase tracking-[0.12em] text-wine opacity-55">{m.day.slice(0, 1)}</span>
+                      <span className="font-ui text-[12px] uppercase tracking-[0.12em] text-wine opacity-55">{m.day.slice(0, 1)}</span>
                     </div>
                   ))}
                 </div>
@@ -130,7 +130,7 @@ export default function HubPage() {
 
             {/* habits */}
             <div className="rounded-2xl border-2 border-wine bg-marble p-5 sm:p-6">
-              <h2 className="font-ui text-[10px] uppercase tracking-[0.28em] text-wine">Today&apos;s rites</h2>
+              <h2 className="font-ui text-[14px] uppercase tracking-[0.28em] text-wine">Today&apos;s rites</h2>
               <ul className="mt-4 space-y-2">
                 {s.habits.slice(0, 4).map((h) => (
                   <li key={h.id}>
@@ -139,16 +139,16 @@ export default function HubPage() {
                       className="flex w-full items-center gap-3 rounded-pill border-2 border-wine px-3 py-2 text-left transition-colors hover:bg-gold"
                     >
                       <span
-                        className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 border-wine text-[10px] ${
+                        className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 border-wine text-[14px] ${
                           h.doneToday ? "bg-wine text-marble" : "bg-marble text-transparent"
                         }`}
                       >
                         ✓
                       </span>
-                      <span className={`flex-1 font-body text-[13.5px] text-wine ${h.doneToday ? "opacity-45 line-through" : ""}`}>
+                      <span className={`flex-1 font-body text-[16.5px] text-wine ${h.doneToday ? "opacity-45 line-through" : ""}`}>
                         {h.name}
                       </span>
-                      <span className="font-ui text-[9px] tracking-[0.14em] text-wine opacity-70">{h.streak}d</span>
+                      <span className="font-ui text-[13px] tracking-[0.14em] text-wine opacity-70">{h.streak}d</span>
                     </button>
                   </li>
                 ))}
@@ -157,7 +157,7 @@ export default function HubPage() {
           </div>
 
           <MeanderWine className="mt-12" height={16} />
-          <p className="mt-6 text-center font-ui text-[9px] uppercase tracking-[0.36em] text-wine opacity-45">
+          <p className="mt-6 text-center font-ui text-[13px] uppercase tracking-[0.36em] text-wine opacity-45">
             He holds the sky so you can hold your life · ATLAS
           </p>
         </section>
@@ -188,13 +188,13 @@ function Tile({
         <img src={image} alt="" className="h-full w-full object-cover" />
       </span>
       <span className="min-w-0">
-        <span className="block font-ui text-[8.5px] uppercase tracking-[0.24em] text-wine opacity-70 group-hover:text-gold group-hover:opacity-100">
+        <span className="block font-ui text-[12.5px] uppercase tracking-[0.24em] text-wine opacity-70 group-hover:text-gold group-hover:opacity-100">
           {eyebrow}
         </span>
-        <span className="mt-1 block truncate font-display text-[17px] tracking-[0.02em] text-wine group-hover:text-marble">
+        <span className="mt-1 block truncate font-display text-[19px] tracking-[0.02em] text-wine group-hover:text-marble">
           {value}
         </span>
-        <span className="mt-1 block truncate font-body text-[11.5px] italic text-wine opacity-55 group-hover:text-marble group-hover:opacity-70">
+        <span className="mt-1 block truncate font-body text-[14.5px] italic text-wine opacity-55 group-hover:text-marble group-hover:opacity-70">
           {meta}
         </span>
       </span>

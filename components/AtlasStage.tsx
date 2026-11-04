@@ -257,7 +257,7 @@ export default function AtlasStage() {
                   <span data-veil className="pointer-events-none absolute inset-0 bg-wine" style={{ opacity: 0.3 }} />
                 </span>
                 {/* name plate under the sphere */}
-                <span className="pointer-events-none absolute left-1/2 top-[calc(100%+8px)] -translate-x-1/2 whitespace-nowrap rounded-pill border-2 border-gold bg-marble px-3 py-1 font-ui text-[8.5px] uppercase tracking-[0.22em] text-wine">
+                <span className="pointer-events-none absolute left-1/2 top-[calc(100%+8px)] -translate-x-1/2 whitespace-nowrap rounded-pill border-2 border-gold bg-marble px-3 py-1 font-ui text-[12.5px] uppercase tracking-[0.22em] text-wine">
                   {p.name}
                 </span>
               </button>
@@ -267,7 +267,7 @@ export default function AtlasStage() {
 
         {/* flat caption */}
         <div className="pointer-events-none absolute inset-x-0 bottom-4 z-[400] px-4 text-center">
-          <p className="inline-block rounded-pill border-2 border-gold bg-wine px-4 py-1.5 font-ui text-[9px] uppercase tracking-[0.3em] text-marble">
+          <p className="inline-block rounded-pill border-2 border-gold bg-wine px-4 py-1.5 font-ui text-[13px] uppercase tracking-[0.3em] text-marble">
             {hovered ? PILLARS.find((p) => p.key === hovered)?.blurb : "Touch a sphere to open it"}
           </p>
         </div>
@@ -287,8 +287,8 @@ export default function AtlasStage() {
               <img src={p.image} alt="" className="h-full w-full object-cover" draggable={false} />
             </span>
             <span className="min-w-0">
-              <span className="block font-ui text-[10px] uppercase tracking-[0.22em] text-wine group-hover:text-gold">{p.name}</span>
-              <span className="block truncate font-body text-[11px] italic text-wine opacity-60 group-hover:text-marble group-hover:opacity-80">
+              <span className="block font-ui text-[14px] uppercase tracking-[0.22em] text-wine group-hover:text-gold">{p.name}</span>
+              <span className="block truncate font-body text-[14px] italic text-wine opacity-60 group-hover:text-marble group-hover:opacity-80">
                 {p.greek}
               </span>
             </span>
@@ -301,10 +301,10 @@ export default function AtlasStage() {
         <div className="pointer-events-none fixed inset-0 z-[900] grid place-items-center anim-fade bg-wine/95">
           <div className="text-center">
             <img src={opening.image} alt="" className="mx-auto h-24 w-24 rounded-full border-[3px] border-gold object-cover" />
-            <p className="mt-5 font-display text-[clamp(26px,6vw,54px)] tracking-[0.22em] text-gold">
+            <p className="mt-5 font-display text-[clamp(28px,6vw,56px)] tracking-[0.22em] text-gold">
               {opening.name.toUpperCase()}
             </p>
-            <p className="mt-2 font-body text-[13px] italic tracking-[0.2em] text-marble opacity-70">{opening.greek}</p>
+            <p className="mt-2 font-body text-[16px] italic tracking-[0.2em] text-marble opacity-70">{opening.greek}</p>
           </div>
         </div>
       )}

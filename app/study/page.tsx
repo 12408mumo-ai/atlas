@@ -50,14 +50,14 @@ export default function StudyPage() {
                 const slots = s.timetable.filter((x) => x.day === d);
                 return (
                   <div key={d} className="rounded-xl border-2 border-wine bg-marble">
-                    <p className="border-b-2 border-wine px-3 py-2 font-ui text-[9px] uppercase tracking-[0.24em] text-wine">{d}</p>
+                    <p className="border-b-2 border-wine px-3 py-2 font-ui text-[13px] uppercase tracking-[0.24em] text-wine">{d}</p>
                     <div className="space-y-2 p-2">
-                      {slots.length === 0 && <p className="px-1 py-4 text-center font-body text-[11px] italic text-wine opacity-40">free</p>}
+                      {slots.length === 0 && <p className="px-1 py-4 text-center font-body text-[14px] italic text-wine opacity-40">free</p>}
                       {slots.map((sl) => (
                         <div key={sl.id} className="rounded-lg border-2 border-wine bg-gold px-2.5 py-2">
-                          <p className="font-ui text-[9px] tracking-[0.14em] text-wine">{sl.time}</p>
-                          <p className="mt-0.5 font-body text-[12.5px] leading-tight text-wine">{sl.title}</p>
-                          <p className="mt-1 font-body text-[10.5px] italic text-wine opacity-65">{sl.place}</p>
+                          <p className="font-ui text-[13px] tracking-[0.14em] text-wine">{sl.time}</p>
+                          <p className="mt-0.5 font-body text-[15.5px] leading-tight text-wine">{sl.title}</p>
+                          <p className="mt-1 font-body text-[14.5px] italic text-wine opacity-65">{sl.place}</p>
                         </div>
                       ))}
                     </div>
@@ -76,7 +76,7 @@ export default function StudyPage() {
                   <Ring value={c.progress} max={100} label={`${c.progress}%`} color={c.status === "complete" ? "gold" : "wine"} sub={c.status} size={84} />
                   <div className="flex-1">
                     <Bar value={c.progress} color={c.status === "complete" ? "gold" : "wine"} />
-                    <p className="mt-3 font-body text-[12.5px] italic text-wine opacity-60">
+                    <p className="mt-3 font-body text-[15.5px] italic text-wine opacity-60">
                       {c.status === "complete" ? "Closed and kept." : `Currently at ${c.progress}% — keep the thread.`}
                     </p>
                   </div>
@@ -96,13 +96,13 @@ export default function StudyPage() {
                   return (
                     <li key={a.id} className="flex items-center gap-4 py-3">
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-body text-[14px] text-wine">{a.title}</p>
-                        <p className="font-ui text-[9px] uppercase tracking-[0.18em] text-wine opacity-55">{a.course} · weighs {a.weight}%</p>
+                        <p className="truncate font-body text-[16px] text-wine">{a.title}</p>
+                        <p className="font-ui text-[13px] uppercase tracking-[0.18em] text-wine opacity-55">{a.course} · weighs {a.weight}%</p>
                       </div>
                       <Badge tone={a.status === "open" ? "marble" : "wine"}>
                         {a.status}
                       </Badge>
-                      <span className="hidden w-32 text-right font-ui text-[9.5px] uppercase tracking-[0.12em] text-wine opacity-70 sm:block">
+                      <span className="hidden w-32 text-right font-ui text-[13.5px] uppercase tracking-[0.12em] text-wine opacity-70 sm:block">
                         {prettyDate(a.due)}
                         <br />
                         <span className="opacity-70">{relativeDue(a.due)}</span>
@@ -122,7 +122,7 @@ export default function StudyPage() {
                   <Ring value={k.hours} max={40} label={`${k.hours}h`} color="gold" size={76} />
                   <div>
                     <Badge tone="gold">{k.status}</Badge>
-                    <p className="mt-2 font-body text-[12px] italic text-wine opacity-55">
+                    <p className="mt-2 font-body text-[15px] italic text-wine opacity-55">
                       {k.hours < 10 ? "Fresh — protect the first ten hours." : "Compounding quietly."}
                     </p>
                   </div>
@@ -158,14 +158,14 @@ export default function StudyPage() {
                 date.setDate(date.getDate() + x.d);
                 return (
                   <li key={i} className="flex items-start gap-4 py-3">
-                    <div className="w-16 shrink-0 font-ui text-[9px] uppercase tracking-[0.14em] text-wine opacity-60">
+                    <div className="w-16 shrink-0 font-ui text-[13px] uppercase tracking-[0.14em] text-wine opacity-60">
                       {date.toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-body text-[13.5px] text-wine">{x.subj}</p>
-                      <p className="mt-0.5 font-body text-[12px] italic text-wine opacity-55">{x.note}</p>
+                      <p className="font-body text-[16.5px] text-wine">{x.subj}</p>
+                      <p className="mt-0.5 font-body text-[15px] italic text-wine opacity-55">{x.note}</p>
                     </div>
-                    <span className="font-ui text-[10px] tracking-[0.12em] text-wine opacity-70">{x.mins}m</span>
+                    <span className="font-ui text-[14px] tracking-[0.12em] text-wine opacity-70">{x.mins}m</span>
                   </li>
                 );
               })}
