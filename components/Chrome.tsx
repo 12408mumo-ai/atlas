@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getSession, clearSession } from "@/lib/store";
 import { MeanderWine } from "./Ornaments";
+import { AtlasSideIcon } from "./AtlasSideIcon";
 
 export function TopBar() {
   const router = useRouter();
@@ -86,6 +87,8 @@ export function TopBar() {
         </div>
         <MeanderWine height={14} />
       </div>
+      {/* the little orb at the edge of every page — one touch opens the Titan */}
+      <AtlasSideIcon />
     </header>
   );
 }
