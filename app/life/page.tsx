@@ -54,7 +54,7 @@ export default function LifePage() {
                   ["Meals", s.health.meals, 4, "gold"],
                 ].map(([l, v, m, c]) => (
                   <div key={l as string}>
-                    <div className="mb-1 flex justify-between font-ui text-[9px] uppercase tracking-[0.18em] text-wine opacity-65">
+                    <div className="mb-1 flex justify-between font-ui text-[13px] uppercase tracking-[0.18em] text-wine opacity-65">
                       <span>{l as string}</span>
                       <span>{v as number}/{m as number}</span>
                     </div>
@@ -66,15 +66,15 @@ export default function LifePage() {
             <Panel title="Log the body" hint="Thirty seconds, once a day">
               <div className="space-y-3">
                 <label className="block">
-                  <span className="font-ui text-[9px] uppercase tracking-[0.2em] text-wine opacity-60">Hours slept</span>
+                  <span className="font-ui text-[13px] uppercase tracking-[0.2em] text-wine opacity-60">Hours slept</span>
                   <input className="field mt-1.5" type="number" step="0.5" defaultValue={s.health.sleep} />
                 </label>
                 <label className="block">
-                  <span className="font-ui text-[9px] uppercase tracking-[0.2em] text-wine opacity-60">Glasses of water</span>
+                  <span className="font-ui text-[13px] uppercase tracking-[0.2em] text-wine opacity-60">Glasses of water</span>
                   <input className="field mt-1.5" type="number" defaultValue={s.health.water} />
                 </label>
                 <label className="block">
-                  <span className="font-ui text-[9px] uppercase tracking-[0.2em] text-wine opacity-60">Meals eaten</span>
+                  <span className="font-ui text-[13px] uppercase tracking-[0.2em] text-wine opacity-60">Meals eaten</span>
                   <input className="field mt-1.5" type="number" defaultValue={s.health.meals} />
                 </label>
                 <button className="btn-gold w-full">Record</button>
@@ -92,7 +92,7 @@ export default function LifePage() {
                 <Stat label="Subscriptions" value={`$${subs}/mo`} tone="gold" />
               </div>
               <div className="mt-5">
-                <div className="mb-1.5 flex justify-between font-ui text-[9px] uppercase tracking-[0.18em] text-wine opacity-60">
+                <div className="mb-1.5 flex justify-between font-ui text-[13px] uppercase tracking-[0.18em] text-wine opacity-60">
                   <span>Savings rate target</span>
                   <span>32% of income</span>
                 </div>
@@ -104,14 +104,14 @@ export default function LifePage() {
                 {s.money.subscriptions.map((x) => (
                   <li key={x.id} className="flex items-center justify-between rounded-pill border-2 border-wine px-3 py-2">
                     <div>
-                      <p className="font-body text-[13px] text-wine">{x.name}</p>
-                      <p className="font-ui text-[8.5px] uppercase tracking-[0.14em] text-wine opacity-55">renews {x.renew}</p>
+                      <p className="font-body text-[16px] text-wine">{x.name}</p>
+                      <p className="font-ui text-[12.5px] uppercase tracking-[0.14em] text-wine opacity-55">renews {x.renew}</p>
                     </div>
-                    <span className="font-ui text-[11px] tracking-[0.08em] text-wine">${x.cost}</span>
+                    <span className="font-ui text-[14px] tracking-[0.08em] text-wine">${x.cost}</span>
                   </li>
                 ))}
               </ul>
-              <p className="mt-4 font-body text-[12px] italic text-wine opacity-55">
+              <p className="mt-4 font-body text-[15px] italic text-wine opacity-55">
                 ${subs} a month, ${subs * 12} a year. Worth it?
               </p>
             </Panel>
@@ -128,9 +128,9 @@ export default function LifePage() {
                       onClick={() => toggleHabit(h.id)}
                       className={`flex w-full items-center gap-4 rounded-pill border-2 border-wine px-4 py-3 text-left transition-colors ${h.doneToday ? "bg-gold" : "bg-marble hover:bg-wine/10"}`}
                     >
-                      <span className={`grid h-6 w-6 place-items-center rounded-full border-2 border-wine text-[11px] ${h.doneToday ? "bg-wine text-marble" : "bg-marble text-transparent"}`}>✓</span>
-                      <span className="flex-1 font-body text-[14px] text-wine">{h.name}</span>
-                      <span className="font-display text-[15px] text-wine">{h.streak}<span className="ml-1 font-ui text-[8px] tracking-[0.14em] text-wine opacity-55">DAYS</span></span>
+                      <span className={`grid h-6 w-6 place-items-center rounded-full border-2 border-wine text-[14px] ${h.doneToday ? "bg-wine text-marble" : "bg-marble text-transparent"}`}>✓</span>
+                      <span className="flex-1 font-body text-[16px] text-wine">{h.name}</span>
+                      <span className="font-display text-[17px] text-wine">{h.streak}<span className="ml-1 font-ui text-[12px] tracking-[0.14em] text-wine opacity-55">DAYS</span></span>
                     </button>
                   </li>
                 ))}
@@ -149,7 +149,7 @@ export default function LifePage() {
                   );
                 })}
               </div>
-              <p className="mt-4 font-body text-[12.5px] italic text-wine opacity-60">
+              <p className="mt-4 font-body text-[15.5px] italic text-wine opacity-60">
                 Longest chain: {Math.max(...s.habits.map((h) => h.streak))} days. Missing a day is not breaking the habit — missing two is.
               </p>
             </Panel>
@@ -164,13 +164,13 @@ export default function LifePage() {
                   <button
                     key={n}
                     onClick={() => setMoodToday(n)}
-                    className={`flex-1 rounded-xl border-2 py-4 font-display text-[20px] transition-colors ${moodToday >= n ? "border-wine bg-wine text-marble" : "border-wine bg-marble text-wine hover:bg-gold"}`}
+                    className={`flex-1 rounded-xl border-2 py-4 font-display text-[22px] transition-colors ${moodToday >= n ? "border-wine bg-wine text-marble" : "border-wine bg-marble text-wine hover:bg-gold"}`}
                   >
                     {n}
                   </button>
                 ))}
               </div>
-              <div className="mt-5 flex justify-between font-ui text-[8.5px] uppercase tracking-[0.14em] text-wine opacity-55">
+              <div className="mt-5 flex justify-between font-ui text-[12.5px] uppercase tracking-[0.14em] text-wine opacity-55">
                 <span>Heavy</span><span>Even</span><span>Light</span>
               </div>
             </Panel>
@@ -182,11 +182,11 @@ export default function LifePage() {
                       <div className="flex-1 rounded-t-sm bg-wine" style={{ height: `${(m.score / 5) * 100}%` }} title={`mood ${m.score}`} />
                       <div className="flex-1 rounded-t-sm bg-gold" style={{ height: `${((m.score + 1) / 6) * 100}%` }} title="energy" />
                     </div>
-                    <span className="font-ui text-[8px] uppercase tracking-[0.1em] text-wine opacity-55">{m.day.slice(0, 1)}</span>
+                    <span className="font-ui text-[12px] uppercase tracking-[0.1em] text-wine opacity-55">{m.day.slice(0, 1)}</span>
                   </div>
                 ))}
               </div>
-              <div className="mt-3 flex gap-4 font-ui text-[8.5px] uppercase tracking-[0.16em] text-wine opacity-60">
+              <div className="mt-3 flex gap-4 font-ui text-[12.5px] uppercase tracking-[0.16em] text-wine opacity-60">
                 <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-gold" /> mood</span>
                 <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-gold" /> energy</span>
               </div>

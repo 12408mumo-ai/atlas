@@ -71,13 +71,13 @@ export default function MemoriesPage() {
                   </span>
                   <article className="rounded-2xl border-2 border-wine bg-marble p-5 transition-colors hover:border-gold">
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                      <span className="font-ui text-[9px] uppercase tracking-[0.22em] text-wine opacity-65">{prettyDate(e.date)}</span>
+                      <span className="font-ui text-[13px] uppercase tracking-[0.22em] text-wine opacity-65">{prettyDate(e.date)}</span>
                       {e.pillar && <Badge tone="dim">{e.pillar}</Badge>}
                       <Badge tone={e.kind === "milestone" ? "gold" : "marble"}>{e.kind}</Badge>
-                      <span className="ml-auto font-ui text-[9px] tracking-[0.16em] text-wine opacity-55">mood {e.mood}/5</span>
+                      <span className="ml-auto font-ui text-[13px] tracking-[0.16em] text-wine opacity-55">mood {e.mood}/5</span>
                     </div>
-                    <h3 className="mt-3 font-display text-[18px] tracking-[0.02em] text-wine">{e.title}</h3>
-                    <p className="mt-2 font-body text-[14px] leading-[1.75] text-wine opacity-75">{e.text}</p>
+                    <h3 className="mt-3 font-display text-[20px] tracking-[0.02em] text-wine">{e.title}</h3>
+                    <p className="mt-2 font-body text-[16px] leading-[1.75] text-wine opacity-75">{e.text}</p>
                   </article>
                 </li>
               ))}
@@ -96,12 +96,12 @@ export default function MemoriesPage() {
                 onChange={(e) => setDraft(e.target.value)}
               />
               <div className="mt-4 flex flex-wrap items-center gap-2">
-                <span className="font-ui text-[9px] uppercase tracking-[0.2em] text-wine opacity-60">Mood</span>
+                <span className="font-ui text-[13px] uppercase tracking-[0.2em] text-wine opacity-60">Mood</span>
                 {[1, 2, 3, 4, 5].map((n) => (
                   <button
                     key={n}
                     onClick={() => setMood(n)}
-                    className={`h-8 w-8 rounded-full border-2 border-wine font-display text-[12px] transition-colors ${mood >= n ? "bg-wine text-marble" : "bg-marble text-wine"}`}
+                    className={`h-8 w-8 rounded-full border-2 border-wine font-display text-[15px] transition-colors ${mood >= n ? "bg-wine text-marble" : "bg-marble text-wine"}`}
                   >
                     {n}
                   </button>
@@ -128,13 +128,13 @@ export default function MemoriesPage() {
                 ].map(([p, t]) => (
                   <li key={t} className="flex items-start gap-3 border-l-4 border-gold pl-3">
                     <div>
-                      <p className="font-ui text-[8.5px] uppercase tracking-[0.18em] text-wine opacity-60">{p}</p>
-                      <p className="mt-0.5 font-body text-[13px] text-wine">{t}</p>
+                      <p className="font-ui text-[12.5px] uppercase tracking-[0.18em] text-wine opacity-60">{p}</p>
+                      <p className="mt-0.5 font-body text-[16px] text-wine">{t}</p>
                     </div>
                   </li>
                 ))}
               </ul>
-              <p className="mt-4 font-body text-[12px] italic text-wine opacity-55">
+              <p className="mt-4 font-body text-[15px] italic text-wine opacity-55">
                 You never file these yourself. They surface from Work, Study, People and Life.
               </p>
             </Panel>
@@ -149,9 +149,9 @@ export default function MemoriesPage() {
               <ul className="space-y-3">
                 {onThisDay.map((e) => (
                   <li key={e.id} className="border-l-4 border-wine pl-4">
-                    <p className="font-ui text-[9px] uppercase tracking-[0.22em] text-wine opacity-65">{e.date.slice(0, 4)}</p>
-                    <p className="mt-1 font-display text-[17px] text-wine">{e.title}</p>
-                    <p className="mt-1 font-body text-[13.5px] text-wine opacity-75">{e.text}</p>
+                    <p className="font-ui text-[13px] uppercase tracking-[0.22em] text-wine opacity-65">{e.date.slice(0, 4)}</p>
+                    <p className="mt-1 font-display text-[19px] text-wine">{e.title}</p>
+                    <p className="mt-1 font-body text-[16.5px] text-wine opacity-75">{e.text}</p>
                   </li>
                 ))}
               </ul>
@@ -164,12 +164,12 @@ export default function MemoriesPage() {
             <ul className="divide-y-2 divide-gold">
               {entries.map((e) => (
                 <li key={e.id} className="flex items-center gap-4 py-3">
-                  <span className="w-6 text-center font-display text-[14px] text-wine opacity-70">{KIND_GLYPH[e.kind] ?? "·"}</span>
+                  <span className="w-6 text-center font-display text-[16px] text-wine opacity-70">{KIND_GLYPH[e.kind] ?? "·"}</span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-body text-[13.5px] text-wine">{e.title}</p>
-                    <p className="font-ui text-[9px] uppercase tracking-[0.18em] text-wine opacity-55">{prettyDate(e.date)} · {e.kind}</p>
+                    <p className="truncate font-body text-[16.5px] text-wine">{e.title}</p>
+                    <p className="font-ui text-[13px] uppercase tracking-[0.18em] text-wine opacity-55">{prettyDate(e.date)} · {e.kind}</p>
                   </div>
-                  <span className="font-ui text-[9px] uppercase tracking-[0.16em] text-wine opacity-60">{e.pillar ?? "Personal"}</span>
+                  <span className="font-ui text-[13px] uppercase tracking-[0.16em] text-wine opacity-60">{e.pillar ?? "Personal"}</span>
                 </li>
               ))}
             </ul>

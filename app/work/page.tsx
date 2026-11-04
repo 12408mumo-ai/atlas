@@ -57,7 +57,7 @@ export default function WorkPage() {
                 <Panel key={p.id} title={p.name} hint={`${p.client} · $${p.rate}/h`}>
                   <div className="mb-3 flex items-center justify-between">
                     <Badge tone={p.status === "active" ? "gold" : "dim"}>{p.status}</Badge>
-                    <span className="font-body text-[11.5px] italic text-wine opacity-60">
+                    <span className="font-body text-[14.5px] italic text-wine opacity-60">
                       {p.hours}h · {done}/{p.tasks.length} done
                     </span>
                   </div>
@@ -69,11 +69,11 @@ export default function WorkPage() {
                           onClick={() => toggleTask(p.id, t.id)}
                           className="flex w-full items-center gap-3 rounded-pill border-2 border-wine px-3 py-2 text-left transition-colors hover:bg-gold"
                         >
-                          <span className={`grid h-4 w-4 shrink-0 place-items-center rounded-full border-2 border-wine text-[9px] ${t.done ? "bg-wine text-marble" : "bg-marble text-transparent"}`}>
+                          <span className={`grid h-4 w-4 shrink-0 place-items-center rounded-full border-2 border-wine text-[13px] ${t.done ? "bg-wine text-marble" : "bg-marble text-transparent"}`}>
                             ✓
                           </span>
-                          <span className={`flex-1 font-body text-[13px] text-wine ${t.done ? "opacity-45 line-through" : ""}`}>{t.title}</span>
-                          <span className="font-ui text-[9px] tracking-[0.12em] text-wine opacity-60">{relativeDue(t.due)}</span>
+                          <span className={`flex-1 font-body text-[16px] text-wine ${t.done ? "opacity-45 line-through" : ""}`}>{t.title}</span>
+                          <span className="font-ui text-[13px] tracking-[0.12em] text-wine opacity-60">{relativeDue(t.due)}</span>
                         </button>
                       </li>
                     ))}
@@ -99,10 +99,10 @@ export default function WorkPage() {
                       <li key={t.id} className="flex items-center gap-4 py-3">
                         <span className={`h-2.5 w-2.5 rounded-full ${late ? "bg-wine" : "bg-gold"}`} />
                         <div className="min-w-0 flex-1">
-                          <p className="truncate font-body text-[14px] text-wine">{t.title}</p>
-                          <p className="font-ui text-[9px] uppercase tracking-[0.18em] text-wine opacity-55">{project.name}</p>
+                          <p className="truncate font-body text-[16px] text-wine">{t.title}</p>
+                          <p className="font-ui text-[13px] uppercase tracking-[0.18em] text-wine opacity-55">{project.name}</p>
                         </div>
-                        <span className="font-ui text-[9.5px] uppercase tracking-[0.14em] text-wine opacity-70">
+                        <span className="font-ui text-[13.5px] uppercase tracking-[0.14em] text-wine opacity-70">
                           {prettyDate(t.due)} · {relativeDue(t.due)}
                         </span>
                       </li>
@@ -120,11 +120,11 @@ export default function WorkPage() {
                 {s.projects.map((p) => (
                   <li key={p.id}>
                     <div className="mb-1.5 flex items-baseline justify-between">
-                      <span className="font-body text-[13.5px] text-wine">{p.name}</span>
-                      <span className="font-ui text-[10px] tracking-[0.12em] text-wine opacity-70">{p.hours}h</span>
+                      <span className="font-body text-[16.5px] text-wine">{p.name}</span>
+                      <span className="font-ui text-[14px] tracking-[0.12em] text-wine opacity-70">{p.hours}h</span>
                     </div>
                     <Bar value={p.hours} max={Math.max(...s.projects.map((x) => x.hours))} color={p.client === "Own venture" ? "gold" : "wine"} />
-                    <p className="mt-1 font-body text-[11px] italic text-wine opacity-50">{p.client}</p>
+                    <p className="mt-1 font-body text-[14px] italic text-wine opacity-50">{p.client}</p>
                   </li>
                 ))}
               </ul>
@@ -136,8 +136,8 @@ export default function WorkPage() {
                     <div className="flex h-36 w-full items-end rounded-t-md border-2 border-wine bg-marbleDim">
                       <div className="w-full rounded-t-sm bg-wine" style={{ height: `${(h / 8) * 100}%` }} />
                     </div>
-                    <span className="font-ui text-[8px] uppercase tracking-[0.1em] text-wine opacity-55">{["M", "T", "W", "T", "F", "S", "S"][i]}</span>
-                    <span className="font-ui text-[8px] text-wine opacity-45">{h}h</span>
+                    <span className="font-ui text-[12px] uppercase tracking-[0.1em] text-wine opacity-55">{["M", "T", "W", "T", "F", "S", "S"][i]}</span>
+                    <span className="font-ui text-[12px] text-wine opacity-45">{h}h</span>
                   </div>
                 ))}
               </div>
@@ -150,22 +150,22 @@ export default function WorkPage() {
             <ul className="divide-y-2 divide-gold">
               {s.ledger.map((l) => (
                 <li key={l.id} className="flex items-center gap-4 py-3">
-                  <span className={`grid h-7 w-7 place-items-center rounded-full border-2 text-[11px] ${l.kind === "income" ? "border-wine bg-marble text-wine" : "border-wine bg-wine text-marble"}`}>
+                  <span className={`grid h-7 w-7 place-items-center rounded-full border-2 text-[14px] ${l.kind === "income" ? "border-wine bg-marble text-wine" : "border-wine bg-wine text-marble"}`}>
                     {l.kind === "income" ? "↓" : "↑"}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-body text-[14px] text-wine">{l.label}</p>
-                    <p className="font-ui text-[9px] uppercase tracking-[0.18em] text-wine opacity-55">{l.bucket} · {prettyDate(l.date)}</p>
+                    <p className="truncate font-body text-[16px] text-wine">{l.label}</p>
+                    <p className="font-ui text-[13px] uppercase tracking-[0.18em] text-wine opacity-55">{l.bucket} · {prettyDate(l.date)}</p>
                   </div>
-                  <span className="font-display text-[15px] text-wine">
+                  <span className="font-display text-[17px] text-wine">
                     {l.kind === "income" ? "+" : "−"}${l.amount.toLocaleString()}
                   </span>
                 </li>
               ))}
             </ul>
             <div className="mt-4 flex items-center justify-between rounded-pill border-2 border-wine bg-gold px-4 py-2.5">
-              <span className="font-ui text-[10px] uppercase tracking-[0.24em] text-wine">Net</span>
-              <span className="font-display text-[19px] text-wine">${(income - expense).toLocaleString()}</span>
+              <span className="font-ui text-[14px] uppercase tracking-[0.24em] text-wine">Net</span>
+              <span className="font-display text-[21px] text-wine">${(income - expense).toLocaleString()}</span>
             </div>
           </Panel>
         )}
@@ -181,8 +181,8 @@ export default function WorkPage() {
                 <ul className="mt-4 space-y-2">
                   {p.tasks.map((t) => (
                     <li key={t.id} className="flex items-center justify-between rounded-pill border-2 border-wine px-3 py-2">
-                      <span className="font-body text-[13px] text-wine">{t.title}</span>
-                      <span className="font-ui text-[9px] tracking-[0.12em] text-wine opacity-60">{relativeDue(t.due)}</span>
+                      <span className="font-body text-[16px] text-wine">{t.title}</span>
+                      <span className="font-ui text-[13px] tracking-[0.12em] text-wine opacity-60">{relativeDue(t.due)}</span>
                     </li>
                   ))}
                 </ul>

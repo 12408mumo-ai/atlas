@@ -58,8 +58,8 @@ export default function LoginPage() {
 
       <div className="relative z-10 mx-auto flex min-h-screen max-w-[1240px] flex-col px-6 sm:px-10">
         <header className="flex items-center justify-between py-6">
-          <span className="font-display text-[15px] tracking-[0.5em] text-marble">ATLAS</span>
-          <span className="hidden font-ui text-[10px] uppercase tracking-[0.3em] text-gold sm:block">
+          <span className="font-display text-[17px] tracking-[0.5em] text-marble">ATLAS</span>
+          <span className="hidden font-ui text-[14px] uppercase tracking-[0.3em] text-gold sm:block">
             Ἄτλας · he who holds the sky
           </span>
         </header>
@@ -69,9 +69,9 @@ export default function LoginPage() {
           <div className={mounted ? "anim-fade-up" : "opacity-0"}>
             <ScrollFrame width={470}>
               <div className="text-center">
-                <p className="font-ui text-[9px] uppercase tracking-[0.42em] text-wine opacity-60">The registry</p>
-                <h1 className="mt-2 font-display text-[34px] leading-none tracking-[0.12em] text-wine sm:text-[40px]">ATLAS</h1>
-                <p className="mt-2 font-body text-[13px] italic tracking-wide text-wine opacity-70">
+                <p className="font-ui text-[13px] uppercase tracking-[0.42em] text-wine opacity-60">The registry</p>
+                <h1 className="mt-2 font-display text-[36px] leading-none tracking-[0.12em] text-wine sm:text-[42px]">ATLAS</h1>
+                <p className="mt-2 font-body text-[16px] italic tracking-wide text-wine opacity-70">
                   Sign the ledger and take up your world.
                 </p>
                 <div className="mx-auto mt-4 flex items-center justify-center gap-2">
@@ -85,7 +85,7 @@ export default function LoginPage() {
 
               <form onSubmit={submit} className="mt-6 space-y-4">
                 <label className="block">
-                  <span className="font-ui text-[9px] uppercase tracking-[0.3em] text-wine opacity-70">Email</span>
+                  <span className="font-ui text-[13px] uppercase tracking-[0.3em] text-wine opacity-70">Email</span>
                   <input
                     type="email"
                     value={email}
@@ -93,11 +93,11 @@ export default function LoginPage() {
                     placeholder="you@example.com"
                     autoComplete="email"
                     required
-                    className="mt-1.5 w-full rounded-[10px] border-2 border-wine bg-marble px-3 py-2.5 font-ui text-[14px] text-wine outline-none transition-colors placeholder:text-wine placeholder:opacity-40 focus:border-gold"
+                    className="mt-1.5 w-full rounded-[10px] border-2 border-wine bg-marble px-3 py-2.5 font-ui text-[16px] text-wine outline-none transition-colors placeholder:text-wine placeholder:opacity-40 focus:border-gold"
                   />
                 </label>
                 <label className="block">
-                  <span className="font-ui text-[9px] uppercase tracking-[0.3em] text-wine opacity-70">Password</span>
+                  <span className="font-ui text-[13px] uppercase tracking-[0.3em] text-wine opacity-70">Password</span>
                   <input
                     type="password"
                     value={password}
@@ -105,12 +105,12 @@ export default function LoginPage() {
                     placeholder="••••••••"
                     autoComplete="current-password"
                     required
-                    className="mt-1.5 w-full rounded-[10px] border-2 border-wine bg-marble px-3 py-2.5 font-ui text-[14px] text-wine outline-none transition-colors placeholder:text-wine placeholder:opacity-40 focus:border-gold"
+                    className="mt-1.5 w-full rounded-[10px] border-2 border-wine bg-marble px-3 py-2.5 font-ui text-[16px] text-wine outline-none transition-colors placeholder:text-wine placeholder:opacity-40 focus:border-gold"
                   />
                 </label>
 
                 {error && (
-                  <p className="rounded-[10px] border-2 border-wine bg-gold px-3 py-2 font-ui text-[11px] tracking-[0.04em] text-wine">
+                  <p className="rounded-[10px] border-2 border-wine bg-gold px-3 py-2 font-ui text-[14px] tracking-[0.04em] text-wine">
                     {error}
                   </p>
                 )}
@@ -122,7 +122,7 @@ export default function LoginPage() {
 
               <div className="mt-6">
                 <MeanderWine height={12} />
-                <p className="mt-4 text-center font-ui text-[9px] uppercase tracking-[0.2em] text-wine opacity-55">
+                <p className="mt-4 text-center font-ui text-[13px] uppercase tracking-[0.2em] text-wine opacity-55">
                   Any email and password forges your world
                 </p>
               </div>
@@ -132,13 +132,13 @@ export default function LoginPage() {
           {/* ------------------- the invocation ------------------- */}
           <div className="hidden md:block anim-fade">
             <div className="ml-auto max-w-[470px]">
-              <p className="font-ui text-[10px] uppercase tracking-[0.44em] text-gold">Titan of endurance</p>
-              <h2 className="mt-4 font-display text-[clamp(34px,4vw,54px)] leading-[1.04] tracking-[0.02em] text-marble">
+              <p className="font-ui text-[14px] uppercase tracking-[0.44em] text-gold">Titan of endurance</p>
+              <h2 className="mt-4 font-display text-[clamp(36px,4vw,56px)] leading-[1.04] tracking-[0.02em] text-marble">
                 The world is heavy.
                 <br />
                 <span className="text-gold">Carry it well.</span>
               </h2>
-              <p className="mt-5 max-w-[420px] font-body text-[15px] leading-[1.8] text-marble opacity-75">
+              <p className="mt-5 max-w-[420px] font-body text-[17px] leading-[1.8] text-marble opacity-75">
                 Atlas was condemned to hold the sky on his shoulders forever. He did it without
                 dropping a single star. This is the place where you put down what you carry —
                 work, study, people, life — and see it all at once.
@@ -151,8 +151,8 @@ export default function LoginPage() {
                   ["∞", "days"],
                 ].map(([n, l]) => (
                   <div key={l} className="rounded-xl border-2 border-gold bg-wine px-3 py-4 text-center">
-                    <p className="font-display text-[26px] text-gold">{n}</p>
-                    <p className="mt-1 font-ui text-[9px] uppercase tracking-[0.22em] text-marble opacity-70">{l}</p>
+                    <p className="font-display text-[28px] text-gold">{n}</p>
+                    <p className="mt-1 font-ui text-[13px] uppercase tracking-[0.22em] text-marble opacity-70">{l}</p>
                   </div>
                 ))}
               </div>
@@ -161,10 +161,10 @@ export default function LoginPage() {
         </div>
 
         <footer className="flex items-center justify-between pb-6">
-          <p className="font-ui text-[9px] uppercase tracking-[0.3em] text-marble opacity-40">Athens · MMXXV</p>
+          <p className="font-ui text-[13px] uppercase tracking-[0.3em] text-marble opacity-40">Athens · MMXXV</p>
           <Link
             href="/hub"
-            className="rounded-pill border-2 border-gold px-4 py-2 font-ui text-[9px] uppercase tracking-[0.26em] text-gold transition-colors hover:bg-gold hover:text-wine"
+            className="rounded-pill border-2 border-gold px-4 py-2 font-ui text-[13px] uppercase tracking-[0.26em] text-gold transition-colors hover:bg-gold hover:text-wine"
           >
             Enter without signing →
           </Link>

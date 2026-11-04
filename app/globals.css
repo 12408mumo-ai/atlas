@@ -42,7 +42,7 @@ body {
 @layer components {
   .eyebrow {
     font-family: var(--font-ui), system-ui, sans-serif;
-    font-size: 10px;
+    font-size: 13px;
     letter-spacing: 0.42em;
     text-transform: uppercase;
     color: var(--wine);
@@ -80,7 +80,7 @@ body {
     gap: 0.5rem;
     padding: 0.8rem 1.5rem;
     font-family: var(--font-ui), system-ui, sans-serif;
-    font-size: 11px;
+    font-size: 14px;
     font-weight: 500;
     letter-spacing: 0.22em;
     text-transform: uppercase;
@@ -102,7 +102,7 @@ body {
   .btn-ghost { background: transparent; color: var(--wine); }
   .btn-ghost:hover { background: var(--wine); color: var(--marble); }
 
-  .btn-sm { padding: 0.5rem 1rem; font-size: 9.5px; letter-spacing: 0.18em; }
+  .btn-sm { padding: 0.5rem 1rem; font-size: 13.5px; letter-spacing: 0.18em; }
 
   /* ---- inputs: flat marble, wine rule ---- */
   .field {
@@ -112,7 +112,7 @@ body {
     border-radius: 10px;
     padding: 0.7rem 0.95rem;
     font-family: var(--font-ui), system-ui, sans-serif;
-    font-size: 13px;
+    font-size: 16px;
     letter-spacing: 0.02em;
     color: var(--wine);
     outline: none;

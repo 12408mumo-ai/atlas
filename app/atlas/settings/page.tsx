@@ -91,7 +91,7 @@ export default function AtlasSettingsPage() {
   if (!loaded) {
     return (
       <PageShell greek="Θυσίαστήριον" title="Atlas Assistant Settings">
-        <p className="font-body text-[14px] italic text-wine opacity-60">Raising the altar…</p>
+        <p className="font-body text-[16px] italic text-wine opacity-60">Raising the altar…</p>
       </PageShell>
     );
   }
@@ -113,7 +113,7 @@ export default function AtlasSettingsPage() {
           <div className="space-y-4">
             {/* provider */}
             <div>
-              <label className="mb-1.5 block font-ui text-[9.5px] uppercase tracking-[0.22em] text-wine opacity-70">
+              <label className="mb-1.5 block font-ui text-[13.5px] uppercase tracking-[0.22em] text-wine opacity-70">
                 Provider
               </label>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -121,7 +121,7 @@ export default function AtlasSettingsPage() {
                   <button
                     key={p}
                     onClick={() => setProvider(p)}
-                    className={`rounded-xl border-2 px-3 py-2.5 font-ui text-[9.5px] uppercase tracking-[0.14em] transition-colors ${
+                    className={`rounded-xl border-2 px-3 py-2.5 font-ui text-[13.5px] uppercase tracking-[0.14em] transition-colors ${
                       form.provider === p ? "border-wine bg-wine text-marble" : "border-wine bg-marble text-wine hover:bg-gold/40"
                     }`}
                   >
@@ -129,12 +129,12 @@ export default function AtlasSettingsPage() {
                   </button>
                 ))}
               </div>
-              <p className="mt-1.5 font-body text-[12px] italic text-wine opacity-60">{provider.keyHint}</p>
+              <p className="mt-1.5 font-body text-[15px] italic text-wine opacity-60">{provider.keyHint}</p>
             </div>
 
             {/* api key */}
             <div>
-              <label className="mb-1.5 block font-ui text-[9.5px] uppercase tracking-[0.22em] text-wine opacity-70">
+              <label className="mb-1.5 block font-ui text-[13.5px] uppercase tracking-[0.22em] text-wine opacity-70">
                 API key
               </label>
               <div className="flex gap-2">
@@ -157,14 +157,14 @@ export default function AtlasSettingsPage() {
                 )}
               </div>
               {form.apiKey && !showKey && (
-                <p className="mt-1.5 font-ui text-[10px] tracking-[0.08em] text-wine opacity-50">Held key: {maskedKey}</p>
+                <p className="mt-1.5 font-ui text-[14px] tracking-[0.08em] text-wine opacity-50">Held key: {maskedKey}</p>
               )}
             </div>
 
             {/* base url for custom */}
             {form.provider === "custom" && (
               <div>
-                <label className="mb-1.5 block font-ui text-[9.5px] uppercase tracking-[0.22em] text-wine opacity-70">
+                <label className="mb-1.5 block font-ui text-[13.5px] uppercase tracking-[0.22em] text-wine opacity-70">
                   Base URL · OpenAI-compatible
                 </label>
                 <input
@@ -179,7 +179,7 @@ export default function AtlasSettingsPage() {
 
             {/* model */}
             <div>
-              <label className="mb-1.5 block font-ui text-[9.5px] uppercase tracking-[0.22em] text-wine opacity-70">
+              <label className="mb-1.5 block font-ui text-[13.5px] uppercase tracking-[0.22em] text-wine opacity-70">
                 Model — the mind to test
               </label>
               {!customModel ? (
@@ -189,7 +189,7 @@ export default function AtlasSettingsPage() {
                       <button
                         key={m.id}
                         onClick={() => patch({ model: m.id })}
-                        className={`rounded-pill border-2 px-3.5 py-2 font-ui text-[9.5px] uppercase tracking-[0.12em] transition-colors ${
+                        className={`rounded-pill border-2 px-3.5 py-2 font-ui text-[13.5px] uppercase tracking-[0.12em] transition-colors ${
                           form.model === m.id
                             ? "border-wine bg-wine text-marble"
                             : "border-wine bg-marble text-wine hover:bg-gold/40"
@@ -200,7 +200,7 @@ export default function AtlasSettingsPage() {
                     ))}
                     <button
                       onClick={() => setCustomModel(true)}
-                      className="rounded-pill border-2 border-dashed border-wine px-3.5 py-2 font-ui text-[9.5px] uppercase tracking-[0.12em] text-wine opacity-70 transition-opacity hover:opacity-100"
+                      className="rounded-pill border-2 border-dashed border-wine px-3.5 py-2 font-ui text-[13.5px] uppercase tracking-[0.12em] text-wine opacity-70 transition-opacity hover:opacity-100"
                     >
                       Other…
                     </button>
@@ -222,7 +222,7 @@ export default function AtlasSettingsPage() {
                   )}
                 </div>
               )}
-              <p className="mt-1.5 font-ui text-[10px] tracking-[0.06em] text-wine opacity-50">
+              <p className="mt-1.5 font-ui text-[14px] tracking-[0.06em] text-wine opacity-50">
                 Armed with: <span className="text-gold">{form.model || "—"}</span>
               </p>
             </div>
@@ -240,7 +240,7 @@ export default function AtlasSettingsPage() {
                 {test.phase === "running" ? "Probing…" : "Test the key"}
               </button>
               {savedAt && (
-                <p className="font-ui text-[9px] uppercase tracking-[0.18em] text-wine opacity-60">laid at {savedAt}</p>
+                <p className="font-ui text-[13px] uppercase tracking-[0.18em] text-wine opacity-60">laid at {savedAt}</p>
               )}
             </div>
 
@@ -255,10 +255,10 @@ export default function AtlasSettingsPage() {
                       : "border-gold bg-marbleDim text-wine"
                 }`}
               >
-                <p className="font-ui text-[9.5px] uppercase tracking-[0.22em]">
+                <p className="font-ui text-[13.5px] uppercase tracking-[0.22em]">
                   {test.phase === "ok" ? "✦ The model answers" : test.phase === "fail" ? "✕ The key was refused" : "…"}
                 </p>
-                <p className="mt-1 whitespace-pre-wrap font-body text-[13px] leading-snug opacity-90">{test.detail}</p>
+                <p className="mt-1 whitespace-pre-wrap font-body text-[16px] leading-snug opacity-90">{test.detail}</p>
                 {test.phase === "ok" && (
                   <Link href="/atlas" className="btn-gold btn-sm mt-3">
                     Go speak with Atlas →
@@ -274,7 +274,7 @@ export default function AtlasSettingsPage() {
           <Panel title="The voice of the Titan" hint="Speech is poured from your browser's own voices" tone="wine">
             <div className="space-y-4">
               <label className="flex cursor-pointer items-center justify-between gap-3">
-                <span className="font-body text-[14px] text-marble">Atlas speaks his replies aloud</span>
+                <span className="font-body text-[16px] text-marble">Atlas speaks his replies aloud</span>
                 <button
                   role="switch"
                   aria-checked={form.speak}
@@ -289,7 +289,7 @@ export default function AtlasSettingsPage() {
               </label>
 
               <div>
-                <label className="mb-1.5 block font-ui text-[9.5px] uppercase tracking-[0.22em] text-gold">
+                <label className="mb-1.5 block font-ui text-[13.5px] uppercase tracking-[0.22em] text-gold">
                   Choose his voice
                 </label>
                 <select
@@ -309,7 +309,7 @@ export default function AtlasSettingsPage() {
                     </option>
                   ))}
                 </select>
-                <p className="mt-1.5 font-body text-[12px] italic text-marble opacity-60">
+                <p className="mt-1.5 font-body text-[15px] italic text-marble opacity-60">
                   Choosing a voice plays a short preview.
                 </p>
               </div>
@@ -321,7 +321,7 @@ export default function AtlasSettingsPage() {
           </Panel>
 
           <Panel title="On safety" hint="Where the key lives">
-            <ul className="space-y-2.5 font-body text-[13px] leading-snug text-wine opacity-80">
+            <ul className="space-y-2.5 font-body text-[16px] leading-snug text-wine opacity-80">
               <li>· The key is kept in this browser's <em>local storage</em> only — no server of ours ever sees it.</li>
               <li>· Calls go straight from your browser to the provider you chose.</li>
               <li>· “Lift” removes the key at once; clearing browser data does too.</li>

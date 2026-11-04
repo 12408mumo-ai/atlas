@@ -39,17 +39,17 @@ export function TopBar() {
                 <ellipse cx="12" cy="12" rx="8" ry="3.4" stroke="#f4efe6" strokeWidth="1.4" />
               </svg>
             </span>
-            <span className="font-display text-[18px] tracking-[0.4em] text-wine">ATLAS</span>
+            <span className="font-display text-[20px] tracking-[0.4em] text-wine">ATLAS</span>
           </Link>
 
-          <nav className="hidden items-center gap-1 md:flex">
+          <nav className="hidden items-center gap-1 lg:flex">
             {links.map((l) => {
               const active = pathname === l.href || pathname?.startsWith(l.href + "/");
               return (
                 <Link
                   key={l.href}
                   href={l.href}
-                  className={`rounded-pill px-3.5 py-2 font-ui text-[10px] uppercase tracking-[0.22em] transition-colors ${
+                  className={`rounded-pill px-3.5 py-2 font-ui text-[14px] uppercase tracking-[0.22em] transition-colors ${
                     active ? "bg-wine text-marble" : "text-wine hover:bg-gold/40"
                   }`}
                 >
@@ -62,22 +62,22 @@ export function TopBar() {
           <div className="relative flex items-center gap-2">
             <button
               onClick={() => setMenu((m) => !m)}
-              className="grid h-9 w-9 place-items-center rounded-full border-2 border-wine bg-marble font-ui text-[11px] uppercase tracking-widest text-wine transition-colors hover:bg-wine hover:text-marble"
+              className="grid h-9 w-9 place-items-center rounded-full border-2 border-wine bg-marble font-ui text-[14px] uppercase tracking-widest text-wine transition-colors hover:bg-wine hover:text-marble"
               aria-label="Account menu"
             >
               {name.slice(0, 1).toUpperCase()}
             </button>
             {menu && (
               <div className="absolute right-0 top-12 w-60 rounded-2xl border-2 border-wine bg-marble p-2 anim-fade">
-                <p className="px-3 py-2 font-ui text-[9px] uppercase tracking-[0.24em] text-wine opacity-60">The bearer</p>
-                <p className="truncate px-3 pb-2 font-body text-sm text-wine">{name}</p>
+                <p className="px-3 py-2 font-ui text-[13px] uppercase tracking-[0.24em] text-wine opacity-60">The bearer</p>
+                <p className="truncate px-3 pb-2 font-body text-base text-wine">{name}</p>
                 <div className="my-2 h-[2px] bg-gold" />
                 <button
                   onClick={() => {
                     clearSession();
                     router.push("/login");
                   }}
-                  className="w-full rounded-pill px-3 py-2 text-left font-ui text-[9.5px] uppercase tracking-[0.2em] text-wine transition-colors hover:bg-wine hover:text-marble"
+                  className="w-full rounded-pill px-3 py-2 text-left font-ui text-[13.5px] uppercase tracking-[0.2em] text-wine transition-colors hover:bg-wine hover:text-marble"
                 >
                   Set the world down · Sign out
                 </button>
@@ -115,11 +115,11 @@ export function PageShell({
         <div className="flex items-start justify-between gap-4 pt-9 pb-7 anim-fade-up">
           <div>
             <p className="eyebrow">{greek}</p>
-            <h1 className="mt-2 font-display text-[clamp(30px,5vw,50px)] leading-[1.05] tracking-[0.06em] text-wine">
+            <h1 className="mt-2 font-display text-[clamp(32px,5vw,52px)] leading-[1.05] tracking-[0.06em] text-wine">
               {title}
             </h1>
             {subtitle && (
-              <p className="mt-3 max-w-xl font-body text-[15px] leading-relaxed text-wine opacity-70">{subtitle}</p>
+              <p className="mt-3 max-w-xl font-body text-[17px] leading-relaxed text-wine opacity-70">{subtitle}</p>
             )}
           </div>
           {action && <div className="shrink-0 pt-2">{action}</div>}

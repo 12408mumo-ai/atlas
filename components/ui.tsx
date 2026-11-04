@@ -35,9 +35,9 @@ export function Panel({
         <div className="flex items-start gap-3">
           {icon && <span className={`mt-0.5 h-4 w-4 shrink-0 ${wine ? "text-gold" : "text-wine"}`}>{icon}</span>}
           <div>
-            <h2 className={`font-ui text-[10px] uppercase tracking-[0.28em] ${wine ? "text-gold" : "text-wine"}`}>{title}</h2>
+            <h2 className={`font-ui text-[14px] uppercase tracking-[0.28em] ${wine ? "text-gold" : "text-wine"}`}>{title}</h2>
             {hint && (
-              <p className={`mt-1.5 font-body text-[13px] italic leading-snug ${wine ? "text-marble opacity-70" : "text-wine opacity-60"}`}>
+              <p className={`mt-1.5 font-body text-[16px] italic leading-snug ${wine ? "text-marble opacity-70" : "text-wine opacity-60"}`}>
                 {hint}
               </p>
             )}
@@ -65,9 +65,9 @@ export function Stat({
   const ink = tone === "wine" ? "text-marble" : "text-wine";
   return (
     <div className={`rounded-xl border-2 px-4 py-4 ${bg}`}>
-      <p className={`font-ui text-[9px] uppercase tracking-[0.24em] ${ink} opacity-65`}>{label}</p>
-      <p className={`mt-2 font-display text-[26px] leading-none tracking-[0.02em] ${ink}`}>{value}</p>
-      {sub && <p className={`mt-1.5 font-body text-[11.5px] italic ${ink} opacity-55`}>{sub}</p>}
+      <p className={`font-ui text-[13px] uppercase tracking-[0.24em] ${ink} opacity-65`}>{label}</p>
+      <p className={`mt-2 font-display text-[28px] leading-none tracking-[0.02em] ${ink}`}>{value}</p>
+      {sub && <p className={`mt-1.5 font-body text-[14.5px] italic ${ink} opacity-55`}>{sub}</p>}
     </div>
   );
 }
@@ -131,10 +131,10 @@ export function Ring({
           />
         </svg>
         <div className="absolute inset-0 grid place-items-center">
-          <span className="font-display text-[16px] text-wine">{label}</span>
+          <span className="font-display text-[18px] text-wine">{label}</span>
         </div>
       </div>
-      {sub && <p className="font-ui text-[9px] uppercase tracking-[0.2em] text-wine opacity-60">{sub}</p>}
+      {sub && <p className="font-ui text-[13px] uppercase tracking-[0.2em] text-wine opacity-60">{sub}</p>}
     </div>
   );
 }
@@ -154,7 +154,7 @@ export function Badge({
   };
   return (
     <span
-      className={`inline-flex items-center rounded-pill border-2 px-2.5 py-[2px] font-ui text-[8.5px] uppercase tracking-[0.18em] ${tones[tone]}`}
+      className={`inline-flex items-center rounded-pill border-2 px-2.5 py-[2px] font-ui text-[12.5px] uppercase tracking-[0.18em] ${tones[tone]}`}
     >
       {children}
     </span>
@@ -174,7 +174,7 @@ export function Tabs({
     <div className="flex flex-wrap items-center gap-1.5 rounded-pill border-2 border-wine bg-marble p-1.5">
       {tabs.map((t) => {
         const active = t.key === value;
-        const cls = `block rounded-pill px-4 py-2 font-ui text-[9.5px] uppercase tracking-[0.2em] transition-colors ${
+        const cls = `block rounded-pill px-4 py-2 font-ui text-[13.5px] uppercase tracking-[0.2em] transition-colors ${
           active ? "bg-wine text-marble" : "text-wine hover:bg-gold"
         }`;
         return t.href ? (
@@ -192,7 +192,7 @@ export function Tabs({
 }
 
 export function Empty({ children }: { children: React.ReactNode }) {
-  return <p className="py-6 text-center font-body text-[13px] italic text-wine opacity-50">{children}</p>;
+  return <p className="py-6 text-center font-body text-[16px] italic text-wine opacity-50">{children}</p>;
 }
 
 export function TwinLink({
@@ -220,14 +220,14 @@ export function TwinLink({
           </span>
         )}
         <div>
-          <p className="font-ui text-[9px] uppercase tracking-[0.3em] text-gold group-hover:text-wine">{greek}</p>
-          <p className="mt-1 font-display text-[18px] tracking-[0.06em] text-marble group-hover:text-wine">{name}</p>
-          <p className="mt-1 font-body text-[12.5px] italic text-marble opacity-70 group-hover:text-wine group-hover:opacity-80">
+          <p className="font-ui text-[13px] uppercase tracking-[0.3em] text-gold group-hover:text-wine">{greek}</p>
+          <p className="mt-1 font-display text-[20px] tracking-[0.06em] text-marble group-hover:text-wine">{name}</p>
+          <p className="mt-1 font-body text-[15.5px] italic text-marble opacity-70 group-hover:text-wine group-hover:opacity-80">
             {blurb}
           </p>
         </div>
       </div>
-      <span className="shrink-0 font-ui text-[10px] uppercase tracking-[0.2em] text-gold group-hover:text-wine">Open →</span>
+      <span className="shrink-0 font-ui text-[14px] uppercase tracking-[0.2em] text-gold group-hover:text-wine">Open →</span>
     </Link>
   );
 }

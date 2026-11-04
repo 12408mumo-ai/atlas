@@ -16,7 +16,7 @@ export default function FlowWavePage() {
       />
       <a
         href="/hub"
-        className="fixed left-4 top-4 z-10 rounded-sm border border-[#34e89a]/30 bg-black/40 px-3 py-1.5 font-ui text-[9px] uppercase tracking-[0.24em] text-[#aef0c0]/70 backdrop-blur-sm transition hover:border-[#34e89a]/60 hover:text-[#aef0c0]"
+        className="fixed left-4 top-4 z-10 rounded-sm border border-[#34e89a]/30 bg-black/40 px-3 py-1.5 font-ui text-[13px] uppercase tracking-[0.24em] text-[#aef0c0]/70 backdrop-blur-sm transition hover:border-[#34e89a]/60 hover:text-[#aef0c0]"
       >
         ← Atlas
       </a>

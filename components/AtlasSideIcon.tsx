@@ -41,7 +41,7 @@ export function AtlasSideIcon() {
             hover ? "mr-2 max-w-[140px] opacity-100" : "max-w-0 opacity-0"
           }`}
         >
-          <span className="rounded-pill border-2 border-wine bg-marble px-3 py-2 font-ui text-[9px] uppercase tracking-[0.22em] text-wine shadow-sm">
+          <span className="rounded-pill border-2 border-wine bg-marble px-3 py-2 font-ui text-[13px] uppercase tracking-[0.22em] text-wine shadow-sm">
             Ask Atlas
           </span>
         </span>
