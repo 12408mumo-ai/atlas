@@ -19,6 +19,7 @@ export function TopBar() {
 
   const links = [
     { href: "/hub", label: "Hub" },
+    { href: "/atlas", label: "Atlas AI" },
     { href: "/work", label: "Work" },
     { href: "/study", label: "Study" },
     { href: "/people", label: "People" },
@@ -94,11 +95,13 @@ export function PageShell({
   title,
   greek,
   subtitle,
+  action,
 }: {
   children: React.ReactNode;
   title: string;
   greek: string;
   subtitle?: string;
+  action?: React.ReactNode;
 }) {
   return (
     <div className="relative min-h-screen bg-marble">
@@ -106,14 +109,17 @@ export function PageShell({
         <TopBar />
       </div>
       <main className="mx-auto max-w-[1180px] px-5 pb-24 sm:px-8">
-        <div className="pt-9 pb-7 anim-fade-up">
-          <p className="eyebrow">{greek}</p>
-          <h1 className="mt-2 font-display text-[clamp(30px,5vw,50px)] leading-[1.05] tracking-[0.06em] text-wine">
-            {title}
-          </h1>
-          {subtitle && (
-            <p className="mt-3 max-w-xl font-body text-[15px] leading-relaxed text-wine opacity-70">{subtitle}</p>
-          )}
+        <div className="flex items-start justify-between gap-4 pt-9 pb-7 anim-fade-up">
+          <div>
+            <p className="eyebrow">{greek}</p>
+            <h1 className="mt-2 font-display text-[clamp(30px,5vw,50px)] leading-[1.05] tracking-[0.06em] text-wine">
+              {title}
+            </h1>
+            {subtitle && (
+              <p className="mt-3 max-w-xl font-body text-[15px] leading-relaxed text-wine opacity-70">{subtitle}</p>
+            )}
+          </div>
+          {action && <div className="shrink-0 pt-2">{action}</div>}
         </div>
         {children}
       </main>
