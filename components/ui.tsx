@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useId } from "react";
 import { GreekKeyCorner } from "./Ornaments";
+
+/* Flat three-colour UI kit: marble surface, wine structure, gold accent.
+   No gradients anywhere — every fill is a single solid colour. */
 
 export function Panel({
   title,
@@ -11,6 +13,7 @@ export function Panel({
   children,
   className = "",
   icon,
+  tone = "marble",
 }: {
   title: string;
   hint?: string;
@@ -18,16 +21,26 @@ export function Panel({
   children: React.ReactNode;
   className?: string;
   icon?: React.ReactNode;
+  tone?: "marble" | "wine";
 }) {
+  const wine = tone === "wine";
   return (
-    <section className={`relative glass rounded-sm p-5 sm:p-6 shadow-relic ${className}`}>
-      <GreekKeyCorner className="pointer-events-none absolute right-2 top-2 h-6 w-6 text-gold/25" />
-      <header className="mb-5 flex items-start justify-between gap-3">
+    <section
+      className={`relative rounded-2xl border-2 p-5 sm:p-6 ${
+        wine ? "border-gold bg-wine" : "border-wine bg-marble"
+      } ${className}`}
+    >
+      <GreekKeyCorner className={`pointer-events-none absolute right-2.5 top-2.5 h-6 w-6 ${wine ? "text-gold" : "text-wine"}`} />
+      <header className="mb-4 flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          {icon && <span className="mt-0.5 h-4 w-4 shrink-0 text-gold/80">{icon}</span>}
+          {icon && <span className={`mt-0.5 h-4 w-4 shrink-0 ${wine ? "text-gold" : "text-wine"}`}>{icon}</span>}
           <div>
-            <h2 className="font-ui text-[10px] uppercase tracking-[.3em] text-gold/85">{title}</h2>
-            {hint && <p className="mt-1.5 font-body text-[13px] italic leading-snug text-marble/40">{hint}</p>}
+            <h2 className={`font-ui text-[10px] uppercase tracking-[0.28em] ${wine ? "text-gold" : "text-wine"}`}>{title}</h2>
+            {hint && (
+              <p className={`mt-1.5 font-body text-[13px] italic leading-snug ${wine ? "text-marble opacity-70" : "text-wine opacity-60"}`}>
+                {hint}
+              </p>
+            )}
           </div>
         </div>
         {action}
@@ -41,30 +54,39 @@ export function Stat({
   label,
   value,
   sub,
-  accent = "#e2b563",
+  tone = "marble",
 }: {
   label: string;
   value: string;
   sub?: string;
-  accent?: string;
+  tone?: "marble" | "wine" | "gold";
 }) {
+  const bg = tone === "wine" ? "bg-wine border-gold" : tone === "gold" ? "bg-gold border-wine" : "bg-marble border-wine";
+  const ink = tone === "wine" ? "text-marble" : "text-wine";
   return (
-    <div className="relative overflow-hidden border border-white/[.06] bg-white/[.015] px-4 py-4">
-      <span className="absolute inset-x-0 top-0 h-px" style={{ background: `linear-gradient(90deg,transparent,${accent}88,transparent)` }} />
-      <p className="font-ui text-[9px] uppercase tracking-[.26em] text-marble/40">{label}</p>
-      <p className="mt-2 font-display text-[26px] leading-none tracking-[.02em] text-marble/95">{value}</p>
-      {sub && <p className="mt-1.5 font-body text-[11.5px] italic text-marble/35">{sub}</p>}
+    <div className={`rounded-xl border-2 px-4 py-4 ${bg}`}>
+      <p className={`font-ui text-[9px] uppercase tracking-[0.24em] ${ink} opacity-65`}>{label}</p>
+      <p className={`mt-2 font-display text-[26px] leading-none tracking-[0.02em] ${ink}`}>{value}</p>
+      {sub && <p className={`mt-1.5 font-body text-[11.5px] italic ${ink} opacity-55`}>{sub}</p>}
     </div>
   );
 }
 
-export function Bar({ value, max = 100, accent = "#e2b563" }: { value: number; max?: number; accent?: string }) {
+export function Bar({
+  value,
+  max = 100,
+  color = "wine",
+}: {
+  value: number;
+  max?: number;
+  color?: "wine" | "gold";
+}) {
   const pct = Math.max(0, Math.min(100, (value / max) * 100));
   return (
-    <div className="h-[5px] w-full overflow-hidden rounded-full bg-white/[.07]">
+    <div className="h-[7px] w-full overflow-hidden rounded-pill border border-wine/30 bg-marbleDim">
       <div
-        className="h-full rounded-full transition-all duration-700"
-        style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${accent}77, ${accent})`, boxShadow: `0 0 12px ${accent}66` }}
+        className={`h-full rounded-pill transition-all duration-700 ${color === "gold" ? "bg-gold" : "bg-wine"}`}
+        style={{ width: `${pct}%` }}
       />
     </div>
   );
@@ -73,9 +95,9 @@ export function Bar({ value, max = 100, accent = "#e2b563" }: { value: number; m
 export function Ring({
   value,
   max,
-  size = 96,
-  stroke = 5,
-  accent = "#e2b563",
+  size = 92,
+  stroke = 7,
+  color = "wine",
   label,
   sub,
 }: {
@@ -83,11 +105,10 @@ export function Ring({
   max: number;
   size?: number;
   stroke?: number;
-  accent?: string;
+  color?: "wine" | "gold";
   label: string;
   sub?: string;
 }) {
-  const id = useId().replace(/:/g, "");
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const pct = Math.max(0, Math.min(1, value / max));
@@ -95,45 +116,46 @@ export function Ring({
     <div className="flex flex-col items-center gap-2">
       <div className="relative" style={{ width: size, height: size }}>
         <svg width={size} height={size} className="-rotate-90">
-          <defs>
-            <linearGradient id={`g${id}`} x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stopColor={accent} stopOpacity=".55" />
-              <stop offset="1" stopColor={accent} />
-            </linearGradient>
-          </defs>
-          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,.07)" strokeWidth={stroke} />
+          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#ded6c7" strokeWidth={stroke} />
           <circle
             cx={size / 2}
             cy={size / 2}
             r={r}
             fill="none"
-            stroke={`url(#g${id})`}
+            stroke={color === "gold" ? "#c6a15b" : "#5a1220"}
             strokeWidth={stroke}
             strokeLinecap="round"
             strokeDasharray={c}
             strokeDashoffset={c * (1 - pct)}
-            style={{ transition: "stroke-dashoffset 900ms cubic-bezier(.2,.8,.2,1)" }}
+            style={{ transition: "stroke-dashoffset 800ms ease" }}
           />
         </svg>
         <div className="absolute inset-0 grid place-items-center">
-          <span className="font-display text-[17px] text-marble/95">{label}</span>
+          <span className="font-display text-[16px] text-wine">{label}</span>
         </div>
       </div>
-      {sub && <p className="font-ui text-[9px] uppercase tracking-[.22em] text-marble/40">{sub}</p>}
+      {sub && <p className="font-ui text-[9px] uppercase tracking-[0.2em] text-wine opacity-60">{sub}</p>}
     </div>
   );
 }
 
-export function Badge({ children, tone = "gold" }: { children: React.ReactNode; tone?: "gold" | "green" | "red" | "blue" | "dim" }) {
+export function Badge({
+  children,
+  tone = "gold",
+}: {
+  children: React.ReactNode;
+  tone?: "gold" | "wine" | "marble" | "dim";
+}) {
   const tones: Record<string, string> = {
-    gold: "border-gold/35 text-goldBright bg-gold/[.08]",
-    green: "border-laurel/40 text-laurel bg-laurel/10",
-    red: "border-[#d98f7a]/40 text-[#e5a794] bg-[#d98f7a]/10",
-    blue: "border-aegean/50 text-[#9dc4d8] bg-aegean/10",
-    dim: "border-white/10 text-marble/45 bg-white/[.03]",
+    gold: "bg-gold border-wine text-wine",
+    wine: "bg-wine border-wine text-marble",
+    marble: "bg-marble border-wine text-wine",
+    dim: "bg-marble border-gold text-wine",
   };
   return (
-    <span className={`inline-flex items-center border px-2 py-[3px] font-ui text-[8.5px] uppercase tracking-[.2em] ${tones[tone]}`}>
+    <span
+      className={`inline-flex items-center rounded-pill border-2 px-2.5 py-[2px] font-ui text-[8.5px] uppercase tracking-[0.18em] ${tones[tone]}`}
+    >
       {children}
     </span>
   );
@@ -149,23 +171,20 @@ export function Tabs({
   onChange?: (k: string) => void;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-1 border-b border-white/[.07] pb-0">
+    <div className="flex flex-wrap items-center gap-1.5 rounded-pill border-2 border-wine bg-marble p-1.5">
       {tabs.map((t) => {
         const active = t.key === value;
-        const inner = (
-          <span
-            className={`relative block px-4 py-2.5 font-ui text-[10px] uppercase tracking-[.24em] transition ${
-              active ? "text-goldBright" : "text-marble/45 hover:text-marble/80"
-            }`}
-          >
-            {t.label}
-            {active && <span className="absolute inset-x-3 -bottom-[1px] h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent" />}
-          </span>
-        );
+        const cls = `block rounded-pill px-4 py-2 font-ui text-[9.5px] uppercase tracking-[0.2em] transition-colors ${
+          active ? "bg-wine text-marble" : "text-wine hover:bg-gold"
+        }`;
         return t.href ? (
-          <Link key={t.key} href={t.href}>{inner}</Link>
+          <Link key={t.key} href={t.href} className={cls}>
+            {t.label}
+          </Link>
         ) : (
-          <button key={t.key} onClick={() => onChange?.(t.key)}>{inner}</button>
+          <button key={t.key} onClick={() => onChange?.(t.key)} className={cls}>
+            {t.label}
+          </button>
         );
       })}
     </div>
@@ -173,25 +192,42 @@ export function Tabs({
 }
 
 export function Empty({ children }: { children: React.ReactNode }) {
-  return <p className="py-6 text-center font-body text-[13px] italic text-marble/30">{children}</p>;
+  return <p className="py-6 text-center font-body text-[13px] italic text-wine opacity-50">{children}</p>;
 }
 
-export function TwinLink({ href, greek, name, blurb }: { href: string; greek: string; name: string; blurb: string }) {
+export function TwinLink({
+  href,
+  greek,
+  name,
+  blurb,
+  image,
+}: {
+  href: string;
+  greek: string;
+  name: string;
+  blurb: string;
+  image?: string;
+}) {
   return (
     <Link
       href={href}
-      className="group flex items-center justify-between gap-4 border border-gold/20 bg-gradient-to-r from-gold/[.07] to-transparent px-5 py-4 transition-all hover:border-gold/50 hover:from-gold/[.12]"
+      className="group flex items-center justify-between gap-4 rounded-2xl border-2 border-gold bg-wine px-5 py-4 transition-colors hover:bg-gold"
     >
-      <div>
-        <p className="eyebrow !tracking-[.34em]">{greek}</p>
-        <p className="mt-1.5 font-display text-[19px] tracking-[.08em] text-marble/90 group-hover:text-goldBright transition">
-          {name}
-        </p>
-        <p className="mt-1 font-body text-[12.5px] italic text-marble/40">{blurb}</p>
+      <div className="flex items-center gap-4">
+        {image && (
+          <span className="h-12 w-12 shrink-0 overflow-hidden rounded-full border-2 border-gold">
+            <img src={image} alt="" className="h-full w-full object-cover" />
+          </span>
+        )}
+        <div>
+          <p className="font-ui text-[9px] uppercase tracking-[0.3em] text-gold group-hover:text-wine">{greek}</p>
+          <p className="mt-1 font-display text-[18px] tracking-[0.06em] text-marble group-hover:text-wine">{name}</p>
+          <p className="mt-1 font-body text-[12.5px] italic text-marble opacity-70 group-hover:text-wine group-hover:opacity-80">
+            {blurb}
+          </p>
+        </div>
       </div>
-      <span className="font-ui text-[10px] uppercase tracking-[.24em] text-gold/60 transition group-hover:translate-x-1 group-hover:text-goldBright">
-        Open →
-      </span>
+      <span className="shrink-0 font-ui text-[10px] uppercase tracking-[0.2em] text-gold group-hover:text-wine">Open →</span>
     </Link>
   );
 }

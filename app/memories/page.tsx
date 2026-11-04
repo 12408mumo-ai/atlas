@@ -3,10 +3,8 @@
 import { useState } from "react";
 import { PageShell } from "@/components/Chrome";
 import { Panel, Stat, Badge, Tabs, Empty } from "@/components/ui";
-import { Meander } from "@/components/Ornaments";
+import { MeanderWine } from "@/components/Ornaments";
 import { useAtlas, addJournal, prettyDate, todayISO } from "@/lib/store";
-
-const VIOLET = "#b79bd6";
 
 const KIND_GLYPH: Record<string, string> = {
   journal: "✎",
@@ -46,10 +44,10 @@ export default function MemoriesPage() {
       subtitle="The timeline that cuts across everything. Every log from Work, Study, People and Life arrives here on its own."
     >
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Entries" value={`${entries.length}`} sub="kept so far" accent={VIOLET} />
-        <Stat label="Streak" value="6 days" sub="writing, not streak-keeping" accent="#e2b563" />
-        <Stat label="Milestones" value={`${entries.filter((e) => e.kind === "milestone").length}`} sub="worth remembering" accent="#7fae86" />
-        <Stat label="On this day" value={`${onThisDay.length}`} sub="look-backs waiting" accent="#8fb3c9" />
+        <Stat label="Entries" value={`${entries.length}`} sub="kept so far" />
+        <Stat label="Streak" value="6 days" sub="writing, not streak-keeping" tone="gold" />
+        <Stat label="Milestones" value={`${entries.filter((e) => e.kind === "milestone").length}`} sub="worth remembering" tone="wine" />
+        <Stat label="On this day" value={`${onThisDay.length}`} sub="look-backs waiting" />
       </div>
 
       <div className="mt-8">
@@ -64,25 +62,22 @@ export default function MemoriesPage() {
       <div className="mt-5">
         {tab === "timeline" && (
           <div className="relative">
-            <span className="absolute bottom-0 left-[15px] top-2 w-px bg-gradient-to-b from-gold/50 via-gold/20 to-transparent" />
+            <span className="absolute bottom-0 left-[16px] top-2 w-[3px] bg-gold" />
             <ul className="space-y-3">
               {entries.map((e) => (
                 <li key={e.id} className="relative pl-11">
-                  <span
-                    className="absolute left-[9px] top-5 grid h-3.5 w-3.5 place-items-center rounded-full border"
-                    style={{ borderColor: `${VIOLET}aa`, background: "#0b1119", boxShadow: `0 0 12px ${VIOLET}66` }}
-                  >
-                    <span className="h-1 w-1 rounded-full" style={{ background: VIOLET }} />
+                  <span className="absolute left-[9px] top-5 grid h-4 w-4 place-items-center rounded-full border-2 border-wine bg-marble">
+                    <span className="h-1.5 w-1.5 rounded-full bg-wine" />
                   </span>
-                  <article className="glass-soft rounded-sm p-5 transition hover:border-gold/25">
+                  <article className="rounded-2xl border-2 border-wine bg-marble p-5 transition-colors hover:border-gold">
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                      <span className="font-ui text-[9px] uppercase tracking-[.24em] text-gold/70">{prettyDate(e.date)}</span>
+                      <span className="font-ui text-[9px] uppercase tracking-[0.22em] text-wine opacity-65">{prettyDate(e.date)}</span>
                       {e.pillar && <Badge tone="dim">{e.pillar}</Badge>}
-                      <Badge tone={e.kind === "milestone" ? "gold" : "blue"}>{e.kind}</Badge>
-                      <span className="ml-auto font-ui text-[9px] tracking-[.18em] text-marble/30">mood {e.mood}/5</span>
+                      <Badge tone={e.kind === "milestone" ? "gold" : "marble"}>{e.kind}</Badge>
+                      <span className="ml-auto font-ui text-[9px] tracking-[0.16em] text-wine opacity-55">mood {e.mood}/5</span>
                     </div>
-                    <h3 className="mt-3 font-display text-[18px] tracking-[.02em] text-marble/90">{e.title}</h3>
-                    <p className="mt-2 font-body text-[14px] leading-[1.75] text-marble/58">{e.text}</p>
+                    <h3 className="mt-3 font-display text-[18px] tracking-[0.02em] text-wine">{e.title}</h3>
+                    <p className="mt-2 font-body text-[14px] leading-[1.75] text-wine opacity-75">{e.text}</p>
                   </article>
                 </li>
               ))}
@@ -101,21 +96,21 @@ export default function MemoriesPage() {
                 onChange={(e) => setDraft(e.target.value)}
               />
               <div className="mt-4 flex flex-wrap items-center gap-2">
-                <span className="font-ui text-[9px] uppercase tracking-[.22em] text-marble/35">Mood</span>
+                <span className="font-ui text-[9px] uppercase tracking-[0.2em] text-wine opacity-60">Mood</span>
                 {[1, 2, 3, 4, 5].map((n) => (
                   <button
                     key={n}
                     onClick={() => setMood(n)}
-                    className={`h-8 w-8 rounded-full border font-display text-[12px] transition ${mood >= n ? "border-gold/60 bg-gold/15 text-goldBright" : "border-white/10 text-marble/30"}`}
+                    className={`h-8 w-8 rounded-full border-2 border-wine font-display text-[12px] transition-colors ${mood >= n ? "bg-wine text-marble" : "bg-marble text-wine"}`}
                   >
                     {n}
                   </button>
                 ))}
                 <span className="ml-auto flex gap-2">
-                  <button className="btn-ghost" title="Voice entries would record here">
+                  <button className="btn-ghost btn-sm" title="Voice entries would record here">
                     ◎ Voice
                   </button>
-                  <button className="btn-ghost" title="Attach a photo">
+                  <button className="btn-ghost btn-sm" title="Attach a photo">
                     ▣ Photo
                   </button>
                   <button onClick={save} className="btn-gold">Keep it</button>
@@ -131,15 +126,15 @@ export default function MemoriesPage() {
                   ["Life", "Habit kept: morning walk (12 days)"],
                   ["Life", "Mood recorded: 4/5"],
                 ].map(([p, t]) => (
-                  <li key={t} className="flex items-start gap-3 border-l border-white/10 pl-3">
+                  <li key={t} className="flex items-start gap-3 border-l-4 border-gold pl-3">
                     <div>
-                      <p className="font-ui text-[8.5px] uppercase tracking-[.2em] text-gold/60">{p}</p>
-                      <p className="mt-0.5 font-body text-[13px] text-marble/75">{t}</p>
+                      <p className="font-ui text-[8.5px] uppercase tracking-[0.18em] text-wine opacity-60">{p}</p>
+                      <p className="mt-0.5 font-body text-[13px] text-wine">{t}</p>
                     </div>
                   </li>
                 ))}
               </ul>
-              <p className="mt-4 font-body text-[12px] italic text-marble/32">
+              <p className="mt-4 font-body text-[12px] italic text-wine opacity-55">
                 You never file these yourself. They surface from Work, Study, People and Life.
               </p>
             </Panel>
@@ -153,10 +148,10 @@ export default function MemoriesPage() {
             ) : (
               <ul className="space-y-3">
                 {onThisDay.map((e) => (
-                  <li key={e.id} className="border-l-2 border-[#8fb3c9]/50 pl-4">
-                    <p className="font-ui text-[9px] uppercase tracking-[.24em] text-[#8fb3c9]/80">{e.date.slice(0, 4)}</p>
-                    <p className="mt-1 font-display text-[17px] text-marble/88">{e.title}</p>
-                    <p className="mt-1 font-body text-[13.5px] text-marble/55">{e.text}</p>
+                  <li key={e.id} className="border-l-4 border-wine pl-4">
+                    <p className="font-ui text-[9px] uppercase tracking-[0.22em] text-wine opacity-65">{e.date.slice(0, 4)}</p>
+                    <p className="mt-1 font-display text-[17px] text-wine">{e.title}</p>
+                    <p className="mt-1 font-body text-[13.5px] text-wine opacity-75">{e.text}</p>
                   </li>
                 ))}
               </ul>
@@ -166,15 +161,15 @@ export default function MemoriesPage() {
 
         {tab === "all" && (
           <Panel title="Everything, flat" hint="Filtered by where it came from">
-            <ul className="divide-y divide-white/[.05]">
+            <ul className="divide-y-2 divide-gold">
               {entries.map((e) => (
                 <li key={e.id} className="flex items-center gap-4 py-3">
-                  <span className="w-6 text-center font-display text-[14px] text-gold/70">{KIND_GLYPH[e.kind] ?? "·"}</span>
+                  <span className="w-6 text-center font-display text-[14px] text-wine opacity-70">{KIND_GLYPH[e.kind] ?? "·"}</span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-body text-[13.5px] text-marble/85">{e.title}</p>
-                    <p className="font-ui text-[9px] uppercase tracking-[.2em] text-marble/30">{prettyDate(e.date)} · {e.kind}</p>
+                    <p className="truncate font-body text-[13.5px] text-wine">{e.title}</p>
+                    <p className="font-ui text-[9px] uppercase tracking-[0.18em] text-wine opacity-55">{prettyDate(e.date)} · {e.kind}</p>
                   </div>
-                  <span className="font-ui text-[9px] uppercase tracking-[.18em] text-marble/35">{e.pillar ?? "Personal"}</span>
+                  <span className="font-ui text-[9px] uppercase tracking-[0.16em] text-wine opacity-60">{e.pillar ?? "Personal"}</span>
                 </li>
               ))}
             </ul>
@@ -182,7 +177,7 @@ export default function MemoriesPage() {
         )}
       </div>
 
-      <Meander className="mt-14" height={16} />
+      <MeanderWine className="mt-14" height={16} />
     </PageShell>
   );
 }

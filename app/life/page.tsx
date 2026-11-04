@@ -3,12 +3,8 @@
 import { useState } from "react";
 import { PageShell } from "@/components/Chrome";
 import { Panel, Stat, Bar, Ring, Badge, Tabs } from "@/components/ui";
-import { Meander } from "@/components/Ornaments";
+import { MeanderWine } from "@/components/Ornaments";
 import { useAtlas, toggleHabit, setMoodToday } from "@/lib/store";
-
-const GREEN = "#7fae86";
-const GOLD = "#e2b563";
-const BLUE = "#8fb3c9";
 
 export default function LifePage() {
   const s = useAtlas();
@@ -25,10 +21,10 @@ export default function LifePage() {
       subtitle="The measurable you. Sleep and water and steps, the money that passes through, the habits that hold, and the plain 1–5 of how you feel."
     >
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Sleep" value={`${s.health.sleep}h`} sub="last night" accent={BLUE} />
-        <Stat label="Workouts" value={`${s.health.workouts}`} sub="this week" accent={GREEN} />
-        <Stat label="Water" value={`${s.health.water}/8`} sub="glasses today" accent="#8fb3c9" />
-        <Stat label="Mood" value={`${moodToday}/5`} sub="right now" accent={GOLD} />
+        <Stat label="Sleep" value={`${s.health.sleep}h`} sub="last night" />
+        <Stat label="Workouts" value={`${s.health.workouts}`} sub="this week" tone="gold" />
+        <Stat label="Water" value={`${s.health.water}/8`} sub="glasses today" />
+        <Stat label="Mood" value={`${moodToday}/5`} sub="right now" tone="wine" />
       </div>
 
       <div className="mt-8">
@@ -45,24 +41,24 @@ export default function LifePage() {
           <div className="grid gap-3 md:grid-cols-3">
             <Panel title="Badges of the body" hint="This week" className="md:col-span-2">
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                <Ring value={s.health.sleep} max={9} label={`${s.health.sleep}h`} accent={BLUE} sub="sleep" />
-                <Ring value={s.health.workouts} max={6} label={`${s.health.workouts}`} accent={GREEN} sub="workouts" />
-                <Ring value={s.health.water} max={8} label={`${s.health.water}`} accent="#8fb3c9" sub="water" />
-                <Ring value={s.health.meals} max={4} label={`${s.health.meals}`} accent={GOLD} sub="meals" />
+                <Ring value={s.health.sleep} max={9} label={`${s.health.sleep}h`} sub="sleep" />
+                <Ring value={s.health.workouts} max={6} label={`${s.health.workouts}`} color="gold" sub="workouts" />
+                <Ring value={s.health.water} max={8} label={`${s.health.water}`} sub="water" />
+                <Ring value={s.health.meals} max={4} label={`${s.health.meals}`} color="gold" sub="meals" />
               </div>
               <div className="mt-6 space-y-3">
                 {[
-                  ["Sleep", s.health.sleep, 9, BLUE],
-                  ["Water", s.health.water, 8, "#8fb3c9"],
-                  ["Workouts", s.health.workouts, 6, GREEN],
-                  ["Meals", s.health.meals, 4, GOLD],
+                  ["Sleep", s.health.sleep, 9, "wine"],
+                  ["Water", s.health.water, 8, "wine"],
+                  ["Workouts", s.health.workouts, 6, "gold"],
+                  ["Meals", s.health.meals, 4, "gold"],
                 ].map(([l, v, m, c]) => (
                   <div key={l as string}>
-                    <div className="mb-1 flex justify-between font-ui text-[9px] uppercase tracking-[.2em] text-marble/40">
+                    <div className="mb-1 flex justify-between font-ui text-[9px] uppercase tracking-[0.18em] text-wine opacity-65">
                       <span>{l as string}</span>
                       <span>{v as number}/{m as number}</span>
                     </div>
-                    <Bar value={v as number} max={m as number} accent={c as string} />
+                    <Bar value={v as number} max={m as number} color={(c as "wine" | "gold")} />
                   </div>
                 ))}
               </div>
@@ -70,15 +66,15 @@ export default function LifePage() {
             <Panel title="Log the body" hint="Thirty seconds, once a day">
               <div className="space-y-3">
                 <label className="block">
-                  <span className="font-ui text-[9px] uppercase tracking-[.22em] text-marble/35">Hours slept</span>
+                  <span className="font-ui text-[9px] uppercase tracking-[0.2em] text-wine opacity-60">Hours slept</span>
                   <input className="field mt-1.5" type="number" step="0.5" defaultValue={s.health.sleep} />
                 </label>
                 <label className="block">
-                  <span className="font-ui text-[9px] uppercase tracking-[.22em] text-marble/35">Glasses of water</span>
+                  <span className="font-ui text-[9px] uppercase tracking-[0.2em] text-wine opacity-60">Glasses of water</span>
                   <input className="field mt-1.5" type="number" defaultValue={s.health.water} />
                 </label>
                 <label className="block">
-                  <span className="font-ui text-[9px] uppercase tracking-[.22em] text-marble/35">Meals eaten</span>
+                  <span className="font-ui text-[9px] uppercase tracking-[0.2em] text-wine opacity-60">Meals eaten</span>
                   <input className="field mt-1.5" type="number" defaultValue={s.health.meals} />
                 </label>
                 <button className="btn-gold w-full">Record</button>
@@ -91,31 +87,31 @@ export default function LifePage() {
           <div className="grid gap-3 md:grid-cols-3">
             <Panel title="This month" hint="Personal, not business" className="md:col-span-2">
               <div className="grid grid-cols-3 gap-3">
-                <Stat label="Spent" value={`$${s.money.spend}`} accent="#d98f7a" />
-                <Stat label="Saved" value={`$${s.money.savings.toLocaleString()}`} accent={GREEN} />
-                <Stat label="Subscriptions" value={`$${subs}/mo`} accent={GOLD} />
+                <Stat label="Spent" value={`$${s.money.spend}`} />
+                <Stat label="Saved" value={`$${s.money.savings.toLocaleString()}`} tone="wine" />
+                <Stat label="Subscriptions" value={`$${subs}/mo`} tone="gold" />
               </div>
               <div className="mt-5">
-                <div className="mb-1.5 flex justify-between font-ui text-[9px] uppercase tracking-[.2em] text-marble/40">
+                <div className="mb-1.5 flex justify-between font-ui text-[9px] uppercase tracking-[0.18em] text-wine opacity-60">
                   <span>Savings rate target</span>
                   <span>32% of income</span>
                 </div>
-                <Bar value={32} max={50} accent={GREEN} />
+                <Bar value={32} max={50} color="gold" />
               </div>
             </Panel>
             <Panel title="Subscriptions" hint="The slow leak">
               <ul className="space-y-2">
                 {s.money.subscriptions.map((x) => (
-                  <li key={x.id} className="flex items-center justify-between border border-white/[.05] px-3 py-2">
+                  <li key={x.id} className="flex items-center justify-between rounded-pill border-2 border-wine px-3 py-2">
                     <div>
-                      <p className="font-body text-[13px] text-marble/85">{x.name}</p>
-                      <p className="font-ui text-[8.5px] uppercase tracking-[.16em] text-marble/30">renews {x.renew}</p>
+                      <p className="font-body text-[13px] text-wine">{x.name}</p>
+                      <p className="font-ui text-[8.5px] uppercase tracking-[0.14em] text-wine opacity-55">renews {x.renew}</p>
                     </div>
-                    <span className="font-ui text-[11px] tracking-[.1em] text-gold/80">${x.cost}</span>
+                    <span className="font-ui text-[11px] tracking-[0.08em] text-wine">${x.cost}</span>
                   </li>
                 ))}
               </ul>
-              <p className="mt-4 font-body text-[12px] italic text-marble/35">
+              <p className="mt-4 font-body text-[12px] italic text-wine opacity-55">
                 ${subs} a month, ${subs * 12} a year. Worth it?
               </p>
             </Panel>
@@ -130,11 +126,11 @@ export default function LifePage() {
                   <li key={h.id}>
                     <button
                       onClick={() => toggleHabit(h.id)}
-                      className={`flex w-full items-center gap-4 border px-4 py-3 text-left transition ${h.doneToday ? "border-gold/35 bg-gold/[.06]" : "border-white/[.06] hover:border-gold/25"}`}
+                      className={`flex w-full items-center gap-4 rounded-pill border-2 border-wine px-4 py-3 text-left transition-colors ${h.doneToday ? "bg-gold" : "bg-marble hover:bg-wine/10"}`}
                     >
-                      <span className={`grid h-6 w-6 place-items-center rounded-full border text-[11px] ${h.doneToday ? "border-gold bg-gold text-[#1a1206]" : "border-white/25 text-transparent"}`}>✓</span>
-                      <span className={`flex-1 font-body text-[14px] ${h.doneToday ? "text-marble/60" : "text-marble/88"}`}>{h.name}</span>
-                      <span className="font-display text-[15px] text-gold/85">{h.streak}<span className="ml-1 font-ui text-[8px] tracking-[.16em] text-marble/30">DAYS</span></span>
+                      <span className={`grid h-6 w-6 place-items-center rounded-full border-2 border-wine text-[11px] ${h.doneToday ? "bg-wine text-marble" : "bg-marble text-transparent"}`}>✓</span>
+                      <span className="flex-1 font-body text-[14px] text-wine">{h.name}</span>
+                      <span className="font-display text-[15px] text-wine">{h.streak}<span className="ml-1 font-ui text-[8px] tracking-[0.14em] text-wine opacity-55">DAYS</span></span>
                     </button>
                   </li>
                 ))}
@@ -148,15 +144,12 @@ export default function LifePage() {
                     <div
                       key={i}
                       className="aspect-square rounded-[2px]"
-                      style={{
-                        background: on ? "linear-gradient(160deg,#f3d79a,#a97b36)" : "rgba(255,255,255,.05)",
-                        boxShadow: on ? "0 0 8px rgba(226,181,99,.35)" : "none",
-                      }}
+                      style={{ background: on ? "#5a1220" : "#ded6c7" }}
                     />
                   );
                 })}
               </div>
-              <p className="mt-4 font-body text-[12.5px] italic text-marble/40">
+              <p className="mt-4 font-body text-[12.5px] italic text-wine opacity-60">
                 Longest chain: {Math.max(...s.habits.map((h) => h.streak))} days. Missing a day is not breaking the habit — missing two is.
               </p>
             </Panel>
@@ -171,13 +164,13 @@ export default function LifePage() {
                   <button
                     key={n}
                     onClick={() => setMoodToday(n)}
-                    className={`flex-1 border py-4 transition ${moodToday >= n ? "border-gold/55 bg-gold/12 text-goldBright" : "border-white/10 text-marble/30 hover:border-gold/30"}`}
+                    className={`flex-1 rounded-xl border-2 py-4 font-display text-[20px] transition-colors ${moodToday >= n ? "border-wine bg-wine text-marble" : "border-wine bg-marble text-wine hover:bg-gold"}`}
                   >
-                    <span className="font-display text-[20px]">{n}</span>
+                    {n}
                   </button>
                 ))}
               </div>
-              <div className="mt-5 flex justify-between font-ui text-[8.5px] uppercase tracking-[.16em] text-marble/30">
+              <div className="mt-5 flex justify-between font-ui text-[8.5px] uppercase tracking-[0.14em] text-wine opacity-55">
                 <span>Heavy</span><span>Even</span><span>Light</span>
               </div>
             </Panel>
@@ -186,23 +179,23 @@ export default function LifePage() {
                 {s.mood.map((m) => (
                   <div key={m.day} className="flex flex-1 flex-col items-center gap-2">
                     <div className="flex h-32 w-full items-end gap-1">
-                      <div className="flex-1 rounded-t-sm" style={{ height: `${(m.score / 5) * 100}%`, background: "linear-gradient(180deg,#f3d79a,#a97b36)" }} title={`mood ${m.score}`} />
-                      <div className="flex-1 rounded-t-sm bg-[#8fb3c9]/45" style={{ height: `${((m.score + 1) / 6) * 100}%` }} title="energy" />
+                      <div className="flex-1 rounded-t-sm bg-wine" style={{ height: `${(m.score / 5) * 100}%` }} title={`mood ${m.score}`} />
+                      <div className="flex-1 rounded-t-sm bg-gold" style={{ height: `${((m.score + 1) / 6) * 100}%` }} title="energy" />
                     </div>
-                    <span className="font-ui text-[8px] uppercase tracking-[.1em] text-marble/30">{m.day.slice(0, 1)}</span>
+                    <span className="font-ui text-[8px] uppercase tracking-[0.1em] text-wine opacity-55">{m.day.slice(0, 1)}</span>
                   </div>
                 ))}
               </div>
-              <div className="mt-3 flex gap-4 font-ui text-[8.5px] uppercase tracking-[.18em] text-marble/30">
+              <div className="mt-3 flex gap-4 font-ui text-[8.5px] uppercase tracking-[0.16em] text-wine opacity-60">
                 <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-gold" /> mood</span>
-                <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-[#8fb3c9]" /> energy</span>
+                <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-gold" /> energy</span>
               </div>
             </Panel>
           </div>
         )}
       </div>
 
-      <Meander className="mt-14" height={16} />
+      <MeanderWine className="mt-14" height={16} />
     </PageShell>
   );
 }
