@@ -35,8 +35,8 @@ export function TopBar() {
           <Link href="/hub" className="group flex items-center gap-3">
             <span className="grid h-9 w-9 place-items-center rounded-full bg-wine">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="8" stroke="#c6a15b" strokeWidth="2" />
-                <ellipse cx="12" cy="12" rx="8" ry="3.4" stroke="#f4efe6" strokeWidth="1.4" />
+                <circle cx="12" cy="12" r="8" stroke="#F5E8D3" strokeWidth="2" />
+                <ellipse cx="12" cy="12" rx="8" ry="3.4" stroke="#F5E8D3" strokeWidth="1.4" />
               </svg>
             </span>
             <span className="font-display text-[20px] tracking-[0.4em] text-wine">ATLAS</span>
@@ -50,7 +50,7 @@ export function TopBar() {
                   key={l.href}
                   href={l.href}
                   className={`rounded-pill px-3.5 py-2 font-ui text-[14px] uppercase tracking-[0.22em] transition-colors ${
-                    active ? "bg-wine text-marble" : "text-wine hover:bg-gold/40"
+                    active ? "bg-wine text-marble" : "text-wine hover:bg-wine/10"
                   }`}
                 >
                   {l.label}
@@ -71,7 +71,7 @@ export function TopBar() {
               <div className="absolute right-0 top-12 w-60 rounded-2xl border-2 border-wine bg-marble p-2 anim-fade">
                 <p className="px-3 py-2 font-ui text-[13px] uppercase tracking-[0.24em] text-wine opacity-60">The bearer</p>
                 <p className="truncate px-3 pb-2 font-body text-base text-wine">{name}</p>
-                <div className="my-2 h-[2px] bg-gold" />
+                <div className="my-2 h-[2px] bg-wine" />
                 <button
                   onClick={() => {
                     clearSession();

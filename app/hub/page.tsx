@@ -48,7 +48,7 @@ export default function HubPage() {
             <p className="eyebrow">Ἄτλας · the bearer</p>
             <h1 className="mt-3 font-display text-[clamp(27px,3.4vw,44px)] leading-tight tracking-[0.04em] text-wine">
               {greeting}
-              {session?.name ? <span className="text-gold">, {session.name.split(" ")[0]}</span> : null}
+              {session?.name ? <span className="text-wine">, {session.name.split(" ")[0]}</span> : null}
             </h1>
             <p className="mt-2 max-w-[560px] font-body text-[16.5px] leading-relaxed text-wine opacity-70">
               Five worlds orbit the one you carry. Touch a sphere and it opens into itself.
@@ -108,7 +108,7 @@ export default function HubPage() {
                     key={n}
                     onClick={() => setMoodToday(n)}
                     className={`grid h-11 w-11 place-items-center rounded-full border-2 font-display text-[17px] transition-colors ${
-                      moodToday >= n ? "border-wine bg-wine text-marble" : "border-wine bg-marble text-wine hover:bg-gold"
+                      moodToday >= n ? "border-wine bg-wine text-marble" : "border-wine bg-marble text-wine hover:bg-marbleDim"
                     }`}
                     aria-label={`Mood ${n} of 5`}
                   >
@@ -136,7 +136,7 @@ export default function HubPage() {
                   <li key={h.id}>
                     <button
                       onClick={() => toggleHabit(h.id)}
-                      className="flex w-full items-center gap-3 rounded-pill border-2 border-wine px-3 py-2 text-left transition-colors hover:bg-gold"
+                      className="flex w-full items-center gap-3 rounded-pill border-2 border-wine px-3 py-2 text-left transition-colors hover:bg-marbleDim"
                     >
                       <span
                         className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 border-wine text-[14px] ${
@@ -184,11 +184,11 @@ function Tile({
       href={href}
       className="group flex items-start gap-3 rounded-2xl border-2 border-wine bg-marble p-4 transition-colors hover:bg-wine"
     >
-      <span className="h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 border-gold">
+      <span className="h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 border-wine">
         <img src={image} alt="" className="h-full w-full object-cover" />
       </span>
       <span className="min-w-0">
-        <span className="block font-ui text-[12.5px] uppercase tracking-[0.24em] text-wine opacity-70 group-hover:text-gold group-hover:opacity-100">
+        <span className="block font-ui text-[12.5px] uppercase tracking-[0.24em] text-wine opacity-70 group-hover:text-wine group-hover:opacity-100">
           {eyebrow}
         </span>
         <span className="mt-1 block truncate font-display text-[19px] tracking-[0.02em] text-wine group-hover:text-marble">

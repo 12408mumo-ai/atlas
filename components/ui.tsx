@@ -61,7 +61,7 @@ export function Stat({
   sub?: string;
   tone?: "marble" | "wine" | "gold";
 }) {
-  const bg = tone === "wine" ? "bg-wine border-gold" : tone === "gold" ? "bg-gold border-wine" : "bg-marble border-wine";
+  const bg = tone === "wine" ? "bg-wine border-gold" : tone === "gold" ? "bg-marbleDim border-wine" : "bg-marble border-wine";
   const ink = tone === "wine" ? "text-marble" : "text-wine";
   return (
     <div className={`rounded-xl border-2 px-4 py-4 ${bg}`}>
@@ -85,7 +85,7 @@ export function Bar({
   return (
     <div className="h-[7px] w-full overflow-hidden rounded-pill border border-wine/30 bg-marbleDim">
       <div
-        className={`h-full rounded-pill transition-all duration-700 ${color === "gold" ? "bg-gold" : "bg-wine"}`}
+        className={`h-full rounded-pill transition-all duration-700 ${color === "gold" ? "bg-wineDeep" : "bg-wine"}`}
         style={{ width: `${pct}%` }}
       />
     </div>
@@ -116,13 +116,13 @@ export function Ring({
     <div className="flex flex-col items-center gap-2">
       <div className="relative" style={{ width: size, height: size }}>
         <svg width={size} height={size} className="-rotate-90">
-          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#ded6c7" strokeWidth={stroke} />
+          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#E9DCC4" strokeWidth={stroke} />
           <circle
             cx={size / 2}
             cy={size / 2}
             r={r}
             fill="none"
-            stroke={color === "gold" ? "#c6a15b" : "#5a1220"}
+            stroke={color === "gold" ? "#19191B" : "#28282A"}
             strokeWidth={stroke}
             strokeLinecap="round"
             strokeDasharray={c}
@@ -150,7 +150,7 @@ export function Badge({
     gold: "bg-gold border-wine text-wine",
     wine: "bg-wine border-wine text-marble",
     marble: "bg-marble border-wine text-wine",
-    dim: "bg-marble border-gold text-wine",
+    dim: "bg-marbleDim border-wine text-wine",
   };
   return (
     <span
@@ -175,7 +175,7 @@ export function Tabs({
       {tabs.map((t) => {
         const active = t.key === value;
         const cls = `block rounded-pill px-4 py-2 font-ui text-[13.5px] uppercase tracking-[0.2em] transition-colors ${
-          active ? "bg-wine text-marble" : "text-wine hover:bg-gold"
+          active ? "bg-wine text-marble" : "text-wine hover:bg-marbleDim"
         }`;
         return t.href ? (
           <Link key={t.key} href={t.href} className={cls}>

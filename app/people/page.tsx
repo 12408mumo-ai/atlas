@@ -28,7 +28,7 @@ export default function PeoplePage() {
       </div>
 
       {drifting.length > 0 && (
-        <div className="mt-6 rounded-2xl border-2 border-wine bg-gold p-4">
+        <div className="mt-6 rounded-2xl border-2 border-wine bg-marbleDim p-4">
           <p className="font-ui text-[14px] uppercase tracking-[0.3em] text-wine">The drifting</p>
           <p className="mt-2 font-body text-[16.5px] text-wine">
             {drifting.map((p) => `${p.name} — ${daysSince(p.lastSeen)} days`).join("  ·  ")}
@@ -56,7 +56,7 @@ export default function PeoplePage() {
               const late = since > p.cadenceDays;
               const open = openId === p.id;
               return (
-                <div key={p.id} className={`rounded-2xl border-2 bg-marble p-5 transition-colors ${open ? "border-gold" : "border-wine"}`}>
+                <div key={p.id} className={`rounded-2xl border-2 bg-marble p-5 transition-colors ${open ? "border-wine" : "border-wine/50"}`}>
                   <div className="flex items-start gap-4">
                     <span
                       className="grid h-12 w-12 shrink-0 place-items-center rounded-full font-display text-[18px] text-[#1a1206]"
@@ -78,7 +78,7 @@ export default function PeoplePage() {
                     </div>
                   </div>
                   {open && (
-                    <div className="mt-4 space-y-2.5 border-t-2 border-gold pt-4 anim-fade">
+                    <div className="mt-4 space-y-2.5 border-t-2 border-wine pt-4 anim-fade">
                       <Row k="Birthday" v={prettyDate(`2025-${p.birthday}`)} />
                       <Row k="Promise" v={p.promise} />
                       <Row k="Gift idea" v={p.gift} />
@@ -121,7 +121,7 @@ export default function PeoplePage() {
             <Panel title="Promises made" hint="Small debts of honour">
               <ul className="space-y-3">
                 {s.people.filter((p) => p.promise).map((p) => (
-                  <li key={p.id} className="border-l-4 border-gold pl-3">
+                  <li key={p.id} className="border-l-4 border-wine pl-3">
                     <p className="font-body text-[16.5px] text-wine">“{p.promise}”</p>
                     <p className="mt-1 font-ui text-[13px] uppercase tracking-[0.18em] text-wine opacity-55">to {p.name}</p>
                   </li>

@@ -126,7 +126,7 @@ export default function LifePage() {
                   <li key={h.id}>
                     <button
                       onClick={() => toggleHabit(h.id)}
-                      className={`flex w-full items-center gap-4 rounded-pill border-2 border-wine px-4 py-3 text-left transition-colors ${h.doneToday ? "bg-gold" : "bg-marble hover:bg-wine/10"}`}
+                      className={`flex w-full items-center gap-4 rounded-pill border-2 border-wine px-4 py-3 text-left transition-colors ${h.doneToday ? "bg-marbleDim" : "bg-marble hover:bg-wine/10"}`}
                     >
                       <span className={`grid h-6 w-6 place-items-center rounded-full border-2 border-wine text-[14px] ${h.doneToday ? "bg-wine text-marble" : "bg-marble text-transparent"}`}>✓</span>
                       <span className="flex-1 font-body text-[16px] text-wine">{h.name}</span>
@@ -144,7 +144,7 @@ export default function LifePage() {
                     <div
                       key={i}
                       className="aspect-square rounded-[2px]"
-                      style={{ background: on ? "#5a1220" : "#ded6c7" }}
+                      style={{ background: on ? "#28282A" : "#E9DCC4" }}
                     />
                   );
                 })}
@@ -164,7 +164,7 @@ export default function LifePage() {
                   <button
                     key={n}
                     onClick={() => setMoodToday(n)}
-                    className={`flex-1 rounded-xl border-2 py-4 font-display text-[22px] transition-colors ${moodToday >= n ? "border-wine bg-wine text-marble" : "border-wine bg-marble text-wine hover:bg-gold"}`}
+                    className={`flex-1 rounded-xl border-2 py-4 font-display text-[22px] transition-colors ${moodToday >= n ? "border-wine bg-wine text-marble" : "border-wine bg-marble text-wine hover:bg-marbleDim"}`}
                   >
                     {n}
                   </button>
@@ -180,15 +180,15 @@ export default function LifePage() {
                   <div key={m.day} className="flex flex-1 flex-col items-center gap-2">
                     <div className="flex h-32 w-full items-end gap-1">
                       <div className="flex-1 rounded-t-sm bg-wine" style={{ height: `${(m.score / 5) * 100}%` }} title={`mood ${m.score}`} />
-                      <div className="flex-1 rounded-t-sm bg-gold" style={{ height: `${((m.score + 1) / 6) * 100}%` }} title="energy" />
+                      <div className="flex-1 rounded-t-sm bg-wine" style={{ height: `${((m.score + 1) / 6) * 100}%` }} title="energy" />
                     </div>
                     <span className="font-ui text-[12px] uppercase tracking-[0.1em] text-wine opacity-55">{m.day.slice(0, 1)}</span>
                   </div>
                 ))}
               </div>
               <div className="mt-3 flex gap-4 font-ui text-[12.5px] uppercase tracking-[0.16em] text-wine opacity-60">
-                <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-gold" /> mood</span>
-                <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-gold" /> energy</span>
+                <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-wine" /> mood</span>
+                <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-wine" /> energy</span>
               </div>
             </Panel>
           </div>

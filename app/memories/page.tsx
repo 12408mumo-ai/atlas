@@ -62,14 +62,14 @@ export default function MemoriesPage() {
       <div className="mt-5">
         {tab === "timeline" && (
           <div className="relative">
-            <span className="absolute bottom-0 left-[16px] top-2 w-[3px] bg-gold" />
+            <span className="absolute bottom-0 left-[16px] top-2 w-[3px] bg-wine" />
             <ul className="space-y-3">
               {entries.map((e) => (
                 <li key={e.id} className="relative pl-11">
                   <span className="absolute left-[9px] top-5 grid h-4 w-4 place-items-center rounded-full border-2 border-wine bg-marble">
                     <span className="h-1.5 w-1.5 rounded-full bg-wine" />
                   </span>
-                  <article className="rounded-2xl border-2 border-wine bg-marble p-5 transition-colors hover:border-gold">
+                  <article className="rounded-2xl border-2 border-wine bg-marble p-5 transition-colors hover:bg-marbleDim">
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                       <span className="font-ui text-[13px] uppercase tracking-[0.22em] text-wine opacity-65">{prettyDate(e.date)}</span>
                       {e.pillar && <Badge tone="dim">{e.pillar}</Badge>}
@@ -126,7 +126,7 @@ export default function MemoriesPage() {
                   ["Life", "Habit kept: morning walk (12 days)"],
                   ["Life", "Mood recorded: 4/5"],
                 ].map(([p, t]) => (
-                  <li key={t} className="flex items-start gap-3 border-l-4 border-gold pl-3">
+                  <li key={t} className="flex items-start gap-3 border-l-4 border-wine pl-3">
                     <div>
                       <p className="font-ui text-[12.5px] uppercase tracking-[0.18em] text-wine opacity-60">{p}</p>
                       <p className="mt-0.5 font-body text-[16px] text-wine">{t}</p>

@@ -54,7 +54,7 @@ export default function StudyPage() {
                     <div className="space-y-2 p-2">
                       {slots.length === 0 && <p className="px-1 py-4 text-center font-body text-[14px] italic text-wine opacity-40">free</p>}
                       {slots.map((sl) => (
-                        <div key={sl.id} className="rounded-lg border-2 border-wine bg-gold px-2.5 py-2">
+                        <div key={sl.id} className="rounded-lg border-2 border-wine bg-marbleDim px-2.5 py-2">
                           <p className="font-ui text-[13px] tracking-[0.14em] text-wine">{sl.time}</p>
                           <p className="mt-0.5 font-body text-[15.5px] leading-tight text-wine">{sl.title}</p>
                           <p className="mt-1 font-body text-[14.5px] italic text-wine opacity-65">{sl.place}</p>
@@ -170,7 +170,7 @@ export default function StudyPage() {
                 );
               })}
             </ul>
-            <div className="mt-4 flex items-center gap-3 border-t-2 border-gold pt-4">
+            <div className="mt-4 flex items-center gap-3 border-t-2 border-wine pt-4">
               <input className="field flex-1" placeholder="Log a session — subject, minutes, one line" />
               <button className="btn-gold shrink-0">Log</button>
             </div>

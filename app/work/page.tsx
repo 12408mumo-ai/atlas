@@ -67,7 +67,7 @@ export default function WorkPage() {
                       <li key={t.id}>
                         <button
                           onClick={() => toggleTask(p.id, t.id)}
-                          className="flex w-full items-center gap-3 rounded-pill border-2 border-wine px-3 py-2 text-left transition-colors hover:bg-gold"
+                          className="flex w-full items-center gap-3 rounded-pill border-2 border-wine px-3 py-2 text-left transition-colors hover:bg-marbleDim"
                         >
                           <span className={`grid h-4 w-4 shrink-0 place-items-center rounded-full border-2 border-wine text-[13px] ${t.done ? "bg-wine text-marble" : "bg-marble text-transparent"}`}>
                             ✓
@@ -97,7 +97,7 @@ export default function WorkPage() {
                     const late = t.due < todayISO();
                     return (
                       <li key={t.id} className="flex items-center gap-4 py-3">
-                        <span className={`h-2.5 w-2.5 rounded-full ${late ? "bg-wine" : "bg-gold"}`} />
+                        <span className={`h-2.5 w-2.5 rounded-full ${late ? "bg-wine" : "bg-wine/35"}`} />
                         <div className="min-w-0 flex-1">
                           <p className="truncate font-body text-[16px] text-wine">{t.title}</p>
                           <p className="font-ui text-[13px] uppercase tracking-[0.18em] text-wine opacity-55">{project.name}</p>
@@ -163,7 +163,7 @@ export default function WorkPage() {
                 </li>
               ))}
             </ul>
-            <div className="mt-4 flex items-center justify-between rounded-pill border-2 border-wine bg-gold px-4 py-2.5">
+            <div className="mt-4 flex items-center justify-between rounded-pill border-2 border-wine bg-marbleDim px-4 py-2.5">
               <span className="font-ui text-[14px] uppercase tracking-[0.24em] text-wine">Net</span>
               <span className="font-display text-[21px] text-wine">${(income - expense).toLocaleString()}</span>
             </div>

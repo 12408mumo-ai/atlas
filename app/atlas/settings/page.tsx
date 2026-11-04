@@ -122,7 +122,7 @@ export default function AtlasSettingsPage() {
                     key={p}
                     onClick={() => setProvider(p)}
                     className={`rounded-xl border-2 px-3 py-2.5 font-ui text-[13.5px] uppercase tracking-[0.14em] transition-colors ${
-                      form.provider === p ? "border-wine bg-wine text-marble" : "border-wine bg-marble text-wine hover:bg-gold/40"
+                      form.provider === p ? "border-wine bg-wine text-marble" : "border-wine bg-marble text-wine hover:bg-wine/10"
                     }`}
                   >
                     {PROVIDERS[p].label.split(" — ")[0]}
@@ -192,7 +192,7 @@ export default function AtlasSettingsPage() {
                         className={`rounded-pill border-2 px-3.5 py-2 font-ui text-[13.5px] uppercase tracking-[0.12em] transition-colors ${
                           form.model === m.id
                             ? "border-wine bg-wine text-marble"
-                            : "border-wine bg-marble text-wine hover:bg-gold/40"
+                            : "border-wine bg-marble text-wine hover:bg-wine/10"
                         }`}
                       >
                         {m.label}
@@ -223,12 +223,12 @@ export default function AtlasSettingsPage() {
                 </div>
               )}
               <p className="mt-1.5 font-ui text-[14px] tracking-[0.06em] text-wine opacity-50">
-                Armed with: <span className="text-gold">{form.model || "—"}</span>
+                Armed with: <span className="text-wine">{form.model || "—"}</span>
               </p>
             </div>
 
             {/* save + test */}
-            <div className="flex flex-wrap items-center gap-2 border-t-2 border-gold pt-4">
+            <div className="flex flex-wrap items-center gap-2 border-t-2 border-wine pt-4">
               <button onClick={save} className="btn-wine">
                 Lay the key
               </button>
@@ -252,7 +252,7 @@ export default function AtlasSettingsPage() {
                     ? "border-wine bg-wine text-marble"
                     : test.phase === "fail"
                       ? "border-wine bg-marbleDim text-wine"
-                      : "border-gold bg-marbleDim text-wine"
+                      : "border-wine bg-marbleDim text-wine"
                 }`}
               >
                 <p className="font-ui text-[13.5px] uppercase tracking-[0.22em]">

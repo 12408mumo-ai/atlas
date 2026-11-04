@@ -1,7 +1,7 @@
 "use client";
 
 /* Flat, three-colour Greek ornament library.
-   Marble white · deep wine red · antique gold. No gradients. */
+   Warm cream · charcoal. No gradients. */
 
 export function Meander({ className = "", height = 18 }: { className?: string; height?: number }) {
   return (
@@ -9,7 +9,7 @@ export function Meander({ className = "", height = 18 }: { className?: string; h
       <svg viewBox="0 0 240 18" preserveAspectRatio="none" className="h-full w-full">
         <defs>
           <pattern id="meanderFlat" width="24" height="18" patternUnits="userSpaceOnUse">
-            <path d="M2 16V5h13v8H7v-4h5" fill="none" stroke="#c6a15b" strokeWidth="2" strokeLinecap="square" />
+            <path d="M2 16V5h13v8H7v-4h5" fill="none" stroke="#F5E8D3" strokeWidth="2" strokeLinecap="square" />
           </pattern>
         </defs>
         <rect width="240" height="18" fill="url(#meanderFlat)" />
@@ -24,7 +24,7 @@ export function MeanderWine({ className = "", height = 18 }: { className?: strin
       <svg viewBox="0 0 240 18" preserveAspectRatio="none" className="h-full w-full">
         <defs>
           <pattern id="meanderWine" width="24" height="18" patternUnits="userSpaceOnUse">
-            <path d="M2 16V5h13v8H7v-4h5" fill="none" stroke="#5a1220" strokeWidth="2" strokeLinecap="square" />
+            <path d="M2 16V5h13v8H7v-4h5" fill="none" stroke="#28282A" strokeWidth="2" strokeLinecap="square" />
           </pattern>
         </defs>
         <rect width="240" height="18" fill="url(#meanderWine)" />
@@ -37,7 +37,7 @@ export function LaurelDivider({ className = "" }: { className?: string }) {
   return (
     <div className={`flex items-center justify-center gap-3 ${className}`} aria-hidden>
       <span className="h-[2px] w-16 bg-wine sm:w-28" />
-      <svg width="34" height="16" viewBox="0 0 34 16" className="text-gold">
+      <svg width="34" height="16" viewBox="0 0 34 16" className="text-wine">
         <path d="M17 1.5 18.9 6l4.8.4-3.7 3.1 1.2 4.7L17 11.6 12.8 14.2l1.2-4.7L10.3 6.4 15.1 6z" fill="currentColor" />
       </svg>
       <span className="h-[2px] w-16 bg-wine sm:w-28" />

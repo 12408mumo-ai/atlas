@@ -240,8 +240,8 @@ export default function AtlasAssistantPage() {
                 }`}
               >
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="8" stroke={status === "listening" || status === "speaking" ? "#5a1220" : "#c6a15b"} strokeWidth="2" />
-                  <ellipse cx="12" cy="12" rx="8" ry="3.4" stroke={status === "listening" || status === "speaking" ? "#5a1220" : "#f4efe6"} strokeWidth="1.4" />
+                  <circle cx="12" cy="12" r="8" stroke={status === "listening" || status === "speaking" ? "#28282A" : "#F5E8D3"} strokeWidth="2" />
+                  <ellipse cx="12" cy="12" rx="8" ry="3.4" stroke={status === "listening" || status === "speaking" ? "#28282A" : "#F5E8D3"} strokeWidth="1.4" />
                 </svg>
               </div>
             </div>
@@ -304,7 +304,7 @@ export default function AtlasAssistantPage() {
         {/* ==== THE ORACLE — chat ==== */}
         <Panel title="The oracle" hint="Type, or touch the disc and speak" tone="marble" className="flex flex-col">
           {!configured && (
-            <div className="mb-3 rounded-xl border-2 border-gold bg-marbleDim px-4 py-3">
+            <div className="mb-3 rounded-xl border-2 border-wine bg-marbleDim px-4 py-3">
               <p className="font-ui text-[14px] uppercase tracking-[0.22em] text-wine">No API key laid</p>
               <p className="mt-1 font-body text-[16px] leading-snug text-wine opacity-80">
                 Atlas has a body but no mind yet. Open{" "}
@@ -331,12 +331,12 @@ export default function AtlasAssistantPage() {
               <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                 <div
                   className={`max-w-[85%] rounded-2xl border-2 px-4 py-3 ${
-                    m.role === "user" ? "border-wine bg-wine text-marble" : "border-gold bg-marbleDim text-wine"
+                    m.role === "user" ? "border-wine bg-wine text-marble" : "border-wine bg-marbleDim text-wine"
                   }`}
                 >
                   <p className="whitespace-pre-wrap font-body text-[16px] leading-relaxed">{m.content}</p>
                   {m.actions && m.actions.length > 0 && (
-                    <div className="mt-2 space-y-1 border-t-2 border-gold/40 pt-2">
+                    <div className="mt-2 space-y-1 border-t-2 border-wine/40 pt-2">
                       {m.actions.map((a, i) => (
                         <p key={i} className="font-ui text-[13.5px] uppercase tracking-[0.14em]">
                           {a.ok ? "⚒ " : "✕ "}
@@ -354,7 +354,7 @@ export default function AtlasAssistantPage() {
             ))}
             {status === "thinking" && (
               <div className="flex justify-start">
-                <div className="rounded-2xl border-2 border-gold bg-marbleDim px-4 py-3">
+                <div className="rounded-2xl border-2 border-wine bg-marbleDim px-4 py-3">
                   <p className="font-body text-[16px] italic text-wine opacity-70">The sphere shifts on his shoulders…</p>
                 </div>
               </div>

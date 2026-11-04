@@ -1,7 +1,7 @@
 "use client";
 
 /* A flat parchment-free scroll: marble sheet, wine rules and turned
-   gold rods. Two colours of ink only — no gradients, no texture. */
+   charcoal-rimmed cream rods. Two colours of ink only — no gradients, no texture. */
 
 export function ScrollFrame({
   children,

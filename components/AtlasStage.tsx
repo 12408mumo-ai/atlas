@@ -166,7 +166,7 @@ export default function AtlasStage() {
       ctx.beginPath();
       ctx.ellipse(0, 0, ring.rx, ring.ry, 0, 0, Math.PI * 2);
       ctx.lineWidth = 2;
-      ctx.strokeStyle = p.key === "people" || p.key === "life" ? "#5a1220" : "#c6a15b";
+      ctx.strokeStyle = p.key === "people" || p.key === "life" ? "#28282A" : "#F5E8D3";
       ctx.globalAlpha = 0.5;
       ctx.stroke();
       ctx.restore();
@@ -244,7 +244,7 @@ export default function AtlasStage() {
                 onFocus={() => setHovered(p.key)}
                 onBlur={() => setHovered(null)}
                 aria-label={`${p.name} — ${p.blurb}`}
-                className="group relative block h-full w-full rounded-full border-[3px] border-gold bg-marble outline-none focus-visible:ring-4 focus-visible:ring-gold"
+                className="group relative block h-full w-full rounded-full border-[3px] border-wine bg-marble outline-none focus-visible:ring-4 focus-visible:ring-wine"
               >
                 <span className="absolute inset-[3px] overflow-hidden rounded-full">
                   <img
@@ -257,7 +257,7 @@ export default function AtlasStage() {
                   <span data-veil className="pointer-events-none absolute inset-0 bg-wine" style={{ opacity: 0.3 }} />
                 </span>
                 {/* name plate under the sphere */}
-                <span className="pointer-events-none absolute left-1/2 top-[calc(100%+8px)] -translate-x-1/2 whitespace-nowrap rounded-pill border-2 border-gold bg-marble px-3 py-1 font-ui text-[12.5px] uppercase tracking-[0.22em] text-wine">
+                <span className="pointer-events-none absolute left-1/2 top-[calc(100%+8px)] -translate-x-1/2 whitespace-nowrap rounded-pill border-2 border-wine bg-marble px-3 py-1 font-ui text-[12.5px] uppercase tracking-[0.22em] text-wine">
                   {p.name}
                 </span>
               </button>
@@ -283,11 +283,11 @@ export default function AtlasStage() {
             onMouseLeave={() => setHovered(null)}
             className="group flex items-center gap-3 rounded-pill border-2 border-wine bg-marble px-3 py-2.5 text-left transition-colors hover:bg-wine"
           >
-            <span className="h-8 w-8 shrink-0 overflow-hidden rounded-full border-2 border-gold">
+            <span className="h-8 w-8 shrink-0 overflow-hidden rounded-full border-2 border-wine">
               <img src={p.image} alt="" className="h-full w-full object-cover" draggable={false} />
             </span>
             <span className="min-w-0">
-              <span className="block font-ui text-[14px] uppercase tracking-[0.22em] text-wine group-hover:text-gold">{p.name}</span>
+              <span className="block font-ui text-[14px] uppercase tracking-[0.22em] text-wine group-hover:text-wine">{p.name}</span>
               <span className="block truncate font-body text-[14px] italic text-wine opacity-60 group-hover:text-marble group-hover:opacity-80">
                 {p.greek}
               </span>

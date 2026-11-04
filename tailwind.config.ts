@@ -5,13 +5,13 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        marble: "#f4efe6",
-        marbleDim: "#ded6c7",
-        wine: "#5a1220",
-        wineDeep: "#4a0f1b",
-        gold: "#c6a15b",
-        goldSoft: "#d9bf8d",
-        ink: "#2a1216",
+        marble: "#F5E8D3",
+        marbleDim: "#E9DCC4",
+        wine: "#28282A",
+        wineDeep: "#19191B",
+        gold: "#F5E8D3",
+        goldSoft: "#EFE3CB",
+        ink: "#1A1A1C",
       },
       fontFamily: {
         display: ["var(--font-display)", "Georgia", "serif"],

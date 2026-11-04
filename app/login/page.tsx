@@ -77,7 +77,7 @@ export default function LoginPage() {
                 <div className="mx-auto mt-4 flex items-center justify-center gap-2">
                   <span className="h-[2px] w-12 bg-wine" />
                   <svg width="26" height="12" viewBox="0 0 26 12">
-                    <path d="M13 1l1.6 3.6 3.9.4-3 2.5 1 3.8L13 9.4l-3.5 2 1-3.9-3-2.5 3.9-.4z" fill="#c6a15b" />
+                    <path d="M13 1l1.6 3.6 3.9.4-3 2.5 1 3.8L13 9.4l-3.5 2 1-3.9-3-2.5 3.9-.4z" fill="#F5E8D3" />
                   </svg>
                   <span className="h-[2px] w-12 bg-wine" />
                 </div>
@@ -110,7 +110,7 @@ export default function LoginPage() {
                 </label>
 
                 {error && (
-                  <p className="rounded-[10px] border-2 border-wine bg-gold px-3 py-2 font-ui text-[14px] tracking-[0.04em] text-wine">
+                  <p className="rounded-[10px] border-2 border-wine bg-wine px-3 py-2 font-ui text-[14px] tracking-[0.04em] text-marble">
                     {error}
                   </p>
                 )}

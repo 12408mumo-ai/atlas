@@ -3,21 +3,21 @@
 @tailwind utilities;
 
 /* ------------------------------------------------------------------ */
-/*  ATLAS — three colours only, no gradients                          */
-/*  Marble White · Deep Wine Red · Antique Gold                       */
+/*  ATLAS — two colours only, no gradients                            */
+/*  Charcoal #28282A (the ink) · Warm Cream #F5E8D3 (the paper)       */
 /* ------------------------------------------------------------------ */
 :root {
   --font-display: "trajan-pro-3", "mrs-eaves", "Cinzel", "Cormorant Garamond", Georgia, serif;
   --font-body: "adobe-garamond-pro", "mrs-eaves", "Cormorant Garamond", Georgia, serif;
   --font-ui: "brandon-grotesque", "proxima-nova", "Jost", system-ui, sans-serif;
 
-  --marble: #f4efe6;
-  --marble-dim: #ded6c7;
-  --wine: #5a1220;
-  --wine-deep: #4a0f1b;
-  --gold: #c6a15b;
-  --gold-soft: #d9bf8d;
-  --ink: #2a1216;
+  --marble: #F5E8D3;
+  --marble-dim: #E9DCC4;
+  --wine: #28282A;
+  --wine-deep: #19191B;
+  --gold: #F5E8D3; /* the light that falls on dark surfaces */
+  --gold-soft: #EFE3CB;
+  --ink: #1A1A1C;
 }
 
 * { -webkit-tap-highlight-color: transparent; }
@@ -89,12 +89,12 @@ body {
     transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
   }
 
-  .btn-gold { background: var(--gold); color: var(--wine); border-color: var(--gold); }
-  .btn-gold:hover { background: var(--wine); color: var(--marble); border-color: var(--wine); }
+  .btn-gold { background: var(--gold); color: var(--wine); border-color: var(--wine); }
+  .btn-gold:hover { background: var(--marble-dim); color: var(--wine); border-color: var(--wine); }
   .btn-gold:disabled { opacity: 0.45; }
 
   .btn-wine { background: var(--wine); color: var(--marble); border-color: var(--wine); }
-  .btn-wine:hover { background: var(--gold); color: var(--wine); border-color: var(--wine); }
+  .btn-wine:hover { background: var(--marble); color: var(--wine); border-color: var(--wine); }
 
   .btn-marble { background: var(--marble); color: var(--wine); }
   .btn-marble:hover { background: var(--wine); color: var(--marble); }
@@ -119,7 +119,7 @@ body {
     transition: border-color 0.18s ease, box-shadow 0.18s ease;
   }
   .field::placeholder { color: var(--wine); opacity: 0.42; }
-  .field:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(198, 161, 91, 0.35); }
+  .field:focus { border-color: var(--wine); box-shadow: 0 0 0 3px rgba(40, 40, 42, 0.28); }
 
   /* legacy aliases used across the pillar pages */
   .glass { background: var(--marble); border: 2px solid var(--wine); border-radius: 16px; }

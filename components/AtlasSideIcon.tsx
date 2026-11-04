@@ -50,12 +50,12 @@ export function AtlasSideIcon() {
         <span className="relative block">
           {/* pulse ring while the Titan sleeps (no key laid) */}
           {!configured && (
-            <span className="absolute inset-0 animate-ping rounded-full border-2 border-gold opacity-60" aria-hidden />
+            <span className="absolute inset-0 animate-ping rounded-full border-2 border-wine opacity-60" aria-hidden />
           )}
           <span
             className={`grid h-12 w-12 place-items-center rounded-full border-2 transition-colors duration-200 sm:h-14 sm:w-14 ${
               configured
-                ? "border-wine bg-wine group-hover:border-gold group-hover:bg-gold"
+                ? "border-wine bg-wine group-hover:bg-gold"
                 : "border-gold bg-wine group-hover:bg-wineDeep"
             }`}
           >
@@ -68,9 +68,9 @@ export function AtlasSideIcon() {
               className={`transition-colors duration-200 ${configured ? "group-hover:[&_*]:stroke-wine" : ""}`}
               aria-hidden
             >
-              <circle cx="12" cy="12" r="8" stroke={configured ? "#c6a15b" : "#c6a15b"} strokeWidth="2" />
-              <ellipse cx="12" cy="12" rx="8" ry="3.4" stroke={configured ? "#f4efe6" : "#c6a15b"} strokeWidth="1.4" />
-              <circle cx="12" cy="4.8" r="1.15" fill={configured ? "#f4efe6" : "#c6a15b"} />
+              <circle cx="12" cy="12" r="8" stroke={configured ? "#F5E8D3" : "#F5E8D3"} strokeWidth="2" />
+              <ellipse cx="12" cy="12" rx="8" ry="3.4" stroke={configured ? "#F5E8D3" : "#F5E8D3"} strokeWidth="1.4" />
+              <circle cx="12" cy="4.8" r="1.15" fill={configured ? "#F5E8D3" : "#F5E8D3"} />
             </svg>
           </span>
           {/* status ember */}
