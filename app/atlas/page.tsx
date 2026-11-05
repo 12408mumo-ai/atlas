@@ -216,52 +216,65 @@ export default function AtlasAssistantPage() {
       }
     >
       {/* ---------------- the temple: body + oracle ---------------- */}
-      <div className="grid gap-3 lg:grid-cols-[380px_1fr]">
+      <div className="grid gap-3.5 lg:grid-cols-[400px_1fr]">
         {/* ==== THE BODY ==== */}
-        <div className="relative overflow-hidden rounded-2xl border-2 border-gold bg-wineDeep">
+        <div className="relative overflow-hidden rounded-2xl border-2 border-wine bg-wineDeep">
           <div className="relative">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/assets/atlas-god.png"
-              alt="The body of Atlas — marble statue of the Titan bearing the golden sphere"
-              className="h-[460px] w-full object-cover object-top sm:h-[520px]"
+              alt="The body of Atlas — warm-cream marble statue of the Titan bearing the celestial sphere"
+              className="h-[490px] w-full object-cover object-top sm:h-[550px]"
             />
             {/* status orb */}
             <div className="absolute left-1/2 top-5 -translate-x-1/2">
               <div
                 className={`grid h-14 w-14 place-items-center rounded-full border-2 ${
                   status === "idle"
-                    ? "border-gold bg-wine"
+                    ? "border-marble bg-wine"
                     : status === "listening"
-                      ? "border-marble bg-gold anim-breathe"
+                      ? "border-wine bg-marble anim-breathe"
                       : status === "thinking"
-                        ? "border-gold bg-wine anim-breathe"
-                        : "border-marble bg-gold anim-breathe"
+                        ? "border-marble bg-wine anim-breathe"
+                        : "border-wine bg-marble anim-breathe"
                 }`}
               >
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="8" stroke={status === "listening" || status === "speaking" ? "#5a1220" : "#c6a15b"} strokeWidth="2" />
-                  <ellipse cx="12" cy="12" rx="8" ry="3.4" stroke={status === "listening" || status === "speaking" ? "#5a1220" : "#f4efe6"} strokeWidth="1.4" />
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="8"
+                    stroke={status === "listening" || status === "speaking" ? "#28282A" : "#F5E8D3"}
+                    strokeWidth="2"
+                  />
+                  <ellipse
+                    cx="12"
+                    cy="12"
+                    rx="8"
+                    ry="3.4"
+                    stroke={status === "listening" || status === "speaking" ? "#28282A" : "#F5E8D3"}
+                    strokeWidth="1.4"
+                  />
                 </svg>
               </div>
             </div>
             <div className="absolute inset-x-0 bottom-0 bg-wine px-5 py-4">
-              <p className="font-ui text-[13px] uppercase tracking-[0.3em] text-gold">The body of Atlas · v1.0 mind</p>
-              <p className="mt-1.5 font-body text-[16px] italic leading-snug text-marble opacity-85">{statusLine[status]}</p>
-              <div className="mt-3 flex items-center gap-2">
+              <p className="font-ui text-[17px] uppercase tracking-[0.22em] text-marble opacity-85">The body of Atlas · v1.0 mind</p>
+              <p className="mt-1.5 font-body text-[20.5px] italic leading-snug text-marble opacity-90">{statusLine[status]}</p>
+              <div className="mt-3.5 flex items-center gap-2.5">
                 {/* mic */}
                 {micSupported && (
                   <button
                     onClick={status === "listening" ? stopListening : startListening}
                     disabled={status === "thinking" || status === "speaking"}
-                    className={`grid h-11 w-11 place-items-center rounded-full border-2 transition-colors disabled:opacity-40 ${
+                    className={`grid h-12 w-12 place-items-center rounded-full border-2 transition-colors disabled:opacity-40 ${
                       status === "listening"
                         ? "border-marble bg-marble text-wine"
-                        : "border-gold bg-wine text-gold hover:bg-gold hover:text-wine"
+                        : "border-marble bg-wine text-marble hover:bg-marble hover:text-wine"
                     }`}
                     aria-label={status === "listening" ? "Stop listening" : "Speak to Atlas"}
                   >
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                       <rect x="9" y="3" width="6" height="11" rx="3" />
                       <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
                     </svg>
@@ -275,24 +288,24 @@ export default function AtlasAssistantPage() {
                     stopSpeaking();
                     saveAISettings({ speak: next });
                   }}
-                  className={`grid h-11 w-11 place-items-center rounded-full border-2 transition-colors ${
-                    speakOn ? "border-gold bg-gold text-wine" : "border-gold bg-transparent text-gold"
+                  className={`grid h-12 w-12 place-items-center rounded-full border-2 transition-colors ${
+                    speakOn ? "border-marble bg-marble text-wine" : "border-marble bg-transparent text-marble"
                   }`}
                   aria-label={speakOn ? "Mute the Titan's voice" : "Give the Titan voice"}
                 >
                   {speakOn ? (
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M11 5 6 9H2v6h4l5 4zM15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13" />
                     </svg>
                   ) : (
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M11 5 6 9H2v6h4l5 4zM22 9l-6 6M16 9l6 6" />
                     </svg>
                   )}
                 </button>
                 <div className="ml-auto text-right">
-                  <p className="font-ui text-[12.5px] uppercase tracking-[0.24em] text-gold opacity-80">powered by</p>
-                  <p className="font-ui text-[14px] uppercase tracking-[0.18em] text-marble">
+                  <p className="font-ui text-[16.5px] uppercase tracking-[0.18em] text-marble opacity-75">powered by</p>
+                  <p className="font-ui text-[18px] uppercase tracking-[0.14em] text-marble">
                     {configured ? `${providerLabel} · ${model}` : "no key laid"}
                   </p>
                 </div>
@@ -304,9 +317,9 @@ export default function AtlasAssistantPage() {
         {/* ==== THE ORACLE — chat ==== */}
         <Panel title="The oracle" hint="Type, or touch the disc and speak" tone="marble" className="flex flex-col">
           {!configured && (
-            <div className="mb-3 rounded-xl border-2 border-gold bg-marbleDim px-4 py-3">
-              <p className="font-ui text-[14px] uppercase tracking-[0.22em] text-wine">No API key laid</p>
-              <p className="mt-1 font-body text-[16px] leading-snug text-wine opacity-80">
+            <div className="mb-3.5 rounded-xl border-2 border-wine bg-marbleDim px-4 py-3.5">
+              <p className="font-ui text-[18px] uppercase tracking-[0.18em] text-wine">No API key laid</p>
+              <p className="mt-1 font-body text-[20px] leading-snug text-wine opacity-85">
                 Atlas has a body but no mind yet. Open{" "}
                 <Link href="/atlas/settings" className="underline underline-offset-2">
                   Atlas Assistant Settings
@@ -316,12 +329,12 @@ export default function AtlasAssistantPage() {
             </div>
           )}
 
-          <div ref={transcriptRef} className="max-h-[430px] flex-1 space-y-3 overflow-y-auto pr-1">
+          <div ref={transcriptRef} className="max-h-[450px] flex-1 space-y-3 overflow-y-auto pr-1">
             {msgs.length === 0 && (
               <div className="grid h-full min-h-[220px] place-items-center">
                 <div className="text-center">
-                  <p className="font-display text-[17px] tracking-[0.3em] text-wine opacity-60">Ἐρώτησις</p>
-                  <p className="mt-2 font-body text-[16.5px] italic text-wine opacity-60">
+                  <p className="font-display text-[22px] tracking-[0.26em] text-wine opacity-65">Ἐρώτησις</p>
+                  <p className="mt-2 font-body text-[21px] italic text-wine opacity-65">
                     Ask and it is weighed. Command and it is carved.
                   </p>
                 </div>
@@ -331,21 +344,29 @@ export default function AtlasAssistantPage() {
               <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                 <div
                   className={`max-w-[85%] rounded-2xl border-2 px-4 py-3 ${
-                    m.role === "user" ? "border-wine bg-wine text-marble" : "border-gold bg-marbleDim text-wine"
+                    m.role === "user" ? "border-wine bg-wine text-marble" : "border-wine bg-marbleDim text-wine"
                   }`}
                 >
-                  <p className="whitespace-pre-wrap font-body text-[16px] leading-relaxed">{m.content}</p>
+                  <p className="whitespace-pre-wrap font-body text-[20.5px] leading-relaxed">{m.content}</p>
                   {m.actions && m.actions.length > 0 && (
-                    <div className="mt-2 space-y-1 border-t-2 border-gold/40 pt-2">
+                    <div
+                      className={`mt-2.5 space-y-1 border-t-2 pt-2 ${
+                        m.role === "user" ? "border-marble/30" : "border-wine/20"
+                      }`}
+                    >
                       {m.actions.map((a, i) => (
-                        <p key={i} className="font-ui text-[13.5px] uppercase tracking-[0.14em]">
+                        <p key={i} className="font-ui text-[17.5px] uppercase tracking-[0.12em]">
                           {a.ok ? "⚒ " : "✕ "}
                           {a.label}
                         </p>
                       ))}
                     </div>
                   )}
-                  <p className={`mt-1.5 font-ui text-[12px] uppercase tracking-[0.2em] ${m.role === "user" ? "text-gold" : "text-wine opacity-50"}`}>
+                  <p
+                    className={`mt-1.5 font-ui text-[16px] uppercase tracking-[0.16em] ${
+                      m.role === "user" ? "text-marble opacity-75" : "text-wine opacity-60"
+                    }`}
+                  >
                     {m.role === "assistant" ? "Atlas · " : ""}
                     {m.time}
                   </p>
@@ -354,15 +375,15 @@ export default function AtlasAssistantPage() {
             ))}
             {status === "thinking" && (
               <div className="flex justify-start">
-                <div className="rounded-2xl border-2 border-gold bg-marbleDim px-4 py-3">
-                  <p className="font-body text-[16px] italic text-wine opacity-70">The sphere shifts on his shoulders…</p>
+                <div className="rounded-2xl border-2 border-wine bg-marbleDim px-4 py-3">
+                  <p className="font-body text-[20px] italic text-wine opacity-75">The sphere shifts on his shoulders…</p>
                 </div>
               </div>
             )}
           </div>
 
           {/* composer */}
-          <div className="mt-4 flex items-stretch gap-2">
+          <div className="mt-4 flex items-stretch gap-2.5">
             <input
               className="field flex-1"
               placeholder={configured ? "Command the Titan… (try a quick edict below)" : "Lay a key in settings first…"}
@@ -375,18 +396,18 @@ export default function AtlasAssistantPage() {
                 }
               }}
             />
-            <button className="btn-wine px-5" onClick={() => void send(draft)} disabled={status === "thinking"}>
+            <button className="btn-wine px-6" onClick={() => void send(draft)} disabled={status === "thinking"}>
               Send
             </button>
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-3.5 flex flex-wrap gap-2">
             {QUICK.map((q) => (
               <button
                 key={q.label}
                 onClick={() => void send(q.prompt)}
                 disabled={status === "thinking"}
-                className="rounded-pill border-2 border-wine px-3 py-1.5 font-ui text-[13px] uppercase tracking-[0.16em] text-wine transition-colors hover:bg-wine hover:text-marble disabled:opacity-40"
+                className="rounded-pill border-2 border-wine px-3.5 py-2 font-ui text-[17px] uppercase tracking-[0.12em] text-wine transition-colors hover:bg-wine hover:text-marble disabled:opacity-40"
               >
                 {q.label}
               </button>
@@ -398,7 +419,7 @@ export default function AtlasAssistantPage() {
                   localStorage.removeItem(CHAT_KEY);
                 } catch {}
               }}
-              className="ml-auto rounded-pill border-2 border-transparent px-3 py-1.5 font-ui text-[13px] uppercase tracking-[0.16em] text-wine opacity-50 transition-opacity hover:opacity-100"
+              className="ml-auto rounded-pill border-2 border-transparent px-3.5 py-2 font-ui text-[17px] uppercase tracking-[0.12em] text-wine opacity-55 transition-opacity hover:opacity-100"
             >
               Clear memory
             </button>
@@ -407,46 +428,46 @@ export default function AtlasAssistantPage() {
       </div>
 
       {/* ---------------- plans + powers ---------------- */}
-      <div className="mt-3 grid gap-3 lg:grid-cols-[1.4fr_1fr]">
+      <div className="mt-3.5 grid gap-3.5 lg:grid-cols-[1.4fr_1fr]">
         <Panel title="The plans Atlas has laid" hint="Every 'plan' edict lands here — a staircase of steps you can climb">
           {activePlans.length === 0 ? (
             <Empty>No plans yet. Ask the Titan to lay one.</Empty>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3.5">
               {activePlans.map((p) => {
                 const done = p.steps.filter((x) => x.done).length;
                 return (
                   <div key={p.id} className="rounded-xl border-2 border-wine bg-marbleDim p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="font-body text-[17px] font-semibold text-wine">{p.title}</p>
-                        <p className="mt-0.5 font-ui text-[12.5px] uppercase tracking-[0.2em] text-wine opacity-60">
+                        <p className="font-body text-[22px] font-semibold text-wine">{p.title}</p>
+                        <p className="mt-0.5 font-ui text-[16.5px] uppercase tracking-[0.16em] text-wine opacity-65">
                           laid {prettyDate(p.created)} · {done}/{p.steps.length} climbed {p.byAtlas ? "· by the Titan" : ""}
                         </p>
                       </div>
                       <button
                         onClick={() => removePlan(p.id)}
-                        className="font-ui text-[13px] uppercase tracking-[0.18em] text-wine opacity-40 transition-opacity hover:opacity-100"
+                        className="font-ui text-[18px] uppercase tracking-[0.14em] text-wine opacity-50 transition-opacity hover:opacity-100"
                         aria-label="Remove plan"
                       >
                         ×
                       </button>
                     </div>
-                    <div className="mt-3 space-y-1.5">
+                    <div className="mt-3 space-y-2">
                       {p.steps.map((st) => (
                         <button
                           key={st.id}
                           onClick={() => togglePlanStep(p.id, st.id)}
-                          className="flex w-full items-center gap-2.5 text-left"
+                          className="flex w-full items-center gap-3 text-left"
                         >
                           <span
-                            className={`grid h-4 w-4 shrink-0 place-items-center rounded-sm border-2 border-wine ${
+                            className={`grid h-5 w-5 shrink-0 place-items-center rounded-sm border-2 border-wine ${
                               st.done ? "bg-wine text-marble" : "bg-marble"
                             }`}
                           >
-                            {st.done && <span className="text-[13px]">✓</span>}
+                            {st.done && <span className="text-[15px]">✓</span>}
                           </span>
-                          <span className={`font-body text-[16.5px] ${st.done ? "text-wine line-through opacity-50" : "text-wine"}`}>
+                          <span className={`font-body text-[20.5px] ${st.done ? "text-wine line-through opacity-50" : "text-wine"}`}>
                             {st.text}
                           </span>
                         </button>
@@ -460,7 +481,7 @@ export default function AtlasAssistantPage() {
         </Panel>
 
         <Panel title="The Titan's powers" hint="What the mind can do when given a key" tone="wine">
-          <ul className="space-y-3">
+          <ul className="space-y-3.5">
             {[
               ["Ἀνάλυσις", "Analyse — he reads every pillar of your world and tells you what matters."],
               ["Πρόσθεσις", "Add — tasks, habits, people, journal entries, expenses, assignments."],
@@ -468,13 +489,13 @@ export default function AtlasAssistantPage() {
               ["Βουλή", "Plan — he lays staircases of steps that appear beside you."],
               ["Φωνή", "Voice — speak to him; he answers aloud, low, like stone moving."],
             ].map(([greek, line]) => (
-              <li key={greek} className="flex gap-3">
-                <span className="mt-0.5 w-24 shrink-0 font-display text-[15px] tracking-[0.08em] text-gold">{greek}</span>
-                <span className="font-body text-[16px] leading-snug text-marble opacity-85">{line}</span>
+              <li key={greek} className="flex gap-3.5">
+                <span className="mt-0.5 w-32 shrink-0 font-display text-[19px] tracking-[0.06em] text-marble">{greek}</span>
+                <span className="font-body text-[20px] leading-snug text-marble opacity-85">{line}</span>
               </li>
             ))}
           </ul>
-          <div className="mt-5 border-t-2 border-gold/40 pt-4">
+          <div className="mt-5 border-t-2 border-marble/30 pt-4">
             <Link href="/atlas/settings" className="btn-gold btn-sm w-full">
               Power him with an API key
             </Link>
