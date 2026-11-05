@@ -3,6 +3,8 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 export type AtlasCloudRow = {
   world_state: Record<string, unknown>;
   memories_state: Record<string, unknown>;
+  assistant_chat: unknown[];
+  assistant_preferences: Record<string, unknown>;
 };
 
 let browserClient: SupabaseClient | null = null;
@@ -35,7 +37,7 @@ export async function loadAtlasCloudRow(): Promise<{ userId: string; row: AtlasC
 
   const { data, error } = await supabase
     .from("atlas_user_data")
-    .select("world_state, memories_state")
+    .select("world_state, memories_state, assistant_chat, assistant_preferences")
     .eq("user_id", user.id)
     .maybeSingle();
   if (error) throw error;
@@ -64,5 +66,22 @@ export async function saveAtlasMemoriesState(state: Record<string, unknown>, use
   const supabase = getSupabaseBrowserClient();
   if (!supabase || !(await verifyExpectedUser(userId))) return;
   const { error } = await supabase.rpc("save_atlas_memories_state", { p_state: state });
+  if (error) throw error;
+}
+
+export async function saveAtlasAssistantChat(chat: unknown[], userId?: string): Promise<void> {
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase || !(await verifyExpectedUser(userId))) return;
+  const { error } = await supabase.rpc("save_atlas_assistant_chat", { p_chat: chat });
+  if (error) throw error;
+}
+
+export async function saveAtlasAssistantPreferences(
+  preferences: Record<string, unknown>,
+  userId?: string
+): Promise<void> {
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase || !(await verifyExpectedUser(userId))) return;
+  const { error } = await supabase.rpc("save_atlas_assistant_preferences", { p_preferences: preferences });
   if (error) throw error;
 }

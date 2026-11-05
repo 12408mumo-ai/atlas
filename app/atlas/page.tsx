@@ -15,6 +15,11 @@ import {
   PROVIDERS,
   type ChatTurn,
 } from "@/lib/atlas-ai";
+import {
+  getSupabaseBrowserClient,
+  loadAtlasCloudRow,
+  saveAtlasAssistantChat,
+} from "@/lib/supabase";
 
 /* ------------------------------------------------------------------ */
 /*  Atlas — the awakened Titan. His body stands at the left; his      */
@@ -46,9 +51,9 @@ type RecognitionLike = {
   onerror: (() => void) | null;
 };
 
-function loadChat(): Msg[] {
+function loadChat(key = CHAT_KEY): Msg[] {
   try {
-    const raw = localStorage.getItem(CHAT_KEY);
+    const raw = localStorage.getItem(key);
     return raw ? (JSON.parse(raw) as Msg[]) : [];
   } catch {
     return [];
@@ -65,6 +70,8 @@ const QUICK = [
 export default function AtlasAssistantPage() {
   const s = useAtlas();
   const [msgs, setMsgs] = useState<Msg[]>([]);
+  const [chatUserId, setChatUserId] = useState<string | null>(null);
+  const [chatReady, setChatReady] = useState(false);
   const [draft, setDraft] = useState("");
   const [status, setStatus] = useState<VoiceStatus>("idle");
   const [configured, setConfigured] = useState(false);
@@ -74,10 +81,42 @@ export default function AtlasAssistantPage() {
   const [micSupported, setMicSupported] = useState(false);
   const recRef = useRef<RecognitionLike | null>(null);
   const transcriptRef = useRef<HTMLDivElement>(null);
+  const chatSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /* hydrate chat + config */
   useEffect(() => {
-    setMsgs(loadChat());
+    let cancelled = false;
+    const hydrateChat = async () => {
+      const supabase = getSupabaseBrowserClient();
+      if (supabase) {
+        let cachedMsgs: Msg[] = [];
+        try {
+          const { data } = await supabase.auth.getSession();
+          const userId = data.session?.user.id ?? null;
+          if (userId) {
+            setChatUserId(userId);
+            cachedMsgs = loadChat(`${CHAT_KEY}.${userId}`);
+            setMsgs(cachedMsgs);
+          }
+          const cloud = await loadAtlasCloudRow();
+          if (cancelled) return;
+          if (cloud) {
+            setChatUserId(cloud.userId);
+            const cloudMsgs = Array.isArray(cloud.row?.assistant_chat) ? cloud.row.assistant_chat as Msg[] : [];
+            setMsgs(cloudMsgs.length > 0 ? cloudMsgs : cachedMsgs);
+          } else if (!userId) {
+            setMsgs([]);
+          }
+        } catch (error) {
+          console.error("Could not load Atlas chat from Supabase.", error);
+        }
+      } else {
+        setMsgs(loadChat());
+      }
+      if (!cancelled) setChatReady(true);
+    };
+    void hydrateChat();
+
     const conf = isConfigured();
     setConfigured(conf);
     const st = loadAISettings();
@@ -86,14 +125,30 @@ export default function AtlasAssistantPage() {
     setSpeakOn(st.speak);
     const w = window as unknown as { SpeechRecognition?: unknown; webkitSpeechRecognition?: unknown };
     setMicSupported(Boolean(w.SpeechRecognition || w.webkitSpeechRecognition));
+    return () => {
+      cancelled = true;
+      if (chatSaveTimer.current) clearTimeout(chatSaveTimer.current);
+    };
   }, []);
 
   useEffect(() => {
+    if (!chatReady) return;
+    const saved = msgs.slice(-60);
+    const key = chatUserId ? `${CHAT_KEY}.${chatUserId}` : CHAT_KEY;
     try {
-      localStorage.setItem(CHAT_KEY, JSON.stringify(msgs.slice(-60)));
+      localStorage.setItem(key, JSON.stringify(saved));
     } catch {}
+    if (chatUserId) {
+      if (chatSaveTimer.current) clearTimeout(chatSaveTimer.current);
+      const userId = chatUserId;
+      chatSaveTimer.current = setTimeout(() => {
+        void saveAtlasAssistantChat(saved, userId).catch((error) => {
+          console.error("Could not save Atlas chat to Supabase.", error);
+        });
+      }, 400);
+    }
     transcriptRef.current?.scrollTo({ top: transcriptRef.current.scrollHeight, behavior: "smooth" });
-  }, [msgs]);
+  }, [msgs, chatReady, chatUserId]);
 
   useEffect(() => () => stopSpeaking(), []);
 
