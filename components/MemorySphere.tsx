@@ -13,6 +13,15 @@ import { useEffect, useRef } from "react";
 export type SphereGlyph =
   | "memories"
   | "people"
+  | "work"
+  | "study"
+  | "projects"
+  | "hours"
+  | "money"
+  | "timetable"
+  | "deadlines"
+  | "subjects"
+  | "sessions"
   | "timeline"
   | "gallery"
   | "calendar"
@@ -53,21 +62,20 @@ export function MemorySphere({
     canvas.width = LOGICAL * DPR;
     canvas.height = LOGICAL * DPR;
 
+    const EMBLEM_PATHS: Partial<Record<SphereGlyph, string>> = {
+      memories: "/assets/emblems/memories.png",
+      people: "/assets/emblems/people.png",
+      work: "/assets/emblems/work.png",
+      study: "/assets/emblems/study.png",
+    };
+
     let emblemImg: HTMLImageElement | null = null;
-    if (glyph === "memories") {
+    const emblemPath = EMBLEM_PATHS[glyph];
+    if (emblemPath) {
       const im = new Image();
-      im.src = "/assets/emblems/memories.png";
+      im.src = emblemPath;
       im.onload = () => {
         emblemImg = im;
-      };
-    }
-
-    let peopleEmblemImg: HTMLImageElement | null = null;
-    if (glyph === "people") {
-      const im = new Image();
-      im.src = "/assets/emblems/people.png";
-      im.onload = () => {
-        peopleEmblemImg = im;
       };
     }
 
@@ -106,14 +114,83 @@ export function MemorySphere({
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
 
-      if ((glyph === "memories" || glyph === "people") && (emblemImg || peopleEmblemImg)) {
-        const emb = glyph === "people" ? peopleEmblemImg : emblemImg;
+      if (emblemPath && emblemImg) {
         ctx.beginPath();
         ctx.arc(0, 0, r * 0.92, 0, Math.PI * 2);
         ctx.clip();
         ctx.fillStyle = "#F5E8D3";
         ctx.fillRect(-r, -r, r * 2, r * 2);
-        if (emb) ctx.drawImage(emb, -r * 0.88, -r * 0.88, r * 1.76, r * 1.76);
+        ctx.drawImage(emblemImg, -r * 0.88, -r * 0.88, r * 1.76, r * 1.76);
+      } else if (glyph === "projects") {
+        // Classical column: shaft, capital, base, fluting
+        ctx.beginPath();
+        ctx.moveTo(0, -r * 0.52);
+        ctx.lineTo(0, r * 0.52);
+        ctx.moveTo(-r * 0.34, -r * 0.52);
+        ctx.lineTo(r * 0.34, -r * 0.52);
+        ctx.moveTo(-r * 0.36, r * 0.52);
+        ctx.lineTo(r * 0.36, r * 0.52);
+        for (const dx of [-r * 0.18, 0, r * 0.18]) {
+          ctx.moveTo(dx, -r * 0.42);
+          ctx.lineTo(dx, r * 0.42);
+        }
+        ctx.stroke();
+      } else if (glyph === "hours") {
+        // Clock face with hands
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.52, 0, Math.PI * 2);
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, -r * 0.34);
+        ctx.moveTo(0, 0);
+        ctx.lineTo(r * 0.24, r * 0.08);
+        ctx.stroke();
+      } else if (glyph === "money") {
+        // Coin with a dollar sign
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.54, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.font = `600 ${r * 0.62}px Georgia, "Times New Roman", serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("$", 0, r * 0.04);
+      } else if (glyph === "deadlines") {
+        // Hourglass outline
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.42, -r * 0.5);
+        ctx.lineTo(r * 0.42, -r * 0.5);
+        ctx.lineTo(-r * 0.12, 0);
+        ctx.lineTo(r * 0.42, r * 0.5);
+        ctx.lineTo(-r * 0.42, r * 0.5);
+        ctx.lineTo(r * 0.12, 0);
+        ctx.closePath();
+        ctx.stroke();
+      } else if (glyph === "subjects") {
+        // Open book
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.46, -r * 0.36);
+        ctx.lineTo(-r * 0.06, -r * 0.2);
+        ctx.lineTo(-r * 0.06, r * 0.36);
+        ctx.lineTo(-r * 0.46, r * 0.44);
+        ctx.closePath();
+        ctx.moveTo(r * 0.46, -r * 0.36);
+        ctx.lineTo(r * 0.06, -r * 0.2);
+        ctx.lineTo(r * 0.06, r * 0.36);
+        ctx.lineTo(r * 0.46, r * 0.44);
+        ctx.closePath();
+        ctx.moveTo(0, -r * 0.24);
+        ctx.lineTo(0, r * 0.38);
+        ctx.stroke();
+      } else if (glyph === "sessions") {
+        // Play button inside a circle
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.54, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.18, -r * 0.3);
+        ctx.lineTo(r * 0.32, 0);
+        ctx.lineTo(-r * 0.18, r * 0.3);
+        ctx.closePath();
+        ctx.fill();
       } else if (glyph === "timeline") {
         // Vertical thread with 3 chronicle nodes
         ctx.beginPath();
@@ -148,7 +225,7 @@ export function MemorySphere({
         ctx.lineTo(w * 0.32, h * 0.04);
         ctx.lineTo(w * 0.46, h * 0.38);
         ctx.stroke();
-      } else if (glyph === "calendar") {
+      } else if (glyph === "calendar" || glyph === "timetable") {
         // Month tablet & marked days
         const w = r * 1.08;
         const h = r * 1.02;
