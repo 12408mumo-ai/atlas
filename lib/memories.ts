@@ -12,9 +12,8 @@ import {
 } from "./store";
 
 /* ------------------------------------------------------------------ */
-/*  Memories Store & Intelligence Engine                              */
-/*  Supports all 5 branches: Timeline, Gallery, Calendar, Journal,    */
-/*  Milestones + Plain-language Search, Quick Atlas Log, Lock & Export*/
+/*  Memories Store (Simple Everyday Language)                         */
+/*  Branches: Timeline, Gallery, Calendar, Journal, Milestones        */
 /* ------------------------------------------------------------------ */
 
 export type MemoryBranchKey = "timeline" | "gallery" | "calendar" | "journal" | "milestones";
@@ -54,30 +53,29 @@ export type MemoryEntry = {
   mood?: number; // 1..5
   location?: string;
   starred?: boolean; // Highlight
-  linkedIds: string[]; // IDs of linked MemoryEntry items
-  // Kind-specific payloads
+  linkedIds: string[];
   journalSubtype?: JournalSubtype;
   voice?: VoiceAttachment;
   media?: MediaItem;
-   mediaAttachments?: MediaItem[]; // optional photos attached to journal/milestone
+  mediaAttachments?: MediaItem[];
   milestoneCategory?: MilestoneCategory;
   pinned?: boolean;
 };
 
 export type MemoryLockConfig = {
-  pinHash: string | null; // stored simple hash of PIN
+  pinHash: string | null;
   biometricCredentialId: string | null;
   locked: boolean;
 };
 
 export type MemoriesState = {
   entries: MemoryEntry[];
-  customSummaries: Record<string, string>; // YYYY-MM-DD -> one-line summary override
+  customSummaries: Record<string, string>;
   albums: string[];
   lock: MemoryLockConfig;
 };
 
-const MEM_KEY = "atlas.memories.v2";
+const MEM_KEY = "atlas.memories.v3";
 
 const offsetISO = (days: number): string => {
   const d = new Date();
@@ -97,7 +95,6 @@ const priorYearSameDayISO = (yearsBack: number): string => {
 };
 
 export function seedMemories(): MemoriesState {
-  // Also ensure cousin Malik exists in main People registry on first hydrate
   return {
     albums: ["Trips", "Events", "Projects"],
     customSummaries: {},
@@ -112,14 +109,14 @@ export function seedMemories(): MemoriesState {
         id: "m-j1",
         kind: "journal",
         journalSubtype: "daily",
-        title: "Held the morning beneath the jacarandas",
-        text: "Woke before the alarm and walked the long avenue while the purple blossoms were still damp on the pavement. Finished wordmark refinement v3 at the studio — the serifs finally carry weight like carved stone rather than drawn ink.",
+        title: "Morning walk and finished logo draft",
+        text: "Woke up early for a quiet walk under the purple trees before heading to the studio. Finished version 3 of the client logo and sent it over.",
         date: offsetISO(0),
         time: "08:25",
         section: "Work",
         peopleTags: [],
         mood: 5,
-        location: "Nairobi · Studio",
+        location: "Nairobi",
         starred: true,
         linkedIds: ["m-ph1"],
         mediaAttachments: [
@@ -134,14 +131,14 @@ export function seedMemories(): MemoriesState {
       {
         id: "m-ph1",
         kind: "media",
-        title: "Jacaranda canopy on the morning walk",
-        text: "Early blue sky over the purple avenue on the way into the studio.",
+        title: "Morning walk down the avenue",
+        text: "Clear morning sky on the walk to work.",
         date: offsetISO(0),
         time: "07:18",
         section: "Life",
         peopleTags: [],
         mood: 5,
-        location: "Nairobi · State House Rd",
+        location: "Nairobi",
         starred: false,
         linkedIds: ["m-j1"],
         media: {
@@ -154,8 +151,8 @@ export function seedMemories(): MemoriesState {
       {
         id: "m-auto1",
         kind: "autolog",
-        title: "Kept morning walk (12-day streak) & Greek drills (21-day streak)",
-        text: "Auto-logged from Life rites.",
+        title: "30-minute morning workout completed",
+        text: "Logged from Life.",
         date: offsetISO(0),
         time: "07:50",
         section: "Life",
@@ -166,13 +163,13 @@ export function seedMemories(): MemoriesState {
       {
         id: "m-auto2",
         kind: "autolog",
-        title: "Attended Classical Greek II — Unit 7 aorist drills",
-        text: "50m session at Room 4 · Homer Hall.",
+        title: "Attended morning class — Unit 7 practice",
+        text: "50-minute class session.",
         date: offsetISO(0),
         time: "10:05",
         section: "Study",
         peopleTags: [],
-        location: "Homer Hall",
+        location: "Room 4",
         linkedIds: [],
       },
 
@@ -181,8 +178,8 @@ export function seedMemories(): MemoriesState {
         id: "m-j2",
         kind: "journal",
         journalSubtype: "reflection",
-        title: "Forty minutes on the phone with Nia",
-        text: "She sounded tired from the first month at her new studio, but steady and proud. Promised I would send over the Kilifi coast photographs tonight — keeping that promise.",
+        title: "Good catch-up call with Nia",
+        text: "Talked for 40 minutes about her first month at her new job. Promised to send her our Kilifi trip photos tonight.",
         date: offsetISO(-1),
         time: "20:15",
         section: "People",
@@ -195,8 +192,8 @@ export function seedMemories(): MemoriesState {
       {
         id: "m-auto3",
         kind: "autolog",
-        title: "Completed task: Client review deck for Kavala Studio",
-        text: "Shipped ahead of call · Marble & Mortar identity.",
+        title: "Deadline met: Sent presentation deck to client",
+        text: "Completed on time.",
         date: offsetISO(-1),
         time: "16:40",
         section: "Work",
@@ -206,14 +203,14 @@ export function seedMemories(): MemoriesState {
       {
         id: "m-ph3",
         kind: "media",
-        title: "Evening desk — type specimen & identity notes",
-        text: "Quiet lamp light after shipping the Kavala Studio review deck.",
+        title: "Desk setup after finishing the presentation",
+        text: "Wrapped up the slides before dinner.",
         date: offsetISO(-1),
         time: "19:05",
         section: "Work",
         peopleTags: [],
         mood: 4,
-        location: "Nairobi · Studio",
+        location: "Studio",
         linkedIds: ["m-auto3"],
         media: {
           id: "med-3",
@@ -227,8 +224,8 @@ export function seedMemories(): MemoriesState {
       {
         id: "m-auto4",
         kind: "autolog",
-        title: "Called Mum — 25 min check-in & kitchen shelf plan",
-        text: "Logged from People circle.",
+        title: "Call with Mum (25 mins)",
+        text: "Logged from People.",
         date: offsetISO(-3),
         time: "18:30",
         section: "People",
@@ -239,8 +236,8 @@ export function seedMemories(): MemoriesState {
       {
         id: "m-auto5",
         kind: "autolog",
-        title: "Paid Studio rent — $420",
-        text: "Recorded in Work ledger · Space.",
+        title: "Paid studio rent — $420",
+        text: "Logged from Work.",
         date: offsetISO(-3),
         time: "11:10",
         section: "Work",
@@ -254,14 +251,14 @@ export function seedMemories(): MemoriesState {
         kind: "milestone",
         milestoneCategory: "Achievement",
         pinned: true,
-        title: "First annual retainer renewed — Delos Labs",
-        text: "Delos renewed the cartography UI retainer for twelve more months without pitching. A whole year of quiet, deep craft now has solid marble underneath it.",
+        title: "Signed 1-year contract renewal with Delos Labs",
+        text: "They renewed our design contract for another full year.",
         date: offsetISO(-4),
         time: "15:00",
         section: "Work",
         peopleTags: ["Amara Osei"],
         mood: 5,
-        location: "Nairobi · Studio",
+        location: "Nairobi",
         starred: true,
         linkedIds: ["m-ph3"],
         mediaAttachments: [
@@ -274,13 +271,13 @@ export function seedMemories(): MemoriesState {
         ],
       },
 
-      /* ---- 7 DAYS AGO (VOICE JOURNAL + VIDEO) ---- */
+      /* ---- 7 DAYS AGO (VOICE NOTE + VIDEO) ---- */
       {
         id: "m-j3",
         kind: "journal",
         journalSubtype: "idea",
-        title: "Voice note walking home — smaller, slower studio",
-        text: "Recorded on the walk back after dusk: fewer concurrent clients, deeper typographic craft, and publishing Fieldnotes every fortnight without fail.",
+        title: "Voice note: Take on fewer, bigger projects next year",
+        text: "Recorded on the walk home: focus on 3 main clients at a time and publish a short newsletter every two weeks.",
         date: offsetISO(-7),
         time: "19:45",
         section: "Work",
@@ -292,20 +289,20 @@ export function seedMemories(): MemoriesState {
         voice: {
           durationSec: 48,
           transcript:
-            "In two years I want the studio to be smaller, slower, and sharper — three enduring commissions a year and Fieldnotes read by a thousand people who care.",
+            "Next year I want to take on fewer projects at once, do deeper work on each one, and write every two weeks.",
         },
       },
       {
         id: "m-vid1",
         kind: "media",
-        title: "Dusk stone study — classical ruins motion reel",
-        text: "Reference film loop captured for the Atlas sanctuary motion study.",
+        title: "Short video clip for the Atlas homepage",
+        text: "14-second background loop test.",
         date: offsetISO(-7),
         time: "18:12",
         section: "Work",
         peopleTags: [],
         mood: 4,
-        location: "Studio Archive",
+        location: "Studio",
         linkedIds: ["m-j3"],
         media: {
           id: "med-vid1",
@@ -317,18 +314,18 @@ export function seedMemories(): MemoriesState {
         },
       },
 
-      /* ---- 12 DAYS AGO (COUSIN DINNER — answers "when did I last see my cousin?") ---- */
+      /* ---- 12 DAYS AGO (COUSIN DINNER) ---- */
       {
         id: "m-ph4",
         kind: "media",
-        title: "Candlelit dinner with cousin Malik & Mum",
-        text: "Long evening catching up with my cousin Malik over dinner — laughed for three hours about childhood holidays.",
+        title: "Dinner with cousin Malik and Mum",
+        text: "Great evening catching up with my cousin Malik over dinner in Kilimani.",
         date: offsetISO(-12),
         time: "20:30",
         section: "People",
         peopleTags: ["Malik Mwangi", "Mum"],
         mood: 5,
-        location: "Nairobi · Kilimani",
+        location: "Kilimani",
         starred: true,
         linkedIds: [],
         media: {
@@ -339,20 +336,20 @@ export function seedMemories(): MemoriesState {
         },
       },
 
-      /* ---- 19 DAYS AGO (STUDY PHOTO + MILESTONE) ---- */
+      /* ---- 19 DAYS AGO (STUDY MILESTONE + PHOTO) ---- */
       {
         id: "m-ms2",
         kind: "milestone",
         milestoneCategory: "Graduation",
         pinned: true,
-        title: "Completed GEO 260 — Cartography & Place (100%)",
-        text: "Turned in the neighbourhood field map and closed the course with distinction.",
+        title: "Finished Cartography course with 100%",
+        text: "Submitted the final map project and passed with top marks.",
         date: offsetISO(-19),
         time: "14:20",
         section: "Study",
         peopleTags: [],
         mood: 5,
-        location: "Homer Hall Library",
+        location: "Library",
         starred: false,
         linkedIds: ["m-ph5"],
         mediaAttachments: [
@@ -367,14 +364,14 @@ export function seedMemories(): MemoriesState {
       {
         id: "m-ph5",
         kind: "media",
-        title: "Warm lamps over the classical library stacks",
-        text: "Late afternoon in the reading room after submitting the final cartography map.",
+        title: "Afternoon study session in the library",
+        text: "Right after handing in the final map assignment.",
         date: offsetISO(-19),
         time: "17:10",
         section: "Study",
         peopleTags: [],
         mood: 4,
-        location: "Homer Hall Library",
+        location: "Library",
         linkedIds: ["m-ms2"],
         media: {
           id: "med-5",
@@ -384,14 +381,14 @@ export function seedMemories(): MemoriesState {
         },
       },
 
-      /* ---- 35 DAYS AGO (KILIFI TRIP MILESTONE + PHOTO) ---- */
+      /* ---- 35 DAYS AGO (KILIFI TRIP) ---- */
       {
         id: "m-ms3",
         kind: "milestone",
         milestoneCategory: "Trip",
         pinned: true,
-        title: "Kilifi Creek coastal retreat with Nia",
-        text: "Four sunlit days overlooking the Indian Ocean cliffs before the new quarter began.",
+        title: "4-day Kilifi coast trip with Nia",
+        text: "Rested by the ocean for four days before the new work quarter started.",
         date: offsetISO(-35),
         time: "16:50",
         section: "People",
@@ -412,8 +409,8 @@ export function seedMemories(): MemoriesState {
       {
         id: "m-ph2",
         kind: "media",
-        title: "Indian Ocean horizon from the Kilifi ridge",
-        text: "Afternoon sea breeze over the palms and white coral roofs.",
+        title: "Ocean view in Kilifi",
+        text: "Sunny afternoon overlooking the water.",
         date: offsetISO(-35),
         time: "17:05",
         section: "Life",
@@ -436,14 +433,14 @@ export function seedMemories(): MemoriesState {
         kind: "milestone",
         milestoneCategory: "First",
         pinned: true,
-        title: "First morning beneath the Parthenon columns with Theo",
-        text: "Stood at the Acropolis as the sun broke right between the Doric columns. Decided that morning to name this sanctuary Atlas.",
+        title: "First trip to Athens with Theo",
+        text: "Morning visit to the Acropolis — the day we came up with the name Atlas.",
         date: priorYearSameDayISO(1),
         time: "08:40",
         section: "Life",
         peopleTags: ["Theo Kaneli"],
         mood: 5,
-        location: "Athens · Acropolis",
+        location: "Athens",
         starred: true,
         linkedIds: ["m-ph6"],
         mediaAttachments: [
@@ -458,14 +455,14 @@ export function seedMemories(): MemoriesState {
       {
         id: "m-ph6",
         kind: "media",
-        title: "Sunburst through the Parthenon marble columns",
-        text: "Athens trip with Theo — exactly one year ago today.",
+        title: "Morning sun in Athens",
+        text: "One year ago today with Theo.",
         date: priorYearSameDayISO(1),
         time: "08:45",
         section: "Life",
         peopleTags: ["Theo Kaneli"],
         mood: 5,
-        location: "Athens · Acropolis",
+        location: "Athens",
         starred: true,
         linkedIds: ["m-otd-1"],
         media: {
@@ -482,8 +479,8 @@ export function seedMemories(): MemoriesState {
         kind: "milestone",
         milestoneCategory: "Launch",
         pinned: true,
-        title: "Launched Fieldnotes Issue #1",
-        text: "Sent the very first dispatch to forty-two friends at midnight. None of us knew where the thread would lead.",
+        title: "Sent out Newsletter Issue #1",
+        text: "Published our very first issue to 42 readers.",
         date: priorYearSameDayISO(2),
         time: "23:15",
         section: "Work",
@@ -518,9 +515,9 @@ function ensureCousinInPeople() {
           lastSeen: offsetISO(-12),
           cadenceDays: 30,
           birthday: "08-11",
-          promise: "Host rooftop roast next month",
-          gift: "Kenyan AA pour-over set",
-          notes: "Architecture graduate; last caught up over dinner in Kilimani.",
+          promise: "Host dinner next month",
+          gift: "Kenyan coffee set",
+          notes: "Last caught up over dinner in Kilimani.",
         },
       ],
     }));
@@ -581,7 +578,7 @@ export function useMemories(): MemoriesState {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Mutations: Add Journal, Media, Milestone, Toggle Star, Link       */
+/*  Mutations                                                         */
 /* ------------------------------------------------------------------ */
 
 export function nowHHMM(): string {
@@ -595,7 +592,6 @@ export function addMemoryEntry(entry: Omit<MemoryEntry, "id">): MemoryEntry {
     id: `m-${Date.now().toString(36)}-${Math.floor(Math.random() * 999)}`,
   };
   setMemories((prev) => {
-    // Also back-link any referenced linkedIds
     const updated = prev.entries.map((e) =>
       created.linkedIds.includes(e.id) && !e.linkedIds.includes(created.id)
         ? { ...e, linkedIds: [...e.linkedIds, created.id] }
@@ -611,7 +607,6 @@ export function addMemoryEntry(entry: Omit<MemoryEntry, "id">): MemoryEntry {
     };
   });
 
-  // Also mirror journal/milestone into legacy store.journal so Atlas AI snapshot sees it!
   if (created.kind === "journal" || created.kind === "milestone" || created.kind === "autolog") {
     setState((s) => ({
       journal: [
@@ -658,7 +653,7 @@ export function setCustomDailySummary(date: string, summary: string) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Atlas Automatic Daily Summary Generator                           */
+/*  Daily Summary (Simple One-Line Recap)                             */
 /* ------------------------------------------------------------------ */
 
 export function generateAtlasDailySummary(
@@ -667,39 +662,40 @@ export function generateAtlasDailySummary(
   customSummaries: Record<string, string>
 ): string {
   if (customSummaries[date]?.trim()) return customSummaries[date];
-  if (!dayEntries.length) return "A quiet page — nothing weighed upon the ledger.";
+  if (!dayEntries.length) return "Quiet day — nothing logged yet.";
 
   const milestones = dayEntries.filter((e) => e.kind === "milestone");
   const journals = dayEntries.filter((e) => e.kind === "journal");
   const media = dayEntries.filter((e) => e.kind === "media");
   const autos = dayEntries.filter((e) => e.kind === "autolog");
   const people = Array.from(new Set(dayEntries.flatMap((e) => e.peopleTags)));
-  const sections = Array.from(new Set(dayEntries.map((e) => e.section).filter(Boolean)));
 
   const parts: string[] = [];
   if (milestones.length > 0) {
-    parts.push(`Pinned milestone “${milestones[0].title}”`);
+    parts.push(milestones[0].title);
   } else if (journals.length > 0) {
-    parts.push(`Wrote “${journals[0].title}”`);
+    parts.push(journals[0].title);
   }
   if (media.length > 0) {
     const vCount = media.filter((m) => m.media?.mediaType === "video").length;
     const pCount = media.length - vCount;
-    const label = [pCount ? `${pCount} photo${pCount > 1 ? "s" : ""}` : "", vCount ? `${vCount} video${vCount > 1 ? "s" : ""}` : ""]
+    const label = [
+      pCount ? `${pCount} photo${pCount > 1 ? "s" : ""}` : "",
+      vCount ? `${vCount} video${vCount > 1 ? "s" : ""}` : "",
+    ]
       .filter(Boolean)
-      .join(" & ");
-    parts.push(`kept ${label}`);
+      .join(" and ");
+    parts.push(`added ${label}`);
   }
   if (autos.length > 0) {
-    parts.push(`${autos.length} automatic log${autos.length > 1 ? "s" : ""}`);
+    parts.push(`${autos.length} activity item${autos.length > 1 ? "s" : ""}`);
   }
   if (people.length > 0) {
     parts.push(`with ${people.slice(0, 2).join(" & ")}`);
-  } else if (sections.length > 0) {
-    parts.push(`across ${sections.join(" & ")}`);
   }
 
-  return `${parts.join(", ")}.`;
+  const line = parts.join(", ");
+  return line ? `${line.charAt(0).toUpperCase()}${line.slice(1)}.` : "Quiet day.";
 }
 
 export function averageDayMood(dayEntries: MemoryEntry[]): number {
@@ -709,8 +705,7 @@ export function averageDayMood(dayEntries: MemoryEntry[]): number {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Quick Log to Atlas ("spent 800 on lunch with Sam")                */
-/*  Files into Work / Study / People / Life AND creates Timeline row! */
+/*  Quick Log ("spent 800 on lunch with Sam")                         */
 /* ------------------------------------------------------------------ */
 
 export function logToAtlasQuick(rawInput: string): {
@@ -725,7 +720,6 @@ export function logToAtlasQuick(rawInput: string): {
   const peopleTags: string[] = [];
   let section: SectionTag = "Life";
 
-  // 1. Detect people mentioned (existing people OR "with <Name>" / "called <Name>" / "saw <Name>")
   for (const p of s.people) {
     const first = p.name.split(" ")[0].toLowerCase();
     if (lower.includes(p.name.toLowerCase()) || (first.length >= 3 && new RegExp(`\\b${first}\\b`, "i").test(text))) {
@@ -751,13 +745,13 @@ export function logToAtlasQuick(rawInput: string): {
           {
             id: `pe-${Date.now().toString(36)}`,
             name: mentioned,
-            relation: "Circle",
+            relation: "Friend",
             lastSeen: todayISO(),
             cadenceDays: 21,
             birthday: "06-15",
             promise: "—",
             gift: "—",
-            notes: `Added from Atlas log: “${text}”`,
+            notes: `Added from quick log: “${text}”`,
           },
           ...prev.people,
         ],
@@ -771,7 +765,6 @@ export function logToAtlasQuick(rawInput: string): {
     filedUnder.push(`People (${peopleTags.join(", ")})`);
   }
 
-  // 2. Detect spending / income ("spent 800 on lunch with Sam", "paid 45 for books", "earned 1200")
   const moneyMatch = text.match(/(?:spent|paid|bought|cost|earned|invoiced|received)?\s*\$?(\d[\d,]*(?:\.\d+)?)/i);
   const isMoney = /\b(spent|paid|bought|cost|lunch|dinner|coffee|groceries|uber|taxi|earned|invoiced|rent)\b/i.test(lower);
 
@@ -789,12 +782,12 @@ export function logToAtlasQuick(rawInput: string): {
               amount,
               kind: isIncome ? "income" : "expense",
               date: todayISO(),
-              bucket: "Atlas Log",
+              bucket: "Work",
             },
             ...prev.ledger,
           ],
         }));
-        filedUnder.unshift(`Work Ledger ($${amount})`);
+        filedUnder.unshift(`Work ($${amount})`);
       } else {
         section = "Life";
         setState((prev) => ({
@@ -811,10 +804,10 @@ export function logToAtlasQuick(rawInput: string): {
             ...prev.ledger,
           ],
         }));
-        filedUnder.unshift(`Life Money (${amount})`);
+        filedUnder.unshift(`Life (${amount})`);
       }
     }
-  } else if (/\b(class|lecture|studied|course|exam|assignment|greek|statistics|read)\b/i.test(lower)) {
+  } else if (/\b(class|lecture|studied|course|exam|assignment|read)\b/i.test(lower)) {
     section = "Study";
     filedUnder.unshift("Study");
   } else if (/\b(shipped|client|project|deck|meeting|design|work|task)\b/i.test(lower)) {
@@ -825,7 +818,7 @@ export function logToAtlasQuick(rawInput: string): {
     if (/\b(workout|ran|gym)\b/i.test(lower)) {
       setState((prev) => ({ health: { ...prev.health, workouts: prev.health.workouts + 1 } }));
     }
-    filedUnder.unshift("Life Health");
+    filedUnder.unshift("Life");
   } else if (peopleTags.length > 0) {
     section = "People";
   } else {
@@ -835,7 +828,7 @@ export function logToAtlasQuick(rawInput: string): {
   const entry = addMemoryEntry({
     kind: "autolog",
     title: text.charAt(0).toUpperCase() + text.slice(1),
-    text: `Filed under ${Array.from(new Set(filedUnder)).join(" · ")}`,
+    text: `Saved to ${Array.from(new Set(filedUnder)).join(" & ")}`,
     date: todayISO(),
     time: nowHHMM(),
     section,
@@ -848,8 +841,7 @@ export function logToAtlasQuick(rawInput: string): {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Plain-Language Search & Conversational Q&A                        */
-/*  Handles queries like "when did I last see my cousin?"             */
+/*  Plain-Language Search                                             */
 /* ------------------------------------------------------------------ */
 
 export function searchMemoriesNaturalLanguage(
@@ -891,7 +883,6 @@ export function searchMemoriesNaturalLanguage(
     "from",
   ]);
 
-  // 1. Relation resolution ("cousin", "sister", "mum", "mother", "mentor", "friend")
   const matchedPeople: Person[] = atlasState.people.filter((p) => {
     const rel = p.relation.toLowerCase();
     const name = p.name.toLowerCase();
@@ -924,7 +915,6 @@ export function searchMemoriesNaturalLanguage(
         .join(" ")
         .toLowerCase();
 
-      // Match resolved person from relation (e.g. "cousin" -> "Malik Mwangi")
       for (const p of matchedPeople) {
         if (
           e.peopleTags.some((tag) => tag.toLowerCase().includes(p.name.split(" ")[0].toLowerCase())) ||
@@ -961,7 +951,6 @@ export function searchMemoriesNaturalLanguage(
 
   const results = scored.map((x) => x.e);
 
-  // Build direct natural-language answer for questions ("when...", "who...", "how many...", matched person)
   let answer: string | null = null;
   const isQuestion = /^(when|where|what|who|how)\b/i.test(q) || q.endsWith("?");
 
@@ -970,28 +959,26 @@ export function searchMemoriesNaturalLanguage(
     const latestEntry = [...results].sort((a, b) => b.date.localeCompare(a.date))[0];
     if (latestEntry) {
       const ago = daysSince(latestEntry.date);
-      answer = `Last recorded with ${p.name} (${p.relation}): ${prettyDate(latestEntry.date)} (${
+      answer = `You last saw ${p.name} (${p.relation}) ${
         ago === 0 ? "today" : `${ago} days ago`
-      }) — “${latestEntry.title}”${latestEntry.location ? ` at ${latestEntry.location}` : ""}.`;
+      } on ${prettyDate(latestEntry.date)}${latestEntry.location ? ` in ${latestEntry.location}` : ""}.`;
     } else {
       const ago = daysSince(p.lastSeen);
-      answer = `${p.name} (${p.relation}) was last seen on ${prettyDate(p.lastSeen)} (${ago} days ago).`;
+      answer = `You last saw ${p.name} (${p.relation}) ${ago} days ago (${prettyDate(p.lastSeen)}).`;
     }
   } else if (isQuestion && results.length > 0) {
     const top = results[0];
     const ago = daysSince(top.date);
-    answer = `Closest match (${results.length} found): ${prettyDate(top.date)} (${
-      ago === 0 ? "today" : `${ago}d ago`
-    }) — “${top.title}”${top.location ? ` · ${top.location}` : ""}.`;
+    answer = `${prettyDate(top.date)} (${ago === 0 ? "today" : `${ago} days ago`}) — ${top.title}.`;
   } else if (isQuestion && results.length === 0) {
-    answer = "No matching memory found in the chronicle yet.";
+    answer = "Nothing found yet.";
   }
 
   return { answer, results };
 }
 
 /* ------------------------------------------------------------------ */
-/*  Biometric (WebAuthn) & PIN Lock Helpers                           */
+/*  PIN & Biometric Lock                                              */
 /* ------------------------------------------------------------------ */
 
 export function hashPin(pin: string): string {
@@ -1005,7 +992,7 @@ export function hashPin(pin: string): string {
 
 export async function registerBiometricLock(): Promise<{ ok: boolean; credentialId?: string; error?: string }> {
   if (typeof window === "undefined" || !window.PublicKeyCredential || !navigator.credentials?.create) {
-    return { ok: false, error: "Biometric WebAuthn is not available on this device/browser — use a 4-digit PIN." };
+    return { ok: false, error: "Biometrics are not supported on this device. Please use a PIN." };
   }
   try {
     const challenge = new Uint8Array(32);
@@ -1016,11 +1003,11 @@ export async function registerBiometricLock(): Promise<{ ok: boolean; credential
     const cred = (await navigator.credentials.create({
       publicKey: {
         challenge,
-        rp: { name: "Atlas Memories Sanctuary" },
+        rp: { name: "Atlas Memories" },
         user: {
           id: userId,
-          name: "bearer@atlas.local",
-          displayName: "Atlas Bearer",
+          name: "user@atlas.local",
+          displayName: "Atlas User",
         },
         pubKeyCredParams: [
           { type: "public-key", alg: -7 },
@@ -1034,13 +1021,13 @@ export async function registerBiometricLock(): Promise<{ ok: boolean; credential
       },
     })) as PublicKeyCredential | null;
 
-    if (!cred) return { ok: false, error: "Biometric enrollment was cancelled." };
+    if (!cred) return { ok: false, error: "Biometric setup was cancelled." };
     const idB64 = btoa(String.fromCharCode(...Array.from(new Uint8Array(cred.rawId))));
     return { ok: true, credentialId: idB64 };
   } catch (e) {
     return {
       ok: false,
-      error: e instanceof Error ? e.message : "Biometric registration could not complete in this context — use PIN.",
+      error: e instanceof Error ? e.message : "Could not set up biometrics here. Please use a PIN.",
     };
   }
 }
@@ -1066,7 +1053,7 @@ export async function verifyBiometricLock(credentialIdB64: string): Promise<bool
 }
 
 /* ------------------------------------------------------------------ */
-/*  Export Whole Timeline (JSON & Markdown Chronicle)                 */
+/*  Export Whole Timeline                                             */
 /* ------------------------------------------------------------------ */
 
 export function exportMemoriesArchive(
@@ -1089,11 +1076,10 @@ export function exportMemoriesArchive(
       null,
       2
     );
-    triggerDownload(`atlas-memories-${stamp}.json`, payload, "application/json");
+    triggerDownload(`memories-${stamp}.json`, payload, "application/json");
     return;
   }
 
-  // Group by day for Markdown chronicle
   const byDay = new Map<string, MemoryEntry[]>();
   for (const e of sorted) {
     const list = byDay.get(e.date) ?? [];
@@ -1102,8 +1088,8 @@ export function exportMemoriesArchive(
   }
 
   const lines: string[] = [
-    `# ATLAS — Memories Chronicle`,
-    `Exported on ${prettyDate(stamp)} · ${sorted.length} entries`,
+    `# Memories`,
+    `Exported on ${prettyDate(stamp)} (${sorted.length} items)`,
     ``,
   ];
 
@@ -1111,28 +1097,27 @@ export function exportMemoriesArchive(
     const summary = generateAtlasDailySummary(date, dayEntries, state.customSummaries);
     const mood = averageDayMood(dayEntries);
     lines.push(`## ${prettyDate(date)} · Mood ${mood}/5`);
-    lines.push(`> **Atlas Daily Summary:** ${summary}`);
+    lines.push(`Summary: ${summary}`);
     lines.push(``);
     for (const e of dayEntries) {
       const meta = [
         e.time,
-        e.kind.toUpperCase(),
-        e.section ? `#${e.section}` : "",
+        e.section ?? "",
         e.peopleTags.length ? `with ${e.peopleTags.join(", ")}` : "",
-        e.location ? `@ ${e.location}` : "",
-        e.starred ? "★ Highlight" : "",
+        e.location ?? "",
+        e.starred ? "Starred" : "",
       ]
         .filter(Boolean)
         .join(" · ");
       lines.push(`### ${e.title}`);
-      lines.push(`*${meta}*`);
+      if (meta) lines.push(`*${meta}*`);
       if (e.text) lines.push(``, e.text);
-      if (e.media) lines.push(``, `Media (${e.media.mediaType} · Album: ${e.media.album}): ${e.media.src}`);
+      if (e.media) lines.push(``, `File (${e.media.album}): ${e.media.src}`);
       lines.push(``);
     }
   });
 
-  triggerDownload(`atlas-memories-${stamp}.md`, lines.join("\n"), "text/markdown");
+  triggerDownload(`memories-${stamp}.md`, lines.join("\n"), "text/markdown");
 }
 
 function triggerDownload(filename: string, content: string, mime: string) {
