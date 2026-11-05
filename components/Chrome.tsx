@@ -35,7 +35,7 @@ export function TopBar() {
           <Link href="/hub" className="group flex shrink-0 items-center gap-3">
             <span className="h-11 w-11 overflow-hidden rounded-full border-2 border-wine bg-wine">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/icons/icon-192.png" alt="" className="h-full w-full object-cover" />
+              <img src="/icons/sphere-192.png?v=4" alt="" className="h-full w-full object-cover" />
             </span>
             <span className="font-display text-[25px] tracking-[0.34em] text-wine">ATLAS</span>
           </Link>
