@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { getSession, clearSession } from "@/lib/store";
 import { MeanderWine } from "./Ornaments";
 import { AtlasSideIcon } from "./AtlasSideIcon";
+import { InstallAppButton } from "./PwaInstall";
 
 export function TopBar() {
   const router = useRouter();
@@ -19,7 +20,7 @@ export function TopBar() {
   }, []);
 
   const links = [
-    { href: "/hub", label: "Hub" },
+    { href: "/hub", label: "World" },
     { href: "/atlas", label: "Atlas AI" },
     { href: "/work", label: "Work" },
     { href: "/study", label: "Study" },
@@ -33,11 +34,9 @@ export function TopBar() {
       <div className="mx-auto max-w-[1240px] px-5 sm:px-8">
         <div className="flex items-center justify-between gap-4 py-4">
           <Link href="/hub" className="group flex shrink-0 items-center gap-3">
-            <span className="grid h-11 w-11 place-items-center rounded-full bg-wine">
-              <svg width="21" height="21" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="8" stroke="#F5E8D3" strokeWidth="2" />
-                <ellipse cx="12" cy="12" rx="8" ry="3.4" stroke="#F5E8D3" strokeWidth="1.4" />
-              </svg>
+            <span className="h-11 w-11 overflow-hidden rounded-full border-2 border-wine bg-wine">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/icons/icon-192.png" alt="" className="h-full w-full object-cover" />
             </span>
             <span className="font-display text-[25px] tracking-[0.34em] text-wine">ATLAS</span>
           </Link>
@@ -59,7 +58,10 @@ export function TopBar() {
             })}
           </nav>
 
-          <div className="relative flex shrink-0 items-center gap-2">
+          <div className="relative flex shrink-0 items-center gap-2.5">
+            <div className="hidden sm:block">
+              <InstallAppButton tone="light" label="Download" className="px-4 py-2 text-[16.5px]" />
+            </div>
             <button
               onClick={() => setMenu((m) => !m)}
               className="grid h-11 w-11 place-items-center rounded-full border-2 border-wine bg-marble font-ui text-[18px] uppercase tracking-widest text-wine transition-colors hover:bg-wine hover:text-marble"
@@ -72,6 +74,9 @@ export function TopBar() {
                 <p className="px-3 py-2 font-ui text-[17px] uppercase tracking-[0.2em] text-wine opacity-65">The bearer</p>
                 <p className="truncate px-3 pb-2 font-body text-[21px] text-wine">{name}</p>
                 <div className="my-2 h-[2px] bg-wine/25" />
+                <div className="px-1 pb-1 sm:hidden">
+                  <InstallAppButton tone="light" label="Download app" className="w-full" />
+                </div>
                 <button
                   onClick={() => {
                     clearSession();

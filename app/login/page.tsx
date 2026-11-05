@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ScrollFrame } from "@/components/ScrollFrame";
 import { MeanderWine, LaurelDivider, GoldDots } from "@/components/Ornaments";
+import { InstallAppButton } from "@/components/PwaInstall";
 import { signIn, getSession } from "@/lib/store";
 
 export default function LoginPage() {
@@ -17,8 +18,9 @@ export default function LoginPage() {
 
   useEffect(() => {
     setMounted(true);
-    if (getSession()) router.replace("/hub");
-  }, [router]);
+    const existing = getSession();
+    if (existing?.email) setEmail(existing.email);
+  }, []);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,7 +34,7 @@ export default function LoginPage() {
         return;
       }
       router.push("/hub");
-    }, 420);
+    }, 360);
   }
 
   return (
@@ -57,11 +59,20 @@ export default function LoginPage() {
       <GoldDots count={18} className="opacity-30" />
 
       <div className="relative z-10 mx-auto flex min-h-screen max-w-[1280px] flex-col px-6 sm:px-10">
-        <header className="flex items-center justify-between py-6">
-          <span className="font-display text-[22px] tracking-[0.42em] text-marble">ATLAS</span>
-          <span className="hidden font-ui text-[18px] uppercase tracking-[0.24em] text-marble opacity-85 sm:block">
-            Ἄτλας · he who holds the sky
-          </span>
+        <header className="flex items-center justify-between gap-4 py-6">
+          <Link href="/" className="flex items-center gap-3">
+            <span className="h-10 w-10 overflow-hidden rounded-full border-2 border-marble bg-wine">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/icons/icon-192.png" alt="" className="h-full w-full object-cover" />
+            </span>
+            <span className="font-display text-[22px] tracking-[0.42em] text-marble">ATLAS</span>
+          </Link>
+          <div className="flex items-center gap-4">
+            <span className="hidden font-ui text-[18px] uppercase tracking-[0.24em] text-marble opacity-85 lg:block">
+              Ἄτλας · he who holds the sky
+            </span>
+            <InstallAppButton tone="dark" label="Download app" />
+          </div>
         </header>
 
         <div className="grid flex-1 items-center gap-12 pb-14 md:grid-cols-[minmax(0,520px)_1fr]">
@@ -146,7 +157,7 @@ export default function LoginPage() {
               <LaurelDivider tone="dark" className="mt-7 justify-start" />
               <div className="mt-7 grid grid-cols-3 gap-3">
                 {[
-                  ["4", "pillars"],
+                  ["5", "spheres"],
                   ["1", "world"],
                   ["∞", "days"],
                 ].map(([n, l]) => (
@@ -161,7 +172,9 @@ export default function LoginPage() {
         </div>
 
         <footer className="flex flex-wrap items-center justify-between gap-4 pb-6">
-          <p className="font-ui text-[17px] uppercase tracking-[0.24em] text-marble opacity-50">Athens · MMXXV</p>
+          <Link href="/" className="font-ui text-[17px] uppercase tracking-[0.2em] text-marble opacity-60 hover:opacity-100">
+            ← Back to AI sphere
+          </Link>
           <Link
             href="/hub"
             className="rounded-pill border-2 border-marble px-5 py-2.5 font-ui text-[17.5px] uppercase tracking-[0.18em] text-marble transition-colors hover:bg-marble hover:text-wine"
