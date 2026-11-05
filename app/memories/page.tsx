@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MemorySphere, type SphereGlyph } from "@/components/MemorySphere";
-import { Badge, Empty, Panel } from "@/components/ui";
 import { prettyDate, todayISO, useAtlas } from "@/lib/store";
 import {
   addMemoryEntry,
@@ -31,59 +30,23 @@ import {
 } from "@/lib/memories";
 
 /* ------------------------------------------------------------------ */
-/*  Branch Definitions (the 5 Spheres inside Memories)                */
+/*  The 5 Memory Branches (Simple Everyday Labels)                    */
 /* ------------------------------------------------------------------ */
 
 type BranchMeta = {
   key: MemoryBranchKey;
   name: string;
-  greek: string;
+  sub: string;
   glyph: SphereGlyph;
-  blurb: string;
   phase: number;
 };
 
 const BRANCHES: BranchMeta[] = [
-  {
-    key: "timeline",
-    name: "Timeline",
-    greek: "Χρόνος",
-    glyph: "timeline",
-    blurb: "Newest first · On this day, Atlas daily summaries, cards & auto-logs.",
-    phase: 0.2,
-  },
-  {
-    key: "gallery",
-    name: "Gallery",
-    greek: "Εἰκόνες",
-    glyph: "gallery",
-    blurb: "Photos & videos grouped by month, albums & media filters.",
-    phase: 1.4,
-  },
-  {
-    key: "calendar",
-    name: "Calendar",
-    greek: "Ἡμερολόγιον",
-    glyph: "calendar",
-    blurb: "Month view marked by daily activity — tap any day to jump to Timeline.",
-    phase: 2.6,
-  },
-  {
-    key: "journal",
-    name: "Journal",
-    greek: "Γραφή",
-    glyph: "journal",
-    blurb: "Daily writing, voice notes, reflections, ideas & starred highlights.",
-    phase: 3.8,
-  },
-  {
-    key: "milestones",
-    name: "Milestones",
-    greek: "Σταθμοί",
-    glyph: "milestones",
-    blurb: "Achievements, launches, graduations, trips & firsts with linked photos.",
-    phase: 5.0,
-  },
+  { key: "timeline", name: "Timeline", sub: "Main feed", glyph: "timeline", phase: 0.2 },
+  { key: "gallery", name: "Gallery", sub: "Photos & videos", glyph: "gallery", phase: 1.4 },
+  { key: "calendar", name: "Calendar", sub: "Month view", glyph: "calendar", phase: 2.6 },
+  { key: "journal", name: "Journal", sub: "Notes & voice", glyph: "journal", phase: 3.8 },
+  { key: "milestones", name: "Milestones", sub: "Big moments", glyph: "milestones", phase: 5.0 },
 ];
 
 const SECTIONS: SectionTag[] = ["Work", "Study", "People", "Life"];
@@ -100,7 +63,7 @@ type SpeechRecLike = {
 };
 
 /* ------------------------------------------------------------------ */
-/*  Main Page Component                                               */
+/*  Memories Page                                                     */
 /* ------------------------------------------------------------------ */
 
 export default function MemoriesPage() {
@@ -108,51 +71,31 @@ export default function MemoriesPage() {
   const atlas = useAtlas();
   const mem = useMemories();
 
-  // Spatial navigation state
   const [globeDocked, setGlobeDocked] = useState(false);
   const [activeBranch, setActiveBranch] = useState<MemoryBranchKey | null>(null);
   const [jumpDate, setJumpDate] = useState<string | null>(null);
 
-  // Search, Quick Atlas Log, Lock, Export & Lightbox
+  // Top bar controls
+  const [barMode, setBarMode] = useState<"search" | "log">("search");
   const [searchQuery, setSearchQuery] = useState("");
   const [quickLogInput, setQuickLogInput] = useState("");
-  const [quickLogFeedback, setQuickLogFeedback] = useState<string | null>(null);
+  const [quickLogNotice, setQuickLogNotice] = useState<string | null>(null);
   const [showLockModal, setShowLockModal] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [lightboxEntry, setLightboxEntry] = useState<MemoryEntry | null>(null);
 
-  // Animate the Memories Globe from center -> left on mount
+  // Move Memories Globe from center to left on open
   useEffect(() => {
-    const id = requestAnimationFrame(() => {
-      setGlobeDocked(true);
-    });
+    const id = requestAnimationFrame(() => setGlobeDocked(true));
     return () => cancelAnimationFrame(id);
   }, []);
 
-  // Count badges per branch sphere
-  const branchCounts = useMemo(() => {
-    const mediaCount = mem.entries.filter(
-      (e) => e.kind === "media" || (e.mediaAttachments && e.mediaAttachments.length > 0)
-    ).length;
-    const daysCount = new Set(mem.entries.map((e) => e.date)).size;
-    const journalCount = mem.entries.filter((e) => e.kind === "journal" || e.starred).length;
-    const milestoneCount = mem.entries.filter((e) => e.kind === "milestone").length;
-    return {
-      timeline: `${mem.entries.length}`,
-      gallery: `${mediaCount}`,
-      calendar: `${daysCount}d`,
-      journal: `${journalCount}`,
-      milestones: `${milestoneCount}`,
-    } as Record<MemoryBranchKey, string>;
-  }, [mem.entries]);
-
-  // Plain-language search results
   const searchResult = useMemo(
     () => searchMemoriesNaturalLanguage(searchQuery, mem.entries, atlas),
     [searchQuery, mem.entries, atlas]
   );
 
-  const handleMemoriesGlobePress = () => {
+  const handleBackPress = () => {
     if (activeBranch !== null) {
       setActiveBranch(null);
       setJumpDate(null);
@@ -166,20 +109,18 @@ export default function MemoriesPage() {
     if (!quickLogInput.trim()) return;
     const res = logToAtlasQuick(quickLogInput);
     setQuickLogInput("");
-    setQuickLogFeedback(`Logged to Timeline · Filed under ${res.filedUnder.join(" & ")}`);
-    window.setTimeout(() => setQuickLogFeedback(null), 4500);
+    setQuickLogNotice(`Saved to Timeline and ${res.filedUnder.join(" & ")}`);
+    window.setTimeout(() => setQuickLogNotice(null), 4000);
   };
 
-  const openLinkedItem = (targetId: string) => {
-    const found = mem.entries.find((x) => x.id === targetId);
-    if (!found) return;
-    setLightboxEntry(found);
+  const openLinkedItem = (id: string) => {
+    const found = mem.entries.find((x) => x.id === id);
+    if (found) setLightboxEntry(found);
   };
 
-  /* ---- Vault Lock Curtain ---- */
   if (mem.lock.locked) {
     return (
-      <VaultLockScreen
+      <LockScreen
         pinHash={mem.lock.pinHash}
         biometricCredentialId={mem.lock.biometricCredentialId}
         onUnlock={() => setMemories((prev) => ({ lock: { ...prev.lock, locked: false } }))}
@@ -188,77 +129,57 @@ export default function MemoriesPage() {
     );
   }
 
+  const currentBranchMeta = BRANCHES.find((b) => b.key === activeBranch);
+
   return (
     <div className="relative min-h-[100svh] w-screen overflow-x-hidden bg-marble text-wine">
       {/* ================================================================ */}
-      {/* 1. LEFT-GLIDING MEMORIES GLOBE (Center -> Left, Press to go back)*/}
+      {/* 1. LEFT MEMORIES GLOBE (Moves left on open; tap to go back)      */}
       {/* ================================================================ */}
       <div
         style={{
           transition:
-            "left 780ms cubic-bezier(0.22, 1, 0.36, 1), top 780ms cubic-bezier(0.22, 1, 0.36, 1), transform 780ms cubic-bezier(0.22, 1, 0.36, 1)",
+            "left 700ms cubic-bezier(0.22, 1, 0.36, 1), top 700ms cubic-bezier(0.22, 1, 0.36, 1), transform 700ms cubic-bezier(0.22, 1, 0.36, 1)",
         }}
         className={
           globeDocked
-            ? "fixed left-[38px] top-[92px] z-50 -translate-x-1/2 -translate-y-1/2 scale-100 sm:left-[54px] sm:top-[106px]"
-            : "fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 scale-[1.5]"
+            ? "fixed left-[38px] top-[92px] z-50 -translate-x-1/2 -translate-y-1/2 scale-100 sm:left-[54px] sm:top-[104px]"
+            : "fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 scale-[1.45]"
         }
       >
-        <div className="flex flex-col items-center">
-          <button
-            type="button"
-            onClick={handleMemoriesGlobePress}
-            title={activeBranch ? "Back to Memories spheres" : "Back to Atlas World"}
-            aria-label={activeBranch ? "Back to Memories branch spheres" : "Back to Atlas World"}
-            className="group cursor-pointer rounded-full transition-transform duration-200 hover:scale-105 focus-visible:ring-4 focus-visible:ring-wine"
-          >
-            <div className="hidden sm:block">
-              <MemorySphere glyph="memories" size={82} tone="wine" speed={0.55} />
-            </div>
-            <div className="sm:hidden">
-              <MemorySphere glyph="memories" size={62} tone="wine" speed={0.55} />
-            </div>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleMemoriesGlobePress}
-            className="mt-1.5 rounded-pill border-2 border-wine bg-wine px-2.5 py-0.5 font-ui text-[13px] uppercase tracking-[0.14em] text-marble transition-colors hover:bg-marble hover:text-wine sm:text-[14px]"
-          >
-            {activeBranch ? "← Spheres" : "← Back"}
-          </button>
-
-          {activeBranch && (
-            <button
-              type="button"
-              onClick={() => router.push("/hub")}
-              className="mt-1 font-ui text-[12.5px] uppercase tracking-[0.14em] text-wine opacity-65 hover:opacity-100"
-            >
-              ← World
-            </button>
-          )}
-        </div>
+        <button
+          type="button"
+          onClick={handleBackPress}
+          aria-label="Go back"
+          className="group flex cursor-pointer flex-col items-center focus-visible:outline-none"
+        >
+          <div className="hidden transition-transform duration-200 group-hover:scale-105 sm:block">
+            <MemorySphere glyph="memories" size={78} tone="wine" speed={0.5} />
+          </div>
+          <div className="transition-transform duration-200 group-hover:scale-105 sm:hidden">
+            <MemorySphere glyph="memories" size={60} tone="wine" speed={0.5} />
+          </div>
+          <span className="mt-1 rounded-pill border border-wine bg-marble px-2.5 py-0.5 font-ui text-[13px] text-wine transition-colors group-hover:bg-wine group-hover:text-marble">
+            ← Back
+          </span>
+        </button>
       </div>
 
       {/* ================================================================ */}
-      {/* 2. RIGHT SCROLLABLE BRANCH SPHERE RAIL (other branches on right) */}
+      {/* 2. RIGHT SCROLLABLE SPHERE RAIL (Other branches move right)      */}
       {/* ================================================================ */}
       <aside
-        aria-label="Other Memories branch spheres"
+        aria-label="Other branches"
         style={{
-          transition:
-            "transform 680ms cubic-bezier(0.22, 1, 0.36, 1), opacity 520ms ease",
+          transition: "transform 600ms cubic-bezier(0.22, 1, 0.36, 1), opacity 450ms ease",
         }}
         className={
           activeBranch !== null
-            ? "fixed right-1.5 top-1/2 z-40 max-h-[78svh] w-[82px] -translate-y-1/2 translate-x-0 overflow-y-auto rounded-2xl border-2 border-wine bg-marble/95 px-1.5 py-3.5 opacity-100 shadow-lg backdrop-blur-sm sm:right-4 sm:w-[114px] sm:px-2.5 sm:py-4"
-            : "pointer-events-none fixed right-4 top-1/2 z-40 max-h-[78svh] w-[114px] -translate-y-1/2 translate-x-40 opacity-0"
+            ? "fixed right-2 top-1/2 z-40 max-h-[80svh] w-[78px] -translate-y-1/2 translate-x-0 overflow-y-auto py-3 opacity-100 sm:right-5 sm:w-[104px]"
+            : "pointer-events-none fixed right-5 top-1/2 z-40 max-h-[80svh] w-[104px] -translate-y-1/2 translate-x-36 opacity-0"
         }
       >
-        <p className="mb-2.5 text-center font-ui text-[11.5px] uppercase tracking-[0.16em] text-wine opacity-65 sm:text-[13px]">
-          Branches
-        </p>
-        <div className="flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center gap-5">
           {BRANCHES.filter((b) => b.key !== activeBranch).map((b) => (
             <button
               key={b.key}
@@ -268,28 +189,15 @@ export default function MemoriesPage() {
                 setActiveBranch(b.key);
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className="group relative flex w-full cursor-pointer flex-col items-center rounded-xl p-1 transition-transform duration-200 hover:scale-105"
+              className="group flex cursor-pointer flex-col items-center transition-transform duration-200 hover:scale-105"
             >
-              <span className="absolute right-1 top-0.5 z-10 rounded-pill border border-marble bg-wine px-1.5 py-0 font-ui text-[10.5px] text-marble sm:text-[11.5px]">
-                {branchCounts[b.key]}
-              </span>
               <div className="hidden sm:block">
-                <MemorySphere
-                  glyph={b.glyph}
-                  size={74}
-                  tone="wine"
-                  phaseOffset={b.phase}
-                />
+                <MemorySphere glyph={b.glyph} size={72} tone="wine" phaseOffset={b.phase} />
               </div>
               <div className="sm:hidden">
-                <MemorySphere
-                  glyph={b.glyph}
-                  size={54}
-                  tone="wine"
-                  phaseOffset={b.phase}
-                />
+                <MemorySphere glyph={b.glyph} size={52} tone="wine" phaseOffset={b.phase} />
               </div>
-              <span className="mt-1.5 w-full truncate rounded-pill border border-wine bg-marble px-1.5 py-0.5 text-center font-ui text-[11.5px] uppercase tracking-[0.1em] text-wine transition-colors group-hover:bg-wine group-hover:text-marble sm:text-[13px]">
+              <span className="mt-1 font-ui text-[13px] text-wine opacity-85 group-hover:opacity-100 sm:text-[14.5px]">
                 {b.name}
               </span>
             </button>
@@ -298,41 +206,20 @@ export default function MemoriesPage() {
       </aside>
 
       {/* ================================================================ */}
-      {/* 3. CENTER MAIN WORKSPACE                                         */}
+      {/* 3. CENTER CONTENT                                                */}
       {/* ================================================================ */}
       <main
-        className={`mx-auto max-w-[1280px] pb-28 pl-20 pt-7 transition-all duration-500 sm:pl-32 sm:pt-9 ${
-          activeBranch !== null ? "pr-[92px] sm:pr-[142px]" : "pr-5 sm:pr-10"
+        className={`mx-auto max-w-[980px] pb-24 pl-20 pt-7 transition-all duration-300 sm:pl-32 sm:pt-10 ${
+          activeBranch !== null ? "pr-24 sm:pr-36" : "pr-6 sm:pr-12"
         }`}
       >
-        {/* ---- Clean Page Title + Extras Bar (Lock & Export) ---- */}
+        {/* ---- Simple Header ---- */}
         <header className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-3.5">
-            {activeBranch && (
-              <div className="shrink-0">
-                <MemorySphere
-                  glyph={BRANCHES.find((b) => b.key === activeBranch)?.glyph ?? "timeline"}
-                  size={54}
-                  active
-                  tone="wine"
-                />
-              </div>
-            )}
-            <div className="flex flex-wrap items-baseline gap-3">
-              <h1 className="font-display text-[clamp(32px,4.8vw,54px)] leading-[1.05] tracking-[0.06em] text-wine">
-                {activeBranch
-                  ? BRANCHES.find((b) => b.key === activeBranch)?.name ?? "Memories"
-                  : "Memories"}
-              </h1>
-              {activeBranch && (
-                <span className="font-ui text-[16px] uppercase tracking-[0.2em] text-wine opacity-60">
-                  · Memories
-                </span>
-              )}
-            </div>
-          </div>
+          <h1 className="font-display text-[clamp(30px,4.2vw,44px)] tracking-[0.03em] text-wine">
+            {currentBranchMeta ? currentBranchMeta.name : "Memories"}
+          </h1>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => {
@@ -342,19 +229,18 @@ export default function MemoriesPage() {
                   setShowLockModal(true);
                 }
               }}
-              className="rounded-pill border-2 border-wine bg-marble px-4 py-2 font-ui text-[16px] uppercase tracking-[0.14em] text-wine transition-colors hover:bg-wine hover:text-marble"
+              className="rounded-pill border border-wine/50 px-3.5 py-1.5 font-ui text-[15px] text-wine transition-colors hover:border-wine hover:bg-wine hover:text-marble"
             >
-              {mem.lock.pinHash || mem.lock.biometricCredentialId ? "🔒 Lock" : "🔒 Set Lock"}
+              Lock
             </button>
 
             {(mem.lock.pinHash || mem.lock.biometricCredentialId) && (
               <button
                 type="button"
                 onClick={() => setShowLockModal(true)}
-                aria-label="Lock settings"
-                className="rounded-pill border-2 border-wine/60 bg-marble px-3 py-2 font-ui text-[15px] uppercase tracking-[0.12em] text-wine hover:bg-marbleDim"
+                className="rounded-pill border border-wine/35 px-3 py-1.5 font-ui text-[14.5px] text-wine opacity-75 hover:opacity-100"
               >
-                PIN / Bio
+                PIN
               </button>
             )}
 
@@ -362,24 +248,21 @@ export default function MemoriesPage() {
               <button
                 type="button"
                 onClick={() => setShowExportMenu((v) => !v)}
-                className="rounded-pill border-2 border-wine bg-wine px-4 py-2 font-ui text-[16px] uppercase tracking-[0.14em] text-marble transition-colors hover:bg-marble hover:text-wine"
+                className="rounded-pill border border-wine/50 px-3.5 py-1.5 font-ui text-[15px] text-wine transition-colors hover:border-wine hover:bg-wine hover:text-marble"
               >
-                ⬇ Export
+                Export
               </button>
               {showExportMenu && (
-                <div className="absolute right-0 top-12 z-50 w-64 rounded-2xl border-2 border-wine bg-marble p-2.5 shadow-xl anim-fade">
-                  <p className="px-3 py-1.5 font-ui text-[15px] uppercase tracking-[0.18em] text-wine opacity-65">
-                    Export whole timeline
-                  </p>
+                <div className="absolute right-0 top-11 z-50 w-48 rounded-xl border-2 border-wine bg-marble p-1.5 shadow-lg">
                   <button
                     type="button"
                     onClick={() => {
                       exportMemoriesArchive("markdown", mem);
                       setShowExportMenu(false);
                     }}
-                    className="mt-1 w-full rounded-xl px-3 py-2.5 text-left font-ui text-[16.5px] uppercase tracking-[0.12em] text-wine hover:bg-wine hover:text-marble"
+                    className="w-full rounded-lg px-3 py-2 text-left font-ui text-[15.5px] text-wine hover:bg-wine hover:text-marble"
                   >
-                    Markdown Chronicle (.md)
+                    Download Text (.md)
                   </button>
                   <button
                     type="button"
@@ -387,9 +270,9 @@ export default function MemoriesPage() {
                       exportMemoriesArchive("json", mem);
                       setShowExportMenu(false);
                     }}
-                    className="mt-1 w-full rounded-xl px-3 py-2.5 text-left font-ui text-[16.5px] uppercase tracking-[0.12em] text-wine hover:bg-wine hover:text-marble"
+                    className="w-full rounded-lg px-3 py-2 text-left font-ui text-[15.5px] text-wine hover:bg-wine hover:text-marble"
                   >
-                    Full JSON Archive (.json)
+                    Download Data (.json)
                   </button>
                 </div>
               )}
@@ -397,171 +280,130 @@ export default function MemoriesPage() {
           </div>
         </header>
 
-        {/* ---- Plain-Language Search + Quick "Log to Atlas" Bar ---- */}
-        <div className="mt-6 grid gap-3 lg:grid-cols-[1.15fr_1fr]">
-          {/* Plain-language search */}
-          <div className="relative flex items-center rounded-pill border-2 border-wine bg-marble px-4 py-1.5">
-            <span className="mr-2.5 font-ui text-[18px] text-wine opacity-65">⌕</span>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search in plain language — e.g. “when did I last see my cousin?”"
-              className="w-full bg-transparent py-1.5 font-ui text-[18px] text-wine outline-none placeholder:text-wine/45"
-            />
-            {searchQuery && (
+        {/* ---- Single Clean Bar: Search OR Quick Log ---- */}
+        <div className="mt-5">
+          {barMode === "search" ? (
+            <div className="flex items-center gap-2">
+              <div className="flex flex-1 items-center rounded-pill border border-wine/60 bg-marble px-4 py-1.5 focus-within:border-wine">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search memories (e.g. when did I last see my cousin?)"
+                  className="w-full bg-transparent py-1 font-ui text-[17px] text-wine outline-none placeholder:text-wine/45"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    className="ml-2 font-ui text-[16px] text-wine opacity-60 hover:opacity-100"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
               <button
                 type="button"
-                onClick={() => setSearchQuery("")}
-                className="ml-2 rounded-full px-2 font-ui text-[17px] text-wine opacity-65 hover:opacity-100"
-                aria-label="Clear search"
+                onClick={() => {
+                  setSearchQuery("");
+                  setBarMode("log");
+                }}
+                className="shrink-0 rounded-pill border border-wine bg-wine px-4 py-2 font-ui text-[15px] text-marble transition-opacity hover:opacity-90"
               >
-                ✕
+                + Quick log
               </button>
-            )}
-          </div>
+            </div>
+          ) : (
+            <form onSubmit={handleQuickLogSubmit} className="flex items-center gap-2">
+              <div className="flex flex-1 items-center rounded-pill border-2 border-wine bg-marble px-4 py-1.5">
+                <input
+                  type="text"
+                  autoFocus
+                  value={quickLogInput}
+                  onChange={(e) => setQuickLogInput(e.target.value)}
+                  placeholder="Log to Atlas (e.g. spent 800 on lunch with Sam)"
+                  className="w-full bg-transparent py-1 font-ui text-[17px] text-wine outline-none placeholder:text-wine/45"
+                />
+              </div>
+              <button
+                type="submit"
+                className="shrink-0 rounded-pill border border-wine bg-wine px-4 py-2 font-ui text-[15px] text-marble"
+              >
+                Save
+              </button>
+              <button
+                type="button"
+                onClick={() => setBarMode("search")}
+                className="shrink-0 rounded-pill border border-wine/45 px-3.5 py-2 font-ui text-[15px] text-wine"
+              >
+                Cancel
+              </button>
+            </form>
+          )}
 
-          {/* Quick Log to Atlas */}
-          <form
-            onSubmit={handleQuickLogSubmit}
-            className="flex items-center gap-2 rounded-pill border-2 border-wine bg-marbleDim/65 px-4 py-1.5"
-          >
-            <input
-              type="text"
-              value={quickLogInput}
-              onChange={(e) => setQuickLogInput(e.target.value)}
-              placeholder="Log to Atlas — “spent 800 on lunch with Sam”"
-              className="w-full bg-transparent py-1.5 font-ui text-[18px] text-wine outline-none placeholder:text-wine/50"
-            />
-            <button
-              type="submit"
-              className="shrink-0 rounded-pill border-2 border-wine bg-wine px-4 py-1.5 font-ui text-[15.5px] uppercase tracking-[0.14em] text-marble transition-colors hover:bg-marble hover:text-wine"
-            >
-              Log
-            </button>
-          </form>
+          {quickLogNotice && (
+            <p className="mt-2.5 font-ui text-[15.5px] text-wine">
+              ✓ {quickLogNotice}
+            </p>
+          )}
         </div>
 
-        {quickLogFeedback && (
-          <div className="mt-3 rounded-xl border-2 border-wine bg-wine px-4 py-2.5 font-ui text-[16.5px] uppercase tracking-[0.14em] text-marble anim-fade">
-            ✓ {quickLogFeedback}
-          </div>
-        )}
-
-        {/* ---- Conversational Plain-Language Search Overlay / Results ---- */}
+        {/* ---- Search Results (only when typing in Search) ---- */}
         {searchQuery.trim() !== "" && (
-          <section className="mt-5 rounded-2xl border-2 border-wine bg-marbleDim/55 p-5 anim-fade-up">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="font-ui text-[16.5px] uppercase tracking-[0.18em] text-wine opacity-75">
-                Atlas Memory Search · {searchResult.results.length} match
-                {searchResult.results.length === 1 ? "" : "es"}
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {[
-                  "When did I last see my cousin?",
-                  "Kilifi photos",
-                  "Starred highlights",
-                  "Voice notes",
-                ].map((sample) => (
-                  <button
-                    key={sample}
-                    type="button"
-                    onClick={() => setSearchQuery(sample)}
-                    className="rounded-pill border border-wine/50 bg-marble px-3 py-0.5 font-ui text-[14px] text-wine hover:bg-wine hover:text-marble"
-                  >
-                    {sample}
-                  </button>
-                ))}
-              </div>
-            </div>
-
+          <section className="mt-6 space-y-4 border-b border-wine/20 pb-8">
             {searchResult.answer && (
-              <div className="mt-3 rounded-xl border-2 border-wine bg-wine px-4 py-3 text-marble">
-                <p className="font-ui text-[14.5px] uppercase tracking-[0.2em] text-marble opacity-75">
-                  Atlas Answer
-                </p>
-                <p className="mt-1 font-body text-[21px] leading-snug text-marble">
-                  {searchResult.answer}
-                </p>
+              <div className="rounded-xl border border-wine bg-marbleDim/70 px-4 py-3">
+                <p className="font-body text-[20px] text-wine">{searchResult.answer}</p>
               </div>
             )}
 
-            <div className="mt-4 space-y-3">
-              {searchResult.results.length === 0 ? (
-                <Empty>No memories match “{searchQuery}”.</Empty>
-              ) : (
-                searchResult.results.slice(0, 10).map((entry) => (
-                  <TimelineEntryItem
+            {searchResult.results.length === 0 ? (
+              <p className="font-body text-[19px] text-wine opacity-70">
+                No memories matched “{searchQuery}”.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {searchResult.results.slice(0, 8).map((entry) => (
+                  <EntryItem
                     key={entry.id}
                     entry={entry}
                     allEntries={mem.entries}
                     onOpenMedia={setLightboxEntry}
                     onOpenLinked={openLinkedItem}
                   />
-                ))
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </section>
         )}
 
         {/* ============================================================== */}
-        {/* STAGE A: THE 5 BRANCHES IN SPHERE FORM (when no branch chosen) */}
+        {/* STAGE A: THE 5 SPHERES (Clean, Open, Unboxed)                  */}
         {/* ============================================================== */}
-        {activeBranch === null && (
-          <section className="mt-8 anim-fade-up">
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <p className="font-ui text-[16.5px] uppercase tracking-[0.22em] text-wine opacity-70">
-                Choose a sphere to open its branch
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {["When did I last see my cousin?", "Starred highlights"].map((q) => (
-                  <button
-                    key={q}
-                    type="button"
-                    onClick={() => setSearchQuery(q)}
-                    className="rounded-pill border border-wine/55 bg-marble px-3 py-1 font-ui text-[14.5px] text-wine transition-colors hover:bg-wine hover:text-marble"
-                  >
-                    Ask: “{q}”
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* 5 Spinning Classical Branch Spheres Constellation */}
-            <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {activeBranch === null && searchQuery.trim() === "" && (
+          <section className="mt-12 sm:mt-16 anim-fade">
+            <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-10 sm:gap-x-16 sm:gap-y-12">
               {BRANCHES.map((b) => (
                 <button
                   key={b.key}
                   type="button"
                   onClick={() => setActiveBranch(b.key)}
-                  className="group relative flex cursor-pointer flex-col items-center rounded-2xl border-2 border-wine bg-marble p-6 text-center transition-all duration-300 hover:-translate-y-1.5 hover:bg-marbleDim/65"
+                  className="group flex w-[150px] cursor-pointer flex-col items-center text-center transition-transform duration-200 hover:-translate-y-1 sm:w-[170px]"
                 >
-                  {/* Entry count badge */}
-                  <span className="absolute right-4 top-4 rounded-pill border-2 border-wine bg-wine px-3 py-0.5 font-ui text-[14.5px] uppercase tracking-[0.14em] text-marble">
-                    {branchCounts[b.key]}
-                  </span>
-
-                  <div className="transition-transform duration-300 group-hover:scale-105">
+                  <div className="transition-transform duration-200 group-hover:scale-105">
                     <MemorySphere
                       glyph={b.glyph}
-                      size={138}
+                      size={132}
                       tone="wine"
-                      speed={0.54}
+                      speed={0.5}
                       phaseOffset={b.phase}
                     />
                   </div>
-
-                  <p className="mt-4 font-ui text-[15.5px] uppercase tracking-[0.24em] text-wine opacity-65">
-                    {b.greek}
-                  </p>
-                  <h2 className="mt-1 font-display text-[30px] tracking-[0.08em] text-wine">
+                  <span className="mt-3 font-display text-[23px] text-wine">
                     {b.name}
-                  </h2>
-                  <p className="mt-2 max-w-[290px] font-body text-[19.5px] italic leading-snug text-wine opacity-80">
-                    {b.blurb}
-                  </p>
-                  <span className="mt-4 inline-block rounded-pill border-2 border-wine px-4 py-1 font-ui text-[15px] uppercase tracking-[0.16em] text-wine transition-colors group-hover:bg-wine group-hover:text-marble">
-                    Open sphere →
+                  </span>
+                  <span className="mt-0.5 font-ui text-[14.5px] text-wine opacity-65">
+                    {b.sub}
                   </span>
                 </button>
               ))}
@@ -570,37 +412,34 @@ export default function MemoriesPage() {
         )}
 
         {/* ============================================================== */}
-        {/* STAGE B: OPENED BRANCH VIEW                                    */}
+        {/* STAGE B: OPENED BRANCH PAGE                                    */}
         {/* ============================================================== */}
         {activeBranch === "timeline" && (
-          <div className="mt-7 anim-fade-up">
-            <TimelineBranch
+          <div className="mt-7 anim-fade">
+            <TimelineView
               entries={mem.entries}
               customSummaries={mem.customSummaries}
               jumpDate={jumpDate}
               onClearJumpDate={() => setJumpDate(null)}
               onOpenMedia={setLightboxEntry}
               onOpenLinked={openLinkedItem}
-              onJumpToJournal={() => setActiveBranch("journal")}
-              onJumpToGallery={() => setActiveBranch("gallery")}
             />
           </div>
         )}
 
         {activeBranch === "gallery" && (
-          <div className="mt-7 anim-fade-up">
-            <GalleryBranch
+          <div className="mt-7 anim-fade">
+            <GalleryView
               entries={mem.entries}
               albums={mem.albums}
-              peopleNames={atlas.people.map((p) => p.name)}
               onOpenLightbox={setLightboxEntry}
             />
           </div>
         )}
 
         {activeBranch === "calendar" && (
-          <div className="mt-7 anim-fade-up">
-            <CalendarBranch
+          <div className="mt-7 anim-fade">
+            <CalendarView
               entries={mem.entries}
               onSelectDate={(iso) => {
                 setJumpDate(iso);
@@ -612,10 +451,9 @@ export default function MemoriesPage() {
         )}
 
         {activeBranch === "journal" && (
-          <div className="mt-7 anim-fade-up">
-            <JournalBranch
+          <div className="mt-7 anim-fade">
+            <JournalView
               entries={mem.entries}
-              peopleNames={atlas.people.map((p) => p.name)}
               onOpenMedia={setLightboxEntry}
               onOpenLinked={openLinkedItem}
             />
@@ -623,10 +461,9 @@ export default function MemoriesPage() {
         )}
 
         {activeBranch === "milestones" && (
-          <div className="mt-7 anim-fade-up">
-            <MilestonesBranch
+          <div className="mt-7 anim-fade">
+            <MilestonesView
               entries={mem.entries}
-              peopleNames={atlas.people.map((p) => p.name)}
               onOpenMedia={setLightboxEntry}
               onOpenLinked={openLinkedItem}
             />
@@ -635,22 +472,19 @@ export default function MemoriesPage() {
       </main>
 
       {/* ================================================================ */}
-      {/* 4. MEDIA / ENTRY LIGHTBOX MODAL                                  */}
+      {/* MODALS                                                           */}
       {/* ================================================================ */}
       {lightboxEntry && (
-        <EntryLightboxModal
+        <LightboxModal
           entry={lightboxEntry}
           allEntries={mem.entries}
           onClose={() => setLightboxEntry(null)}
-          onSelectLinked={(e) => setLightboxEntry(e)}
+          onSelectLinked={setLightboxEntry}
         />
       )}
 
-      {/* ================================================================ */}
-      {/* 5. BIOMETRIC / PIN LOCK CONFIGURATION MODAL                      */}
-      {/* ================================================================ */}
       {showLockModal && (
-        <LockConfigModal
+        <LockSetupModal
           pinHash={mem.lock.pinHash}
           biometricCredentialId={mem.lock.biometricCredentialId}
           onClose={() => setShowLockModal(false)}
@@ -661,18 +495,16 @@ export default function MemoriesPage() {
 }
 
 /* ================================================================== */
-/*  BRANCH 1: TIMELINE (Newest first, On This Day, Atlas Summary)     */
+/*  1. TIMELINE VIEW                                                  */
 /* ================================================================== */
 
-function TimelineBranch({
+function TimelineView({
   entries,
   customSummaries,
   jumpDate,
   onClearJumpDate,
   onOpenMedia,
   onOpenLinked,
-  onJumpToJournal,
-  onJumpToGallery,
 }: {
   entries: MemoryEntry[];
   customSummaries: Record<string, string>;
@@ -680,27 +512,23 @@ function TimelineBranch({
   onClearJumpDate: () => void;
   onOpenMedia: (e: MemoryEntry) => void;
   onOpenLinked: (id: string) => void;
-  onJumpToJournal: () => void;
-  onJumpToGallery: () => void;
 }) {
   const [sectionFilter, setSectionFilter] = useState<SectionTag | "All">("All");
   const [starredOnly, setStarredOnly] = useState(false);
-  const [editingSummaryDate, setEditingSummaryDate] = useState<string | null>(null);
+  const [editingDate, setEditingDate] = useState<string | null>(null);
   const [summaryDraft, setSummaryDraft] = useState("");
 
   const today = todayISO();
-  const todayMonthDay = today.slice(5); // MM-DD
+  const monthDay = today.slice(5);
 
-  // "On this day" look-backs from prior years
-  const onThisDayEntries = useMemo(
+  const onThisDay = useMemo(
     () =>
       entries
-        .filter((e) => e.date.slice(5) === todayMonthDay && e.date.slice(0, 4) !== today.slice(0, 4))
+        .filter((e) => e.date.slice(5) === monthDay && e.date.slice(0, 4) !== today.slice(0, 4))
         .sort((a, b) => b.date.localeCompare(a.date)),
-    [entries, today, todayMonthDay]
+    [entries, monthDay, today]
   );
 
-  // Filtered & sorted newest-first
   const filtered = useMemo(() => {
     return [...entries]
       .filter((e) => {
@@ -712,168 +540,127 @@ function TimelineBranch({
       .sort((a, b) => b.date.localeCompare(a.date) || b.time.localeCompare(a.time));
   }, [entries, jumpDate, sectionFilter, starredOnly]);
 
-  const groupedByDay = useMemo(() => {
+  const byDay = useMemo(() => {
     const map = new Map<string, MemoryEntry[]>();
     for (const e of filtered) {
-      const arr = map.get(e.date) ?? [];
-      arr.push(e);
-      map.set(e.date, arr);
+      const list = map.get(e.date) ?? [];
+      list.push(e);
+      map.set(e.date, list);
     }
     return Array.from(map.entries());
   }, [filtered]);
 
   return (
     <div className="space-y-7">
-      {/* Quick actions + section filter strip */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-1.5">
-          {(["All", ...SECTIONS] as const).map((sec) => (
-            <button
-              key={sec}
-              type="button"
-              onClick={() => setSectionFilter(sec)}
-              className={`rounded-pill border-2 border-wine px-3.5 py-1.5 font-ui text-[15.5px] uppercase tracking-[0.14em] transition-colors ${
-                sectionFilter === sec ? "bg-wine text-marble" : "bg-marble text-wine hover:bg-marbleDim"
-              }`}
-            >
-              {sec}
-            </button>
-          ))}
-          <button
-            type="button"
-            onClick={() => setStarredOnly((v) => !v)}
-            className={`rounded-pill border-2 border-wine px-3.5 py-1.5 font-ui text-[15.5px] uppercase tracking-[0.14em] transition-colors ${
-              starredOnly ? "bg-wine text-marble" : "bg-marble text-wine hover:bg-marbleDim"
-            }`}
+      {/* Simple filter row */}
+      <div className="flex flex-wrap items-center gap-2">
+        {(["All", ...SECTIONS] as const).map((sec) => (
+          <FilterPill
+            key={sec}
+            active={sectionFilter === sec}
+            onClick={() => setSectionFilter(sec)}
           >
-            ★ Highlights
-          </button>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={onJumpToJournal} className="btn-ghost btn-sm">
-            ✎ Write / Speak
-          </button>
-          <button type="button" onClick={onJumpToGallery} className="btn-wine btn-sm">
-            ▣ Upload Media
-          </button>
-        </div>
+            {sec}
+          </FilterPill>
+        ))}
+        <FilterPill active={starredOnly} onClick={() => setStarredOnly((v) => !v)}>
+          ★ Starred
+        </FilterPill>
       </div>
 
-      {/* Active Calendar Jump Banner */}
+      {/* Selected date notice from Calendar */}
       {jumpDate && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-wine bg-wine px-5 py-3.5 text-marble">
-          <p className="font-ui text-[17px] uppercase tracking-[0.16em]">
-            Jumped to {prettyDate(jumpDate)} ({filtered.length} {filtered.length === 1 ? "memory" : "memories"})
-          </p>
+        <div className="flex items-center justify-between rounded-xl border border-wine bg-marbleDim/70 px-4 py-3">
+          <span className="font-ui text-[16px] text-wine">
+            Showing {prettyDate(jumpDate)}
+          </span>
           <button
             type="button"
             onClick={onClearJumpDate}
-            className="rounded-pill border-2 border-marble px-4 py-1 font-ui text-[15px] uppercase tracking-[0.14em] text-marble hover:bg-marble hover:text-wine"
+            className="font-ui text-[15px] underline text-wine"
           >
-            Show all days ×
+            Show all days
           </button>
         </div>
       )}
 
-      {/* 1. "ON THIS DAY" LOOK-BACKS AT THE TOP */}
-      {!jumpDate && onThisDayEntries.length > 0 && (
-        <section className="rounded-2xl border-2 border-wine bg-wine p-5 text-marble sm:p-6">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <div>
-              <p className="font-ui text-[15.5px] uppercase tracking-[0.24em] text-marble opacity-75">
-                On this day · {new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long" })}
-              </p>
-              <h2 className="mt-1 font-display text-[26px] tracking-[0.06em] text-marble">
-                Look-backs across the years
-              </h2>
-            </div>
-            <span className="rounded-pill border border-marble/60 px-3 py-0.5 font-ui text-[14.5px] uppercase tracking-[0.14em] text-marble">
-              {onThisDayEntries.length} kept
-            </span>
-          </div>
-
-          <div className="mt-4 grid gap-3.5 md:grid-cols-2">
-            {onThisDayEntries.map((item) => {
-              const yrsAgo = Number(today.slice(0, 4)) - Number(item.date.slice(0, 4));
-              const previewImg = item.media?.src ?? item.mediaAttachments?.[0]?.src;
+      {/* On this day */}
+      {!jumpDate && onThisDay.length > 0 && (
+        <section className="rounded-2xl border border-wine/45 bg-marbleDim/55 p-4 sm:p-5">
+          <p className="font-ui text-[15px] text-wine opacity-75">On this day</p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            {onThisDay.map((item) => {
+              const yrs = Number(today.slice(0, 4)) - Number(item.date.slice(0, 4));
+              const thumb = item.media?.src ?? item.mediaAttachments?.[0]?.src;
               return (
-                <div
+                <button
                   key={item.id}
+                  type="button"
                   onClick={() => onOpenMedia(item)}
-                  className="group flex cursor-pointer gap-4 rounded-xl border-2 border-marble/75 bg-wineDeep p-4 transition-colors hover:bg-marble hover:text-wine"
+                  className="flex items-center gap-3.5 rounded-xl border border-wine/35 bg-marble p-3 text-left transition-colors hover:border-wine"
                 >
-                  {previewImg && (
+                  {thumb && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={previewImg}
+                      src={thumb}
                       alt=""
-                      className="h-20 w-20 shrink-0 rounded-lg border border-marble/50 object-cover"
+                      className="h-16 w-16 shrink-0 rounded-lg object-cover"
                     />
                   )}
-                  <div className="min-w-0 flex-1">
-                    <p className="font-ui text-[14.5px] uppercase tracking-[0.18em] opacity-80">
-                      {yrsAgo} {yrsAgo === 1 ? "year" : "years"} ago · {item.date.slice(0, 4)}
+                  <div className="min-w-0">
+                    <p className="font-ui text-[13.5px] text-wine opacity-65">
+                      {yrs} {yrs === 1 ? "year" : "years"} ago
                     </p>
-                    <p className="mt-1 truncate font-display text-[21px]">{item.title}</p>
-                    <p className="mt-1 line-clamp-2 font-body text-[18.5px] opacity-85">{item.text}</p>
+                    <p className="truncate font-display text-[19px] text-wine">{item.title}</p>
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
         </section>
       )}
 
-      {/* 2. CHRONOLOGICAL DAY GROUPS (Newest first) */}
-      {groupedByDay.length === 0 ? (
-        <Panel title="Timeline">
-          <Empty>No memories on this filter yet.</Empty>
-        </Panel>
+      {/* Days */}
+      {byDay.length === 0 ? (
+        <p className="py-8 font-body text-[20px] text-wine opacity-65">No entries for this view.</p>
       ) : (
-        <div className="space-y-8">
-          {groupedByDay.map(([date, dayEntries]) => {
+        <div className="space-y-9">
+          {byDay.map(([date, dayEntries]) => {
             const mood = averageDayMood(dayEntries);
             const summary = generateAtlasDailySummary(date, dayEntries, customSummaries);
-            const isToday = date === today;
-
             return (
-              <section key={date} className="relative">
-                {/* Day Header with Mood Dot + One-Line Atlas Daily Summary */}
-                <div className="rounded-2xl border-2 border-wine bg-marbleDim/75 px-5 py-4">
-                  <div className="flex flex-wrap items-center gap-3">
-                    {/* Mood Dot */}
-                    <span
-                      title={`Day mood: ${mood}/5`}
-                      className="flex items-center gap-2 rounded-pill border-2 border-wine bg-wine px-3 py-0.5 text-marble"
-                    >
-                      <span className="h-2.5 w-2.5 rounded-full bg-marble" />
-                      <span className="font-ui text-[14.5px] uppercase tracking-[0.14em]">
-                        Mood {mood}/5
+              <section key={date}>
+                {/* Day Header: Date + Mood Dot + 1-line Summary */}
+                <div className="border-b border-wine/25 pb-2.5">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <h2 className="font-display text-[22px] text-wine">
+                      {date === today ? "Today" : prettyDate(date)}
+                    </h2>
+                    {date === today && (
+                      <span className="font-ui text-[15px] text-wine opacity-60">
+                        · {prettyDate(date)}
                       </span>
+                    )}
+                    <span className="inline-flex items-center gap-1.5 font-ui text-[14.5px] text-wine opacity-75">
+                      <span className="h-2.5 w-2.5 rounded-full bg-wine" />
+                      Mood {mood}/5
                     </span>
-
-                    <h3 className="font-display text-[24px] tracking-[0.05em] text-wine">
-                      {prettyDate(date)}
-                      {isToday ? " · Today" : ""}
-                    </h3>
-
                     <button
                       type="button"
                       onClick={() => {
-                        setEditingSummaryDate(editingSummaryDate === date ? null : date);
+                        setEditingDate(editingDate === date ? null : date);
                         setSummaryDraft(summary);
                       }}
-                      className="ml-auto font-ui text-[14px] uppercase tracking-[0.14em] text-wine opacity-60 hover:opacity-100"
+                      className="ml-auto font-ui text-[13.5px] text-wine opacity-55 hover:opacity-100"
                     >
-                      ✎ Atlas recap
+                      Edit summary
                     </button>
                   </div>
 
-                  {editingSummaryDate === date ? (
-                    <div className="mt-3 flex flex-wrap gap-2">
+                  {editingDate === date ? (
+                    <div className="mt-2 flex gap-2">
                       <input
-                        className="field flex-1 py-2 text-[18px]"
+                        className="field flex-1 py-1.5 text-[17px]"
                         value={summaryDraft}
                         onChange={(e) => setSummaryDraft(e.target.value)}
                       />
@@ -881,28 +668,24 @@ function TimelineBranch({
                         type="button"
                         onClick={() => {
                           setCustomDailySummary(date, summaryDraft);
-                          setEditingSummaryDate(null);
+                          setEditingDate(null);
                         }}
-                        className="btn-wine btn-sm"
+                        className="rounded-pill bg-wine px-4 py-1.5 font-ui text-[14.5px] text-marble"
                       >
                         Save
                       </button>
                     </div>
                   ) : (
-                    <p className="mt-2 font-body text-[20px] italic text-wine opacity-85">
-                      <span className="not-italic font-ui text-[14.5px] uppercase tracking-[0.18em] opacity-70">
-                        Atlas summary:{" "}
-                      </span>
+                    <p className="mt-1 font-body text-[19px] text-wine opacity-75">
                       {summary}
                     </p>
                   )}
                 </div>
 
-                {/* Day Entries: Big Cards for written/recorded/media/milestone, Small Rows for auto-logs */}
-                <div className="relative mt-4 space-y-3.5 pl-6 sm:pl-8">
-                  <span className="absolute bottom-2 left-2.5 top-2 w-[2px] bg-wine/40 sm:left-3.5" />
+                {/* Day items */}
+                <div className="mt-3.5 space-y-3">
                   {dayEntries.map((entry) => (
-                    <TimelineEntryItem
+                    <EntryItem
                       key={entry.id}
                       entry={entry}
                       allEntries={entries}
@@ -920,7 +703,7 @@ function TimelineBranch({
   );
 }
 
-function TimelineEntryItem({
+function EntryItem({
   entry,
   allEntries,
   onOpenMedia,
@@ -931,35 +714,28 @@ function TimelineEntryItem({
   onOpenMedia: (e: MemoryEntry) => void;
   onOpenLinked: (id: string) => void;
 }) {
-  const linkedEntries = entry.linkedIds
+  const linked = entry.linkedIds
     .map((id) => allEntries.find((x) => x.id === id))
     .filter((x): x is MemoryEntry => Boolean(x));
 
-  /* ---- SMALL COMPACT ROW FOR AUTO-LOGGED ENTRIES ---- */
+  /* Small row for auto-logged entries */
   if (entry.kind === "autolog") {
     return (
-      <div className="relative flex flex-wrap items-center gap-3 rounded-xl border-2 border-wine/55 bg-marble px-4 py-2.5 transition-colors hover:bg-marbleDim/40">
-        <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-wine" />
-        <span className="font-ui text-[15px] tabular-nums tracking-[0.1em] text-wine opacity-65">
+      <div className="flex items-center gap-3 rounded-lg bg-marbleDim/45 px-3.5 py-2">
+        <span className="font-ui text-[14px] tabular-nums text-wine opacity-60">
           {entry.time}
         </span>
-        {entry.section && <Badge tone="dim">{entry.section}</Badge>}
-        <p className="min-w-0 flex-1 font-body text-[19.5px] text-wine">{entry.title}</p>
-        {entry.peopleTags.map((person) => (
-          <span
-            key={person}
-            className="rounded-pill border border-wine/50 px-2.5 py-0.5 font-ui text-[14px] text-wine"
-          >
-            @{person}
-          </span>
-        ))}
+        <p className="min-w-0 flex-1 truncate font-body text-[19px] text-wine">
+          {entry.title}
+        </p>
+        {entry.section && (
+          <span className="font-ui text-[13.5px] text-wine opacity-60">{entry.section}</span>
+        )}
         <button
           type="button"
           onClick={() => toggleStarMemory(entry.id)}
-          aria-label="Toggle highlight star"
-          className={`font-display text-[20px] leading-none ${
-            entry.starred ? "text-wine" : "text-wine opacity-30 hover:opacity-80"
-          }`}
+          aria-label="Star"
+          className="font-ui text-[17px] text-wine opacity-55 hover:opacity-100"
         >
           {entry.starred ? "★" : "☆"}
         </button>
@@ -967,87 +743,72 @@ function TimelineEntryItem({
     );
   }
 
-  /* ---- BIG CARD FOR WRITTEN / VOICE / MEDIA / MILESTONE ENTRIES ---- */
+  /* Big card for notes, media, and milestones */
   const photos: MediaItem[] = [
     ...(entry.media ? [entry.media] : []),
     ...(entry.mediaAttachments ?? []),
   ];
 
+  const metaParts = [
+    entry.time,
+    entry.kind === "milestone" ? `Milestone (${entry.milestoneCategory ?? "Moment"})` : "",
+    entry.section ?? "",
+    entry.location ?? "",
+    entry.peopleTags.length ? `with ${entry.peopleTags.join(", ")}` : "",
+  ].filter(Boolean);
+
   return (
-    <article className="relative rounded-2xl border-2 border-wine bg-marble p-5 transition-colors hover:bg-marbleDim/30 sm:p-6">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="font-ui text-[15.5px] tabular-nums uppercase tracking-[0.14em] text-wine opacity-70">
-          {entry.time} · {prettyDate(entry.date)}
-        </span>
-        <Badge tone={entry.kind === "milestone" ? "wine" : "gold"}>
-          {entry.kind === "milestone"
-            ? `★ Milestone · ${entry.milestoneCategory ?? "Moment"}`
-            : entry.kind === "media"
-              ? entry.media?.mediaType === "video"
-                ? "▶ Video"
-                : "▣ Photo"
-              : entry.voice
-                ? "◎ Voice Journal"
-                : `✎ Journal · ${entry.journalSubtype ?? "daily"}`}
-        </Badge>
-        {entry.section && <Badge tone="marble">{entry.section}</Badge>}
-        {typeof entry.mood === "number" && (
-          <span className="font-ui text-[15px] uppercase tracking-[0.12em] text-wine opacity-65">
-            Mood {entry.mood}/5
-          </span>
-        )}
+    <article className="rounded-xl border border-wine/40 bg-marble p-4 sm:p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="font-display text-[22px] leading-snug text-wine">{entry.title}</h3>
+          <p className="mt-0.5 font-ui text-[14px] text-wine opacity-60">
+            {metaParts.join(" · ")}
+          </p>
+        </div>
+
         <button
           type="button"
           onClick={() => toggleStarMemory(entry.id)}
-          title={entry.starred ? "Starred highlight" : "Star as highlight"}
-          className={`ml-auto rounded-pill border-2 px-3 py-0.5 font-ui text-[14.5px] uppercase tracking-[0.12em] transition-colors ${
-            entry.starred
-              ? "border-wine bg-wine text-marble"
-              : "border-wine/40 bg-marble text-wine opacity-70 hover:opacity-100"
-          }`}
+          title={entry.starred ? "Starred" : "Star"}
+          className="shrink-0 font-ui text-[20px] text-wine opacity-75 hover:opacity-100"
         >
-          {entry.starred ? "★ Highlight" : "☆ Star"}
+          {entry.starred ? "★" : "☆"}
         </button>
       </div>
 
-      <h4 className="mt-3 font-display text-[25px] leading-snug tracking-[0.03em] text-wine">
-        {entry.title}
-      </h4>
-
       {entry.text && (
-        <p className="mt-2 whitespace-pre-wrap font-body text-[20.5px] leading-[1.68] text-wine opacity-90">
+        <p className="mt-2.5 whitespace-pre-wrap font-body text-[20px] leading-relaxed text-wine opacity-90">
           {entry.text}
         </p>
       )}
 
-      {/* Voice Note Player */}
       {entry.voice && (
-        <div className="mt-4 rounded-xl border-2 border-wine bg-marbleDim p-3.5">
+        <div className="mt-3 rounded-lg bg-marbleDim/65 px-3.5 py-2.5">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="font-ui text-[15.5px] uppercase tracking-[0.16em] text-wine">
-              ◎ Voice Recording · {entry.voice.durationSec}s
+            <span className="font-ui text-[14.5px] text-wine">
+              Voice note ({entry.voice.durationSec}s)
             </span>
             {entry.voice.audioUrl && (
-              <audio controls src={entry.voice.audioUrl} className="h-9 max-w-[260px]" />
+              <audio controls src={entry.voice.audioUrl} className="h-8 max-w-[230px]" />
             )}
           </div>
           {entry.voice.transcript && (
-            <p className="mt-2 font-body text-[19px] italic text-wine opacity-80">
+            <p className="mt-1.5 font-body text-[18.5px] italic text-wine opacity-80">
               “{entry.voice.transcript}”
             </p>
           )}
         </div>
       )}
 
-      {/* Attached Photos / Video */}
       {photos.length > 0 && (
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div className="mt-3.5 grid gap-2.5 sm:grid-cols-2">
           {photos.map((m) => (
             <button
               key={m.id}
               type="button"
               onClick={() => onOpenMedia(entry)}
-              className="group relative overflow-hidden rounded-xl border-2 border-wine bg-wine text-left"
+              className="group relative overflow-hidden rounded-lg border border-wine/30 bg-wine text-left"
             >
               {m.mediaType === "video" ? (
                 <div className="relative">
@@ -1059,10 +820,10 @@ function TimelineEntryItem({
                     loop
                     onMouseEnter={(ev) => void ev.currentTarget.play().catch(() => undefined)}
                     onMouseLeave={(ev) => ev.currentTarget.pause()}
-                    className="h-52 w-full object-cover"
+                    className="h-48 w-full object-cover"
                   />
-                  <span className="absolute bottom-3 left-3 rounded-pill border border-marble bg-wine/90 px-3 py-0.5 font-ui text-[14px] uppercase tracking-[0.14em] text-marble">
-                    ▶ Video {m.duration ? `· ${m.duration}` : ""}
+                  <span className="absolute bottom-2.5 left-2.5 rounded-pill bg-wine/85 px-2.5 py-0.5 font-ui text-[13px] text-marble">
+                    ▶ Video {m.duration ?? ""}
                   </span>
                 </div>
               ) : (
@@ -1070,44 +831,24 @@ function TimelineEntryItem({
                 <img
                   src={m.src}
                   alt={entry.title}
-                  className="h-52 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
-              )}
-              {m.album && (
-                <span className="absolute right-3 top-3 rounded-pill border border-marble bg-wine/85 px-2.5 py-0.5 font-ui text-[13px] uppercase tracking-[0.14em] text-marble">
-                  {m.album}
-                </span>
               )}
             </button>
           ))}
         </div>
       )}
 
-      {/* Footer Tags: People, Location & Linked Items */}
-      {(entry.peopleTags.length > 0 || entry.location || linkedEntries.length > 0) && (
-        <div className="mt-4 flex flex-wrap items-center gap-2 border-t-2 border-wine/15 pt-3">
-          {entry.location && (
-            <span className="rounded-pill border border-wine/50 bg-marbleDim/60 px-3 py-0.5 font-ui text-[14.5px] text-wine">
-              📍 {entry.location}
-            </span>
-          )}
-          {entry.peopleTags.map((p) => (
-            <span
-              key={p}
-              className="rounded-pill border border-wine bg-marble px-3 py-0.5 font-ui text-[14.5px] text-wine"
-            >
-              👤 {p}
-            </span>
-          ))}
-          {linkedEntries.map((le) => (
+      {linked.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {linked.map((le) => (
             <button
               key={le.id}
               type="button"
               onClick={() => onOpenLinked(le.id)}
-              className="rounded-pill border-2 border-wine bg-wine px-3 py-0.5 font-ui text-[14px] uppercase tracking-[0.1em] text-marble hover:bg-marble hover:text-wine"
+              className="font-ui text-[14px] underline text-wine opacity-70 hover:opacity-100"
             >
-              ↔ {le.title.slice(0, 28)}
-              {le.title.length > 28 ? "…" : ""}
+              Linked: {le.title}
             </button>
           ))}
         </div>
@@ -1117,38 +858,28 @@ function TimelineEntryItem({
 }
 
 /* ================================================================== */
-/*  BRANCH 2: GALLERY (Month Grid, Albums, Filters: All/Photos/Videos)*/
+/*  2. GALLERY VIEW                                                   */
 /* ================================================================== */
 
-function GalleryBranch({
+function GalleryView({
   entries,
   albums,
-  peopleNames,
   onOpenLightbox,
 }: {
   entries: MemoryEntry[];
   albums: string[];
-  peopleNames: string[];
   onOpenLightbox: (e: MemoryEntry) => void;
 }) {
   const [mediaFilter, setMediaFilter] = useState<"all" | "photo" | "video">("all");
-  const [selectedAlbum, setSelectedAlbum] = useState<string>("All");
+  const [selectedAlbum, setSelectedAlbum] = useState("All");
   const [showUpload, setShowUpload] = useState(false);
 
-  // Upload form state
-  const [uploadCaption, setUploadCaption] = useState("");
-  const [uploadAlbum, setUploadAlbum] = useState("Trips");
-  const [customAlbum, setCustomAlbum] = useState("");
-  const [uploadSection, setUploadSection] = useState<SectionTag>("Life");
-  const [uploadPeople, setUploadPeople] = useState("");
-  const [uploadLocation, setUploadLocation] = useState("");
-  const [uploadLinkedId, setUploadLinkedId] = useState("");
-  const [uploadPreview, setUploadPreview] = useState<{
-    src: string;
-    mediaType: "photo" | "video";
-  } | null>(null);
+  const [caption, setCaption] = useState("");
+  const [album, setAlbum] = useState("Trips");
+  const [people, setPeople] = useState("");
+  const [preview, setPreview] = useState<{ src: string; mediaType: "photo" | "video" } | null>(null);
 
-  const mediaEntries = useMemo(() => {
+  const mediaList = useMemo(() => {
     return entries
       .filter((e) => Boolean(e.media))
       .filter((e) => {
@@ -1159,83 +890,69 @@ function GalleryBranch({
       .sort((a, b) => b.date.localeCompare(a.date) || b.time.localeCompare(a.time));
   }, [entries, mediaFilter, selectedAlbum]);
 
-  // Group by YYYY-MM month
   const byMonth = useMemo(() => {
     const map = new Map<string, MemoryEntry[]>();
-    for (const e of mediaEntries) {
+    for (const e of mediaList) {
       const ym = e.date.slice(0, 7);
       const list = map.get(ym) ?? [];
       list.push(e);
       map.set(ym, list);
     }
     return Array.from(map.entries());
-  }, [mediaEntries]);
+  }, [mediaList]);
 
-  const handleFileChange = (ev: React.ChangeEvent<HTMLInputElement>) => {
+  const onPickFile = (ev: React.ChangeEvent<HTMLInputElement>) => {
     const file = ev.target.files?.[0];
     if (!file) return;
     const isVideo = file.type.startsWith("video/");
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === "string") {
-        setUploadPreview({
-          src: reader.result,
-          mediaType: isVideo ? "video" : "photo",
-        });
+        setPreview({ src: reader.result, mediaType: isVideo ? "video" : "photo" });
       }
     };
     reader.readAsDataURL(file);
   };
 
-  const submitUpload = (e: React.FormEvent) => {
+  const saveMedia = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!uploadPreview) return;
-    const finalAlbum = (uploadAlbum === "__custom__" ? customAlbum.trim() : uploadAlbum) || "Trips";
-    const pTags = uploadPeople
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-
+    if (!preview) return;
     addMemoryEntry({
       kind: "media",
-      title: uploadCaption.trim() || `Uploaded ${uploadPreview.mediaType}`,
-      text: uploadCaption.trim(),
+      title: caption.trim() || `Uploaded ${preview.mediaType}`,
+      text: "",
       date: todayISO(),
       time: nowHHMM(),
-      section: uploadSection,
-      peopleTags: pTags,
+      section: "Life",
+      peopleTags: people
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
       mood: 5,
-      location: uploadLocation.trim() || undefined,
-      linkedIds: uploadLinkedId ? [uploadLinkedId] : [],
+      linkedIds: [],
       media: {
         id: `med-${Date.now()}`,
-        mediaType: uploadPreview.mediaType,
-        src: uploadPreview.src,
-        album: finalAlbum,
+        mediaType: preview.mediaType,
+        src: preview.src,
+        album,
       },
     });
-
-    setUploadCaption("");
-    setUploadPeople("");
-    setUploadLocation("");
-    setUploadLinkedId("");
-    setUploadPreview(null);
+    setCaption("");
+    setPeople("");
+    setPreview(null);
     setShowUpload(false);
   };
 
-  const formatMonthLabel = (ym: string) => {
+  const monthTitle = (ym: string) => {
     const [y, m] = ym.split("-").map(Number);
-    return new Date(y, m - 1, 1).toLocaleDateString("en-GB", {
-      month: "long",
-      year: "numeric",
-    });
+    return new Date(y, m - 1, 1).toLocaleDateString("en-GB", { month: "long", year: "numeric" });
   };
 
   return (
     <div className="space-y-6">
-      {/* Top Filter Bar (All / Photos / Videos) + Upload Media Button */}
+      {/* Type filter + Upload button */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex gap-2">
           {(
             [
               ["all", "All"],
@@ -1243,221 +960,92 @@ function GalleryBranch({
               ["video", "Videos"],
             ] as const
           ).map(([k, label]) => (
-            <button
-              key={k}
-              type="button"
-              onClick={() => setMediaFilter(k)}
-              className={`rounded-pill border-2 border-wine px-4 py-1.5 font-ui text-[16px] uppercase tracking-[0.15em] transition-colors ${
-                mediaFilter === k ? "bg-wine text-marble" : "bg-marble text-wine hover:bg-marbleDim"
-              }`}
-            >
+            <FilterPill key={k} active={mediaFilter === k} onClick={() => setMediaFilter(k)}>
               {label}
-            </button>
+            </FilterPill>
           ))}
         </div>
 
         <button
           type="button"
           onClick={() => setShowUpload((v) => !v)}
-          className="btn-wine btn-sm"
+          className="rounded-pill bg-wine px-4 py-1.5 font-ui text-[15px] text-marble"
         >
-          {showUpload ? "Close Upload" : "+ Upload Photo / Video"}
+          {showUpload ? "Close" : "+ Add photo / video"}
         </button>
       </div>
 
-      {/* Upload Drawer */}
+      {/* Albums row */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="mr-1 font-ui text-[14.5px] text-wine opacity-65">Albums:</span>
+        {["All", ...albums].map((alb) => (
+          <FilterPill key={alb} active={selectedAlbum === alb} onClick={() => setSelectedAlbum(alb)}>
+            {alb}
+          </FilterPill>
+        ))}
+      </div>
+
+      {/* Simple upload form */}
       {showUpload && (
-        <Panel
-          title="Upload media to Gallery & Timeline"
-          hint="Appears in both your Gallery album and chronological Timeline"
+        <form
+          onSubmit={saveMedia}
+          className="space-y-3 rounded-xl border border-wine/50 bg-marbleDim/45 p-4"
         >
-          <form onSubmit={submitUpload} className="grid gap-3.5 sm:grid-cols-2">
-            <label className="sm:col-span-2 block cursor-pointer rounded-xl border-2 border-dashed border-wine bg-marbleDim/45 p-5 text-center hover:bg-marbleDim">
-              <span className="font-ui text-[17px] uppercase tracking-[0.16em] text-wine">
-                {uploadPreview
-                  ? `Selected ${uploadPreview.mediaType.toUpperCase()} — click to replace`
-                  : "Choose Photo or Video file"}
-              </span>
-              <input
-                type="file"
-                accept="image/*,video/*"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-            </label>
-
-            {uploadPreview && (
-              <div className="sm:col-span-2">
-                {uploadPreview.mediaType === "video" ? (
-                  <video src={uploadPreview.src} controls className="h-48 rounded-xl border-2 border-wine" />
-                ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={uploadPreview.src}
-                    alt="Preview"
-                    className="h-48 rounded-xl border-2 border-wine object-cover"
-                  />
-                )}
-              </div>
-            )}
-
-            <input
-              className="field sm:col-span-2"
-              placeholder="Caption — what moment is this?"
-              value={uploadCaption}
-              onChange={(e) => setUploadCaption(e.target.value)}
-              required
-            />
-
-            <select
-              className="field"
-              value={uploadAlbum}
-              onChange={(e) => setUploadAlbum(e.target.value)}
-            >
+          <label className="block cursor-pointer rounded-lg border border-dashed border-wine p-4 text-center font-ui text-[16px] text-wine">
+            {preview ? `Selected ${preview.mediaType} (click to change)` : "Choose a photo or video"}
+            <input type="file" accept="image/*,video/*" onChange={onPickFile} className="hidden" />
+          </label>
+          <input
+            className="field py-2"
+            placeholder="Caption"
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
+            required
+          />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <select className="field py-2" value={album} onChange={(e) => setAlbum(e.target.value)}>
               {albums.map((a) => (
                 <option key={a} value={a}>
                   Album: {a}
                 </option>
               ))}
-              <option value="__custom__">+ New Album…</option>
             </select>
-
-            {uploadAlbum === "__custom__" ? (
-              <input
-                className="field"
-                placeholder="New album name"
-                value={customAlbum}
-                onChange={(e) => setCustomAlbum(e.target.value)}
-              />
-            ) : (
-              <select
-                className="field"
-                value={uploadSection}
-                onChange={(e) => setUploadSection(e.target.value as SectionTag)}
-              >
-                {SECTIONS.map((s) => (
-                  <option key={s} value={s}>
-                    Section: {s}
-                  </option>
-                ))}
-              </select>
-            )}
-
             <input
-              className="field"
-              placeholder={`Tagged people (e.g. ${peopleNames.slice(0, 2).join(", ")})`}
-              value={uploadPeople}
-              onChange={(e) => setUploadPeople(e.target.value)}
+              className="field py-2"
+              placeholder="People in this (optional)"
+              value={people}
+              onChange={(e) => setPeople(e.target.value)}
             />
-
-            <input
-              className="field"
-              placeholder="Location (optional, e.g. Kilifi Coast)"
-              value={uploadLocation}
-              onChange={(e) => setUploadLocation(e.target.value)}
-            />
-
-            <select
-              className="field sm:col-span-2"
-              value={uploadLinkedId}
-              onChange={(e) => setUploadLinkedId(e.target.value)}
-            >
-              <option value="">Link to a Journal or Milestone entry (optional)</option>
-              {entries
-                .filter((x) => x.kind === "journal" || x.kind === "milestone")
-                .map((x) => (
-                  <option key={x.id} value={x.id}>
-                    {prettyDate(x.date)} — {x.title}
-                  </option>
-                ))}
-            </select>
-
-            <div className="sm:col-span-2">
-              <button type="submit" disabled={!uploadPreview} className="btn-wine">
-                Save to Gallery & Timeline
-              </button>
-            </div>
-          </form>
-        </Panel>
+          </div>
+          <button
+            type="submit"
+            disabled={!preview}
+            className="rounded-pill bg-wine px-5 py-2 font-ui text-[15px] text-marble disabled:opacity-40"
+          >
+            Save
+          </button>
+        </form>
       )}
 
-      {/* Albums Strip (Trips, Events, Projects, ...) */}
-      <div>
-        <p className="mb-2.5 font-ui text-[15.5px] uppercase tracking-[0.2em] text-wine opacity-70">
-          Albums
-        </p>
-        <div className="flex gap-3 overflow-x-auto pb-2">
-          {["All", ...albums].map((alb) => {
-            const items = entries.filter(
-              (e) => e.media && (alb === "All" || e.media.album === alb)
-            );
-            const cover = items.find((i) => i.media?.mediaType === "photo")?.media?.src ??
-              items[0]?.media?.poster;
-            const active = selectedAlbum === alb;
-            return (
-              <button
-                key={alb}
-                type="button"
-                onClick={() => setSelectedAlbum(alb)}
-                className={`flex shrink-0 items-center gap-3 rounded-2xl border-2 px-4 py-2.5 text-left transition-colors ${
-                  active
-                    ? "border-wine bg-wine text-marble"
-                    : "border-wine bg-marble text-wine hover:bg-marbleDim"
-                }`}
-              >
-                {cover && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={cover}
-                    alt=""
-                    className="h-11 w-11 rounded-lg border border-current object-cover"
-                  />
-                )}
-                <div>
-                  <p className="font-display text-[20px] leading-tight">
-                    {alb === "All" ? "All Albums" : alb}
-                  </p>
-                  <p className="font-ui text-[13.5px] uppercase tracking-[0.14em] opacity-75">
-                    {items.length} {items.length === 1 ? "item" : "items"}
-                  </p>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Month-Grouped Media Grid */}
+      {/* Month-grouped grid */}
       {byMonth.length === 0 ? (
-        <Panel title="Gallery">
-          <Empty>No media in this view yet. Upload a photo or video above.</Empty>
-        </Panel>
+        <p className="py-8 font-body text-[20px] text-wine opacity-65">No photos or videos here yet.</p>
       ) : (
         <div className="space-y-8">
           {byMonth.map(([ym, list]) => (
             <section key={ym}>
-              <div className="mb-3.5 flex items-baseline justify-between border-b-2 border-wine/25 pb-2">
-                <h3 className="font-display text-[26px] tracking-[0.05em] text-wine">
-                  {formatMonthLabel(ym)}
-                </h3>
-                <span className="font-ui text-[15px] uppercase tracking-[0.16em] text-wine opacity-65">
-                  {list.length} {list.length === 1 ? "memory" : "memories"}
-                </span>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <h2 className="mb-3 font-display text-[22px] text-wine">{monthTitle(ym)}</h2>
+              <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
                 {list.map((item) => {
                   const m = item.media!;
                   return (
-                    <div
+                    <button
                       key={item.id}
-                      className="group overflow-hidden rounded-2xl border-2 border-wine bg-marble transition-transform duration-200 hover:-translate-y-1"
+                      type="button"
+                      onClick={() => onOpenLightbox(item)}
+                      className="group text-left"
                     >
-                      <button
-                        type="button"
-                        onClick={() => onOpenLightbox(item)}
-                        className="relative block h-56 w-full overflow-hidden bg-wine text-left"
-                      >
+                      <div className="relative h-48 overflow-hidden rounded-xl border border-wine/35 bg-wine">
                         {m.mediaType === "video" ? (
                           <>
                             <video
@@ -1470,8 +1058,8 @@ function GalleryBranch({
                               onMouseLeave={(ev) => ev.currentTarget.pause()}
                               className="h-full w-full object-cover"
                             />
-                            <span className="absolute bottom-3 left-3 rounded-pill border border-marble bg-wine/90 px-3 py-0.5 font-ui text-[13.5px] uppercase tracking-[0.14em] text-marble">
-                              ▶ Video {m.duration ? `· ${m.duration}` : ""}
+                            <span className="absolute bottom-2 left-2 rounded-pill bg-wine/85 px-2.5 py-0.5 font-ui text-[12.5px] text-marble">
+                              ▶ Video
                             </span>
                           </>
                         ) : (
@@ -1482,43 +1070,12 @@ function GalleryBranch({
                             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                           />
                         )}
-                        <span className="absolute right-3 top-3 rounded-pill border border-marble bg-wine/85 px-2.5 py-0.5 font-ui text-[12.5px] uppercase tracking-[0.14em] text-marble">
-                          {m.album}
-                        </span>
-                      </button>
-
-                      <div className="p-4">
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="font-display text-[20px] leading-snug text-wine">
-                            {item.title}
-                          </p>
-                          <button
-                            type="button"
-                            onClick={() => toggleStarMemory(item.id)}
-                            className="font-display text-[20px] text-wine"
-                            aria-label="Star highlight"
-                          >
-                            {item.starred ? "★" : "☆"}
-                          </button>
-                        </div>
-                        <p className="mt-1 font-ui text-[14px] uppercase tracking-[0.14em] text-wine opacity-65">
-                          {prettyDate(item.date)}
-                          {item.location ? ` · ${item.location}` : ""}
-                        </p>
-                        {item.peopleTags.length > 0 && (
-                          <div className="mt-2 flex flex-wrap gap-1.5">
-                            {item.peopleTags.map((p) => (
-                              <span
-                                key={p}
-                                className="rounded-pill border border-wine/60 px-2.5 py-0.5 font-ui text-[13px] text-wine"
-                              >
-                                {p}
-                              </span>
-                            ))}
-                          </div>
-                        )}
                       </div>
-                    </div>
+                      <p className="mt-2 truncate font-body text-[19px] text-wine">{item.title}</p>
+                      <p className="font-ui text-[13.5px] text-wine opacity-60">
+                        {prettyDate(item.date)} · {m.album}
+                      </p>
+                    </button>
                   );
                 })}
               </div>
@@ -1531,10 +1088,10 @@ function GalleryBranch({
 }
 
 /* ================================================================== */
-/*  BRANCH 3: CALENDAR (Month View, Activity Marks, Tap -> Timeline)  */
+/*  3. CALENDAR VIEW                                                  */
 /* ================================================================== */
 
-function CalendarBranch({
+function CalendarView({
   entries,
   onSelectDate,
 }: {
@@ -1542,12 +1099,9 @@ function CalendarBranch({
   onSelectDate: (iso: string) => void;
 }) {
   const now = new Date();
-  const [cursor, setCursor] = useState<{ year: number; month: number }>({
-    year: now.getFullYear(),
-    month: now.getMonth(), // 0-indexed
-  });
+  const [cursor, setCursor] = useState({ year: now.getFullYear(), month: now.getMonth() });
 
-  const entriesByDate = useMemo(() => {
+  const byDate = useMemo(() => {
     const map = new Map<string, MemoryEntry[]>();
     for (const e of entries) {
       const list = map.get(e.date) ?? [];
@@ -1558,13 +1112,12 @@ function CalendarBranch({
   }, [entries]);
 
   const firstDay = new Date(cursor.year, cursor.month, 1);
-  // Monday-first offset (0=Mon .. 6=Sun)
   const startOffset = (firstDay.getDay() + 6) % 7;
   const daysInMonth = new Date(cursor.year, cursor.month + 1, 0).getDate();
-  const monthTitle = firstDay.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+  const label = firstDay.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
   const today = todayISO();
 
-  const shiftMonth = (delta: number) => {
+  const shift = (delta: number) => {
     setCursor((prev) => {
       const d = new Date(prev.year, prev.month + delta, 1);
       return { year: d.getFullYear(), month: d.getMonth() };
@@ -1572,109 +1125,90 @@ function CalendarBranch({
   };
 
   return (
-    <Panel
-      title={monthTitle}
-      hint="Each day is marked by how much happened — tap any day to jump to it in Timeline"
-      action={
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 className="font-display text-[24px] text-wine">{label}</h2>
+          <p className="font-ui text-[14.5px] text-wine opacity-65">
+            Tap any day to open it in Timeline.
+          </p>
+        </div>
         <div className="flex items-center gap-2">
-          <button type="button" onClick={() => shiftMonth(-1)} className="btn-ghost btn-sm px-3.5">
-            ←
-          </button>
-          <button
-            type="button"
+          <FilterPill active={false} onClick={() => shift(-1)}>
+            ← Prev
+          </FilterPill>
+          <FilterPill
+            active={false}
             onClick={() => setCursor({ year: now.getFullYear(), month: now.getMonth() })}
-            className="btn-ghost btn-sm"
           >
             Today
-          </button>
-          <button type="button" onClick={() => shiftMonth(1)} className="btn-ghost btn-sm px-3.5">
-            →
-          </button>
+          </FilterPill>
+          <FilterPill active={false} onClick={() => shift(1)}>
+            Next →
+          </FilterPill>
         </div>
-      }
-    >
-      <div className="grid grid-cols-7 gap-2 text-center font-ui text-[15px] uppercase tracking-[0.18em] text-wine opacity-70">
+      </div>
+
+      <div className="grid grid-cols-7 gap-1.5 text-center font-ui text-[14px] text-wine opacity-65">
         {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
-          <div key={d} className="py-1.5">
+          <div key={d} className="py-1">
             {d}
           </div>
         ))}
       </div>
 
-      <div className="mt-2 grid grid-cols-7 gap-2">
+      <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
         {Array.from({ length: startOffset }).map((_, i) => (
-          <div key={`pad-${i}`} className="min-h-[82px] rounded-xl border border-wine/15 bg-marbleDim/25 sm:min-h-[104px]" />
+          <div key={`pad-${i}`} className="h-16 sm:h-20" />
         ))}
 
         {Array.from({ length: daysInMonth }).map((_, idx) => {
-          const dayNum = idx + 1;
-          const iso = `${cursor.year}-${String(cursor.month + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
-          const list = entriesByDate.get(iso) ?? [];
-          const count = list.length;
+          const day = idx + 1;
+          const iso = `${cursor.year}-${String(cursor.month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+          const count = byDate.get(iso)?.length ?? 0;
           const isToday = iso === today;
-          const hasMilestone = list.some((x) => x.kind === "milestone");
 
           return (
             <button
               key={iso}
               type="button"
               onClick={() => onSelectDate(iso)}
-              className={`group flex min-h-[82px] flex-col justify-between rounded-xl border-2 p-2 text-left transition-all sm:min-h-[108px] sm:p-3 ${
+              className={`flex h-16 flex-col justify-between rounded-xl border p-2 text-left transition-colors sm:h-20 sm:p-2.5 ${
                 count >= 3
-                  ? "border-wine bg-wine text-marble hover:opacity-90"
+                  ? "border-wine bg-wine text-marble"
                   : count > 0
-                    ? "border-wine bg-marbleDim text-wine hover:bg-wine hover:text-marble"
-                    : "border-wine/35 bg-marble text-wine hover:border-wine"
+                    ? "border-wine/65 bg-marbleDim text-wine hover:bg-wine hover:text-marble"
+                    : "border-wine/25 bg-marble text-wine hover:border-wine"
               }`}
             >
-              <div className="flex w-full items-center justify-between">
-                <span
-                  className={`font-display text-[19px] sm:text-[22px] ${
-                    isToday ? "underline decoration-2 underline-offset-4" : ""
-                  }`}
-                >
-                  {dayNum}
-                </span>
-                {hasMilestone && <span className="text-[15px]">★</span>}
-              </div>
-
-              {count > 0 ? (
-                <div className="w-full">
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: Math.min(5, count) }).map((__, dotIdx) => (
-                      <span
-                        key={dotIdx}
-                        className="h-2 w-2 rounded-full bg-current"
-                      />
-                    ))}
-                  </div>
-                  <p className="mt-1 hidden truncate font-ui text-[12px] uppercase tracking-[0.1em] opacity-85 sm:block">
-                    {count} {count === 1 ? "entry" : "entries"}
-                  </p>
+              <span className={`font-ui text-[16px] ${isToday ? "font-bold underline" : ""}`}>
+                {day}
+              </span>
+              {count > 0 && (
+                <div className="flex gap-1">
+                  {Array.from({ length: Math.min(4, count) }).map((__, i) => (
+                    <span key={i} className="h-1.5 w-1.5 rounded-full bg-current" />
+                  ))}
                 </div>
-              ) : (
-                <span className="font-ui text-[12px] opacity-30">—</span>
               )}
             </button>
           );
         })}
       </div>
-    </Panel>
+    </div>
   );
 }
 
 /* ================================================================== */
-/*  BRANCH 4: JOURNAL (Daily entries, Voice, Reflections, Highlights) */
+/*  4. JOURNAL VIEW                                                   */
 /* ================================================================== */
 
-function JournalBranch({
+function JournalView({
   entries,
-  peopleNames,
   onOpenMedia,
   onOpenLinked,
 }: {
   entries: MemoryEntry[];
-  peopleNames: string[];
   onOpenMedia: (e: MemoryEntry) => void;
   onOpenLinked: (id: string) => void;
 }) {
@@ -1683,41 +1217,40 @@ function JournalBranch({
   const [text, setText] = useState("");
   const [subtype, setSubtype] = useState<JournalSubtype>("daily");
   const [mood, setMood] = useState(4);
-  const [section, setSection] = useState<SectionTag>("Life");
-  const [peopleInput, setPeopleInput] = useState("");
-  const [location, setLocation] = useState("");
   const [starred, setStarred] = useState(false);
-  const [photoAttach, setPhotoAttach] = useState<string | null>(null);
+  const [showMore, setShowMore] = useState(false);
+  const [section, setSection] = useState<SectionTag>("Life");
+  const [people, setPeople] = useState("");
+  const [location, setLocation] = useState("");
+  const [photo, setPhoto] = useState<string | null>(null);
 
-  // Voice Note recording state
+  // Voice recording
   const [recording, setRecording] = useState(false);
-  const [recSeconds, setRecSeconds] = useState(0);
+  const [recSec, setRecSec] = useState(0);
   const [voiceNote, setVoiceNote] = useState<VoiceAttachment | null>(null);
-  const mediaRecRef = useRef<MediaRecorder | null>(null);
+  const mrRef = useRef<MediaRecorder | null>(null);
   const speechRef = useRef<SpeechRecLike | null>(null);
   const timerRef = useRef<number | null>(null);
-  const startSecRef = useRef(0);
+  const t0Ref = useRef(0);
 
-  const startVoiceRecording = async () => {
+  const startRecording = async () => {
     setVoiceNote(null);
-    setRecSeconds(0);
-    startSecRef.current = Date.now();
+    setRecSec(0);
+    t0Ref.current = Date.now();
     setRecording(true);
-
     timerRef.current = window.setInterval(() => {
-      setRecSeconds(Math.max(1, Math.round((Date.now() - startSecRef.current) / 1000)));
+      setRecSec(Math.max(1, Math.round((Date.now() - t0Ref.current) / 1000)));
     }, 500);
 
-    // Optional live SpeechRecognition transcript
-    let heardTranscript = "";
+    let transcript = "";
     const w = window as unknown as {
       SpeechRecognition?: new () => SpeechRecLike;
       webkitSpeechRecognition?: new () => SpeechRecLike;
     };
-    const SpeechCtor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
-    if (SpeechCtor) {
+    const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
+    if (Ctor) {
       try {
-        const rec = new SpeechCtor();
+        const rec = new Ctor();
         rec.lang = "en-US";
         rec.continuous = true;
         rec.interimResults = false;
@@ -1726,10 +1259,8 @@ function JournalBranch({
           for (let i = 0; i < ev.results.length; i++) {
             parts.push(ev.results[i]?.[0]?.transcript ?? "");
           }
-          heardTranscript = parts.join(" ").trim();
-          if (heardTranscript) {
-            setText((prev) => (prev ? `${prev} ${heardTranscript}` : heardTranscript));
-          }
+          transcript = parts.join(" ").trim();
+          if (transcript) setText((prev) => (prev ? `${prev} ${transcript}` : transcript));
         };
         rec.onerror = () => undefined;
         speechRef.current = rec;
@@ -1737,7 +1268,6 @@ function JournalBranch({
       } catch {}
     }
 
-    // Audio blob capture via MediaRecorder if mic available
     if (navigator.mediaDevices?.getUserMedia) {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -1748,106 +1278,86 @@ function JournalBranch({
         };
         mr.onstop = () => {
           stream.getTracks().forEach((t) => t.stop());
-          const dur = Math.max(1, Math.round((Date.now() - startSecRef.current) / 1000));
+          const dur = Math.max(1, Math.round((Date.now() - t0Ref.current) / 1000));
           const blob = new Blob(chunks, { type: "audio/webm" });
-          const url = URL.createObjectURL(blob);
           setVoiceNote({
             durationSec: dur,
-            audioUrl: url,
-            transcript: heardTranscript || undefined,
+            audioUrl: URL.createObjectURL(blob),
+            transcript: transcript || undefined,
           });
         };
-        mediaRecRef.current = mr;
+        mrRef.current = mr;
         mr.start();
-        return;
-      } catch {
-        // Fallback when sandbox/browser has no physical mic connected
-      }
+      } catch {}
     }
   };
 
-  const stopVoiceRecording = () => {
+  const stopRecording = () => {
     if (timerRef.current) {
       window.clearInterval(timerRef.current);
       timerRef.current = null;
     }
     speechRef.current?.stop();
     speechRef.current = null;
-
-    if (mediaRecRef.current && mediaRecRef.current.state !== "inactive") {
-      mediaRecRef.current.stop();
-      mediaRecRef.current = null;
+    if (mrRef.current && mrRef.current.state !== "inactive") {
+      mrRef.current.stop();
+      mrRef.current = null;
     } else {
-      const dur = Math.max(2, Math.round((Date.now() - startSecRef.current) / 1000));
       setVoiceNote({
-        durationSec: dur,
-        transcript: text.trim() || "Voice reflection recorded.",
+        durationSec: Math.max(2, Math.round((Date.now() - t0Ref.current) / 1000)),
+        transcript: text.trim() || "Voice note recorded.",
       });
     }
     setRecording(false);
   };
 
-  const handlePhotoPick = (ev: React.ChangeEvent<HTMLInputElement>) => {
+  const onPhotoPick = (ev: React.ChangeEvent<HTMLInputElement>) => {
     const file = ev.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      if (typeof reader.result === "string") setPhotoAttach(reader.result);
+      if (typeof reader.result === "string") setPhoto(reader.result);
     };
     reader.readAsDataURL(file);
   };
 
-  const saveJournalEntry = (e: React.FormEvent) => {
+  const saveEntry = (e: React.FormEvent) => {
     e.preventDefault();
     if (!text.trim() && !voiceNote) return;
-
-    const pTags = peopleInput
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
 
     addMemoryEntry({
       kind: "journal",
       journalSubtype: subtype,
-      title:
-        title.trim() ||
-        (subtype === "idea"
-          ? "Untitled idea"
-          : subtype === "reflection"
-            ? "Evening reflection"
-            : "Daily entry"),
+      title: title.trim() || (subtype === "idea" ? "Idea" : subtype === "reflection" ? "Reflection" : "Daily note"),
       text: text.trim(),
       date: todayISO(),
       time: nowHHMM(),
       section,
-      peopleTags: pTags,
+      peopleTags: people
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
       mood,
       location: location.trim() || undefined,
       starred,
       linkedIds: [],
       voice: voiceNote ?? undefined,
-      mediaAttachments: photoAttach
-        ? [
-            {
-              id: `att-${Date.now()}`,
-              mediaType: "photo",
-              src: photoAttach,
-              album: "Events",
-            },
-          ]
+      mediaAttachments: photo
+        ? [{ id: `att-${Date.now()}`, mediaType: "photo", src: photo, album: "Events" }]
         : undefined,
     });
 
     setTitle("");
     setText("");
-    setPeopleInput("");
+    setPeople("");
     setLocation("");
     setStarred(false);
-    setPhotoAttach(null);
+    setPhoto(null);
     setVoiceNote(null);
+    setShowMore(false);
   };
 
-  const filteredJournals = useMemo(() => {
+  const list = useMemo(() => {
     return entries
       .filter((e) => {
         if (subFilter === "highlights") return Boolean(e.starred);
@@ -1862,194 +1372,169 @@ function JournalBranch({
 
   return (
     <div className="space-y-6">
-      {/* Sub-view filter pills */}
+      {/* Sub-filters */}
       <div className="flex flex-wrap gap-2">
         {(
           [
-            ["all", "All Writing"],
-            ["daily", "Daily Entries"],
+            ["all", "All"],
+            ["daily", "Daily"],
             ["reflections", "Reflections & Ideas"],
-            ["highlights", "★ Starred Highlights"],
+            ["highlights", "★ Starred"],
           ] as const
         ).map(([k, label]) => (
-          <button
-            key={k}
-            type="button"
-            onClick={() => setSubFilter(k)}
-            className={`rounded-pill border-2 border-wine px-4 py-1.5 font-ui text-[16px] uppercase tracking-[0.14em] transition-colors ${
-              subFilter === k ? "bg-wine text-marble" : "bg-marble text-wine hover:bg-marbleDim"
-            }`}
-          >
+          <FilterPill key={k} active={subFilter === k} onClick={() => setSubFilter(k)}>
             {label}
-          </button>
+          </FilterPill>
         ))}
       </div>
 
-      {/* Write or Speak Journal Composer */}
-      <Panel
-        title="Write or speak a journal entry"
-        hint={`${prettyDate(todayISO())} · Text or voice note, mood, tags & optional photo`}
+      {/* Simple clean composer */}
+      <form
+        onSubmit={saveEntry}
+        className="space-y-3 rounded-xl border border-wine/45 bg-marble p-4 sm:p-5"
       >
-        <form onSubmit={saveJournalEntry} className="space-y-3.5">
-          <div className="flex flex-wrap gap-2">
-            {(
-              [
-                ["daily", "Daily Entry"],
-                ["reflection", "Reflection"],
-                ["idea", "Idea"],
-              ] as const
-            ).map(([k, label]) => (
-              <button
-                key={k}
-                type="button"
-                onClick={() => setSubtype(k)}
-                className={`rounded-pill border-2 border-wine px-3.5 py-1 font-ui text-[15px] uppercase tracking-[0.14em] ${
-                  subtype === k ? "bg-wine text-marble" : "bg-marble text-wine"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
+        <div className="flex flex-wrap items-center gap-2">
+          {(
+            [
+              ["daily", "Daily"],
+              ["reflection", "Reflection"],
+              ["idea", "Idea"],
+            ] as const
+          ).map(([k, label]) => (
+            <FilterPill key={k} active={subtype === k} onClick={() => setSubtype(k)}>
+              {label}
+            </FilterPill>
+          ))}
+          <button
+            type="button"
+            onClick={() => setStarred((v) => !v)}
+            className="ml-auto font-ui text-[15px] text-wine opacity-75 hover:opacity-100"
+          >
+            {starred ? "★ Starred" : "☆ Star"}
+          </button>
+        </div>
 
-            <button
-              type="button"
-              onClick={() => setStarred((v) => !v)}
-              className={`ml-auto rounded-pill border-2 border-wine px-3.5 py-1 font-ui text-[15px] uppercase tracking-[0.14em] ${
-                starred ? "bg-wine text-marble" : "bg-marble text-wine"
-              }`}
-            >
-              {starred ? "★ Highlighted" : "☆ Star as Highlight"}
+        <input
+          className="w-full border-b border-wine/20 bg-transparent py-1.5 font-display text-[21px] text-wine outline-none placeholder:text-wine/40"
+          placeholder="Title (optional)"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+
+        <textarea
+          className="min-h-[110px] w-full resize-y bg-transparent font-body text-[20px] leading-relaxed text-wine outline-none placeholder:text-wine/45"
+          placeholder="Write a note, or tap Voice below to speak..."
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+        />
+
+        {voiceNote && (
+          <div className="flex items-center justify-between rounded-lg bg-marbleDim px-3 py-2 font-ui text-[14.5px]">
+            <span>Voice note ({voiceNote.durationSec}s)</span>
+            <button type="button" onClick={() => setVoiceNote(null)} className="underline">
+              Remove
             </button>
           </div>
+        )}
 
-          <input
-            className="field"
-            placeholder="Title of this entry, reflection or idea"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
+        {photo && (
+          <div className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={photo} alt="" className="h-16 w-16 rounded-lg object-cover" />
+            <button
+              type="button"
+              onClick={() => setPhoto(null)}
+              className="font-ui text-[14px] underline text-wine"
+            >
+              Remove photo
+            </button>
+          </div>
+        )}
 
-          <textarea
-            className="field min-h-[150px] resize-y leading-relaxed"
-            placeholder="Write freely — or press Record Voice below to speak…"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-          />
-
-          {voiceNote && (
-            <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border-2 border-wine bg-marbleDim px-4 py-2.5">
-              <span className="font-ui text-[15.5px] uppercase tracking-[0.14em] text-wine">
-                ◎ Voice note attached ({voiceNote.durationSec}s)
-              </span>
-              {voiceNote.audioUrl && (
-                <audio controls src={voiceNote.audioUrl} className="h-8 max-w-[240px]" />
-              )}
-              <button
-                type="button"
-                onClick={() => setVoiceNote(null)}
-                className="font-ui text-[14px] uppercase text-wine opacity-65 hover:opacity-100"
-              >
-                Remove ×
-              </button>
-            </div>
-          )}
-
-          {photoAttach && (
-            <div className="flex items-center gap-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={photoAttach}
-                alt="Attached"
-                className="h-20 w-20 rounded-lg border-2 border-wine object-cover"
-              />
-              <button
-                type="button"
-                onClick={() => setPhotoAttach(null)}
-                className="font-ui text-[15px] uppercase text-wine opacity-70 hover:opacity-100"
-              >
-                Remove photo ×
-              </button>
-            </div>
-          )}
-
-          <div className="grid gap-3 sm:grid-cols-3">
+        {showMore && (
+          <div className="grid gap-2.5 pt-1 sm:grid-cols-3">
             <select
-              className="field"
+              className="field py-2 text-[16px]"
               value={section}
               onChange={(e) => setSection(e.target.value as SectionTag)}
             >
               {SECTIONS.map((s) => (
                 <option key={s} value={s}>
-                  Section: {s}
+                  {s}
                 </option>
               ))}
             </select>
-
             <input
-              className="field"
-              placeholder={`People (${peopleNames.slice(0, 2).join(", ")})`}
-              value={peopleInput}
-              onChange={(e) => setPeopleInput(e.target.value)}
+              className="field py-2 text-[16px]"
+              placeholder="People"
+              value={people}
+              onChange={(e) => setPeople(e.target.value)}
             />
-
             <input
-              className="field"
-              placeholder="Location (optional)"
+              className="field py-2 text-[16px]"
+              placeholder="Place"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
             />
           </div>
+        )}
 
-          <div className="flex flex-wrap items-center gap-2.5 pt-1">
-            <span className="font-ui text-[16px] uppercase tracking-[0.16em] text-wine opacity-70">
-              Mood
-            </span>
-            {[1, 2, 3, 4, 5].map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => setMood(n)}
-                className={`h-9 w-9 rounded-full border-2 border-wine font-display text-[18px] transition-colors ${
-                  mood >= n ? "bg-wine text-marble" : "bg-marble text-wine hover:bg-marbleDim"
-                }`}
-              >
-                {n}
-              </button>
-            ))}
+        <div className="flex flex-wrap items-center gap-2 border-t border-wine/15 pt-3">
+          <span className="font-ui text-[14.5px] text-wine opacity-65">Mood:</span>
+          {[1, 2, 3, 4, 5].map((n) => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => setMood(n)}
+              className={`h-7 w-7 rounded-full border border-wine font-ui text-[14px] ${
+                mood >= n ? "bg-wine text-marble" : "text-wine"
+              }`}
+            >
+              {n}
+            </button>
+          ))}
 
-            <div className="ml-auto flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={recording ? stopVoiceRecording : () => void startVoiceRecording()}
-                className={`rounded-pill border-2 border-wine px-4 py-2 font-ui text-[15.5px] uppercase tracking-[0.14em] ${
-                  recording ? "bg-wine text-marble anim-breathe" : "bg-marble text-wine hover:bg-marbleDim"
-                }`}
-              >
-                {recording ? `■ Stop (${recSeconds}s)` : "◎ Record Voice"}
-              </button>
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={recording ? stopRecording : () => void startRecording()}
+              className={`rounded-pill border border-wine/50 px-3.5 py-1.5 font-ui text-[14.5px] ${
+                recording ? "bg-wine text-marble" : "text-wine"
+              }`}
+            >
+              {recording ? `Stop (${recSec}s)` : "Voice"}
+            </button>
 
-              <label className="cursor-pointer rounded-pill border-2 border-wine bg-marble px-4 py-2 font-ui text-[15.5px] uppercase tracking-[0.14em] text-wine hover:bg-marbleDim">
-                ▣ Photo
-                <input type="file" accept="image/*" onChange={handlePhotoPick} className="hidden" />
-              </label>
+            <label className="cursor-pointer rounded-pill border border-wine/50 px-3.5 py-1.5 font-ui text-[14.5px] text-wine">
+              Photo
+              <input type="file" accept="image/*" onChange={onPhotoPick} className="hidden" />
+            </label>
 
-              <button type="submit" className="btn-wine">
-                Keep Entry
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setShowMore((v) => !v)}
+              className="rounded-pill border border-wine/35 px-3 py-1.5 font-ui text-[14.5px] text-wine opacity-75"
+            >
+              {showMore ? "Less" : "+ Tags"}
+            </button>
+
+            <button
+              type="submit"
+              className="rounded-pill bg-wine px-5 py-1.5 font-ui text-[15px] text-marble"
+            >
+              Save
+            </button>
           </div>
-        </form>
-      </Panel>
+        </div>
+      </form>
 
-      {/* Journal Feed */}
-      <div className="space-y-4">
-        {filteredJournals.length === 0 ? (
-          <Panel title="Journal">
-            <Empty>Nothing in this journal view yet.</Empty>
-          </Panel>
+      {/* Entries */}
+      <div className="space-y-3">
+        {list.length === 0 ? (
+          <p className="py-6 font-body text-[20px] text-wine opacity-65">No notes here yet.</p>
         ) : (
-          filteredJournals.map((entry) => (
-            <TimelineEntryItem
+          list.map((entry) => (
+            <EntryItem
               key={entry.id}
               entry={entry}
               allEntries={entries}
@@ -2064,38 +1549,33 @@ function JournalBranch({
 }
 
 /* ================================================================== */
-/*  BRANCH 5: MILESTONES (Achievements, Launches, Trips, Firsts)      */
+/*  5. MILESTONES VIEW                                                */
 /* ================================================================== */
 
-function MilestonesBranch({
+function MilestonesView({
   entries,
-  peopleNames,
   onOpenMedia,
   onOpenLinked,
 }: {
   entries: MemoryEntry[];
-  peopleNames: string[];
   onOpenMedia: (e: MemoryEntry) => void;
   onOpenLinked: (id: string) => void;
 }) {
   const [catFilter, setCatFilter] = useState<MilestoneCategory | "All">("All");
-  const [showCreate, setShowCreate] = useState(false);
+  const [showAdd, setShowAdd] = useState(false);
 
   const [title, setTitle] = useState("");
   const [date, setDate] = useState(todayISO());
   const [cat, setCat] = useState<MilestoneCategory>("Achievement");
   const [note, setNote] = useState("");
-  const [section, setSection] = useState<SectionTag>("Work");
-  const [peopleInput, setPeopleInput] = useState("");
-  const [location, setLocation] = useState("");
-  const [linkedPhotoEntryId, setLinkedPhotoEntryId] = useState("");
+  const [linkedPhotoId, setLinkedPhotoId] = useState("");
 
   const galleryPhotos = useMemo(
     () => entries.filter((e) => e.media?.mediaType === "photo"),
     [entries]
   );
 
-  const milestones = useMemo(() => {
+  const list = useMemo(() => {
     return entries
       .filter((e) => e.kind === "milestone")
       .filter((e) => catFilter === "All" || e.milestoneCategory === catFilter)
@@ -2106,15 +1586,10 @@ function MilestonesBranch({
       );
   }, [entries, catFilter]);
 
-  const submitMilestone = (e: React.FormEvent) => {
+  const addMilestone = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-
-    const linkedPhoto = galleryPhotos.find((g) => g.id === linkedPhotoEntryId);
-    const pTags = peopleInput
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
+    const photoEntry = galleryPhotos.find((g) => g.id === linkedPhotoId);
 
     addMemoryEntry({
       kind: "milestone",
@@ -2124,21 +1599,18 @@ function MilestonesBranch({
       text: note.trim(),
       date,
       time: nowHHMM(),
-      section,
-      peopleTags: pTags,
+      section: "Life",
+      peopleTags: [],
       mood: 5,
-      location: location.trim() || undefined,
       starred: true,
-      linkedIds: linkedPhoto ? [linkedPhoto.id] : [],
-      mediaAttachments: linkedPhoto?.media ? [linkedPhoto.media] : undefined,
+      linkedIds: photoEntry ? [photoEntry.id] : [],
+      mediaAttachments: photoEntry?.media ? [photoEntry.media] : undefined,
     });
 
     setTitle("");
     setNote("");
-    setPeopleInput("");
-    setLocation("");
-    setLinkedPhotoEntryId("");
-    setShowCreate(false);
+    setLinkedPhotoId("");
+    setShowAdd(false);
   };
 
   return (
@@ -2146,211 +1618,145 @@ function MilestonesBranch({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2">
           {(["All", ...MILESTONE_CATS] as const).map((c) => (
-            <button
-              key={c}
-              type="button"
-              onClick={() => setCatFilter(c)}
-              className={`rounded-pill border-2 border-wine px-4 py-1.5 font-ui text-[15.5px] uppercase tracking-[0.14em] transition-colors ${
-                catFilter === c ? "bg-wine text-marble" : "bg-marble text-wine hover:bg-marbleDim"
-              }`}
-            >
-              {c === "All" ? "All Moments" : `${c}s`}
-            </button>
+            <FilterPill key={c} active={catFilter === c} onClick={() => setCatFilter(c)}>
+              {c}
+            </FilterPill>
           ))}
         </div>
 
         <button
           type="button"
-          onClick={() => setShowCreate((v) => !v)}
-          className="btn-wine btn-sm"
+          onClick={() => setShowAdd((v) => !v)}
+          className="rounded-pill bg-wine px-4 py-1.5 font-ui text-[15px] text-marble"
         >
-          {showCreate ? "Close" : "+ Pin Milestone"}
+          {showAdd ? "Close" : "+ Add milestone"}
         </button>
       </div>
 
-      {showCreate && (
-        <Panel
-          title="Pin a new Milestone"
-          hint="Achievements, launches, graduations, trips & firsts — pinned with date, note & linked photos"
+      {showAdd && (
+        <form
+          onSubmit={addMilestone}
+          className="space-y-3 rounded-xl border border-wine/50 bg-marbleDim/45 p-4"
         >
-          <form onSubmit={submitMilestone} className="grid gap-3.5 sm:grid-cols-2">
-            <input
-              className="field sm:col-span-2"
-              placeholder="Milestone title (e.g. Shipped Atlas v2, Graduated Honours…)"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-            />
-
+          <input
+            className="field py-2"
+            placeholder="Milestone title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+          />
+          <div className="grid gap-3 sm:grid-cols-2">
             <input
               type="date"
-              className="field"
+              className="field py-2"
               value={date}
               onChange={(e) => setDate(e.target.value)}
             />
-
             <select
-              className="field"
+              className="field py-2"
               value={cat}
               onChange={(e) => setCat(e.target.value as MilestoneCategory)}
             >
               {MILESTONE_CATS.map((c) => (
                 <option key={c} value={c}>
-                  Category: {c}
+                  {c}
                 </option>
               ))}
             </select>
-
-            <textarea
-              className="field min-h-[110px] sm:col-span-2"
-              placeholder="Note — why this moment mattered"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-            />
-
-            <select
-              className="field"
-              value={section}
-              onChange={(e) => setSection(e.target.value as SectionTag)}
-            >
-              {SECTIONS.map((s) => (
-                <option key={s} value={s}>
-                  Section: {s}
-                </option>
-              ))}
-            </select>
-
-            <input
-              className="field"
-              placeholder={`People (${peopleNames.slice(0, 2).join(", ")})`}
-              value={peopleInput}
-              onChange={(e) => setPeopleInput(e.target.value)}
-            />
-
-            <input
-              className="field"
-              placeholder="Location (optional)"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-            />
-
-            <select
-              className="field"
-              value={linkedPhotoEntryId}
-              onChange={(e) => setLinkedPhotoEntryId(e.target.value)}
-            >
-              <option value="">Link a photo from Gallery (optional)</option>
-              {galleryPhotos.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {prettyDate(p.date)} — {p.title}
-                </option>
-              ))}
-            </select>
-
-            <div className="sm:col-span-2">
-              <button type="submit" className="btn-wine">
-                Pin Milestone
-              </button>
-            </div>
-          </form>
-        </Panel>
+          </div>
+          <textarea
+            className="field min-h-[85px] py-2"
+            placeholder="Short note"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+          />
+          <select
+            className="field py-2"
+            value={linkedPhotoId}
+            onChange={(e) => setLinkedPhotoId(e.target.value)}
+          >
+            <option value="">Link a photo from Gallery (optional)</option>
+            {galleryPhotos.map((p) => (
+              <option key={p.id} value={p.id}>
+                {prettyDate(p.date)} — {p.title}
+              </option>
+            ))}
+          </select>
+          <button
+            type="submit"
+            className="rounded-pill bg-wine px-5 py-2 font-ui text-[15px] text-marble"
+          >
+            Save milestone
+          </button>
+        </form>
       )}
 
-      {milestones.length === 0 ? (
-        <Panel title="Milestones">
-          <Empty>No milestones pinned in this category yet.</Empty>
-        </Panel>
+      {list.length === 0 ? (
+        <p className="py-8 font-body text-[20px] text-wine opacity-65">No milestones here yet.</p>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {milestones.map((ms) => {
-            const photos = [
-              ...(ms.media ? [ms.media] : []),
-              ...(ms.mediaAttachments ?? []),
-            ];
+        <div className="grid gap-4 sm:grid-cols-2">
+          {list.map((ms) => {
+            const photo = ms.media ?? ms.mediaAttachments?.[0];
             return (
               <article
                 key={ms.id}
-                className="flex flex-col justify-between rounded-2xl border-2 border-wine bg-marble p-6"
+                className="flex flex-col justify-between rounded-xl border border-wine/40 bg-marble p-4 sm:p-5"
               >
                 <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge tone="wine">{ms.milestoneCategory ?? "Milestone"}</Badge>
-                    {ms.section && <Badge tone="dim">{ms.section}</Badge>}
-                    <span className="font-ui text-[15px] uppercase tracking-[0.14em] text-wine opacity-70">
-                      {prettyDate(ms.date)}
+                  <div className="flex items-center justify-between gap-2 font-ui text-[14px] text-wine opacity-70">
+                    <span>
+                      {ms.milestoneCategory ?? "Milestone"} · {prettyDate(ms.date)}
                     </span>
                     <button
                       type="button"
                       onClick={() => togglePinMilestone(ms.id)}
-                      className={`ml-auto rounded-pill border px-2.5 py-0.5 font-ui text-[13.5px] uppercase tracking-[0.12em] ${
-                        ms.pinned
-                          ? "border-wine bg-wine text-marble"
-                          : "border-wine/40 text-wine opacity-65"
-                      }`}
+                      className="hover:opacity-100"
                     >
                       {ms.pinned ? "📌 Pinned" : "Pin"}
                     </button>
                   </div>
 
-                  <h3 className="mt-3.5 font-display text-[26px] leading-snug text-wine">
-                    {ms.title}
-                  </h3>
+                  <h3 className="mt-2 font-display text-[22px] text-wine">{ms.title}</h3>
                   {ms.text && (
-                    <p className="mt-2 font-body text-[20px] leading-relaxed text-wine opacity-85">
+                    <p className="mt-1.5 font-body text-[19.5px] leading-relaxed text-wine opacity-85">
                       {ms.text}
                     </p>
                   )}
 
-                  {photos.length > 0 && (
-                    <div className="mt-4 grid gap-2.5">
-                      {photos.map((ph) => (
-                        <button
-                          key={ph.id}
-                          type="button"
-                          onClick={() => onOpenMedia(ms)}
-                          className="overflow-hidden rounded-xl border-2 border-wine"
-                        >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={ph.src}
-                            alt={ms.title}
-                            className="h-48 w-full object-cover transition-transform duration-300 hover:scale-105"
-                          />
-                        </button>
-                      ))}
-                    </div>
+                  {photo && (
+                    <button
+                      type="button"
+                      onClick={() => onOpenMedia(ms)}
+                      className="mt-3 block w-full overflow-hidden rounded-lg border border-wine/30"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={photo.src}
+                        alt={ms.title}
+                        className="h-44 w-full object-cover"
+                      />
+                    </button>
                   )}
                 </div>
 
-                <div className="mt-4 flex flex-wrap items-center gap-2 border-t-2 border-wine/15 pt-3">
-                  {ms.location && (
-                    <span className="rounded-pill border border-wine/50 px-3 py-0.5 font-ui text-[14px] text-wine">
-                      📍 {ms.location}
-                    </span>
-                  )}
-                  {ms.peopleTags.map((p) => (
-                    <span
-                      key={p}
-                      className="rounded-pill border border-wine px-3 py-0.5 font-ui text-[14px] text-wine"
-                    >
-                      👤 {p}
-                    </span>
-                  ))}
-                  {ms.linkedIds.map((lid) => {
-                    const target = entries.find((x) => x.id === lid);
-                    if (!target) return null;
-                    return (
-                      <button
-                        key={lid}
-                        type="button"
-                        onClick={() => onOpenLinked(lid)}
-                        className="rounded-pill border-2 border-wine bg-wine px-3 py-0.5 font-ui text-[13.5px] uppercase text-marble hover:bg-marble hover:text-wine"
-                      >
-                        ↔ Linked media
-                      </button>
-                    );
-                  })}
-                </div>
+                {ms.linkedIds.length > 0 && (
+                  <div className="mt-3 pt-2">
+                    {ms.linkedIds.map((lid) => {
+                      const target = entries.find((x) => x.id === lid);
+                      if (!target) return null;
+                      return (
+                        <button
+                          key={lid}
+                          type="button"
+                          onClick={() => onOpenLinked(lid)}
+                          className="font-ui text-[14px] underline text-wine opacity-70 hover:opacity-100"
+                        >
+                          Linked: {target.title}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </article>
             );
           })}
@@ -2361,10 +1767,34 @@ function MilestonesBranch({
 }
 
 /* ================================================================== */
-/*  MODALS: LIGHTBOX VIEWER + VAULT LOCK SCREEN & SETTINGS            */
+/*  SIMPLE SHARED PILL + LIGHTBOX & LOCK MODALS                       */
 /* ================================================================== */
 
-function EntryLightboxModal({
+function FilterPill({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-pill border px-3.5 py-1 font-ui text-[14.5px] transition-colors ${
+        active
+          ? "border-wine bg-wine text-marble"
+          : "border-wine/40 bg-marble text-wine hover:border-wine"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function LightboxModal({
   entry,
   allEntries,
   onClose,
@@ -2380,36 +1810,41 @@ function EntryLightboxModal({
     .map((id) => allEntries.find((x) => x.id === id))
     .filter((x): x is MemoryEntry => Boolean(x));
 
+  const details = [
+    prettyDate(entry.date),
+    entry.time,
+    entry.section ?? "",
+    entry.location ?? "",
+    entry.peopleTags.length ? `with ${entry.peopleTags.join(", ")}` : "",
+  ].filter(Boolean);
+
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-[980] grid place-items-center bg-wine/90 p-4 backdrop-blur-sm anim-fade"
+      className="fixed inset-0 z-[980] grid place-items-center bg-wine/85 p-4 backdrop-blur-sm anim-fade"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[90svh] w-full max-w-3xl overflow-y-auto rounded-2xl border-2 border-marble bg-marble p-5 text-wine sm:p-7"
+        className="max-h-[90svh] w-full max-w-2xl overflow-y-auto rounded-2xl border-2 border-marble bg-marble p-5 text-wine sm:p-6"
       >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="font-ui text-[15px] uppercase tracking-[0.18em] text-wine opacity-70">
-              {prettyDate(entry.date)} · {entry.time}
-              {entry.section ? ` · ${entry.section}` : ""}
+            <h3 className="font-display text-[24px] text-wine">{entry.title}</h3>
+            <p className="mt-0.5 font-ui text-[14.5px] text-wine opacity-65">
+              {details.join(" · ")}
             </p>
-            <h3 className="mt-1 font-display text-[28px] leading-snug text-wine">
-              {entry.title}
-            </h3>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full border-2 border-wine font-ui text-[18px] text-wine hover:bg-wine hover:text-marble"
+            className="font-ui text-[20px] text-wine opacity-70 hover:opacity-100"
           >
             ✕
           </button>
         </div>
 
         {media && (
-          <div className="mt-4 overflow-hidden rounded-xl border-2 border-wine bg-wine">
+          <div className="mt-4 overflow-hidden rounded-xl bg-wine">
             {media.mediaType === "video" ? (
               <video
                 src={media.src}
@@ -2431,36 +1866,31 @@ function EntryLightboxModal({
         )}
 
         {entry.text && (
-          <p className="mt-4 whitespace-pre-wrap font-body text-[21px] leading-relaxed text-wine">
+          <p className="mt-4 whitespace-pre-wrap font-body text-[20px] leading-relaxed text-wine">
             {entry.text}
           </p>
         )}
 
-        <div className="mt-4 flex flex-wrap items-center gap-2 border-t-2 border-wine/20 pt-4">
-          {media?.album && <Badge tone="gold">Album: {media.album}</Badge>}
-          {entry.location && <Badge tone="marble">📍 {entry.location}</Badge>}
-          {entry.peopleTags.map((p) => (
-            <Badge key={p} tone="dim">
-              👤 {p}
-            </Badge>
-          ))}
-          {linked.map((le) => (
-            <button
-              key={le.id}
-              type="button"
-              onClick={() => onSelectLinked(le)}
-              className="rounded-pill border-2 border-wine bg-wine px-3.5 py-1 font-ui text-[14px] uppercase tracking-[0.12em] text-marble hover:bg-marble hover:text-wine"
-            >
-              ↔ Open linked: {le.title}
-            </button>
-          ))}
-        </div>
+        {linked.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-3 border-t border-wine/15 pt-3">
+            {linked.map((le) => (
+              <button
+                key={le.id}
+                type="button"
+                onClick={() => onSelectLinked(le)}
+                className="font-ui text-[14.5px] underline text-wine"
+              >
+                Open linked: {le.title}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function LockConfigModal({
+function LockSetupModal({
   pinHash,
   biometricCredentialId,
   onClose,
@@ -2475,7 +1905,7 @@ function LockConfigModal({
   const savePin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!/^\d{4,6}$/.test(pin)) {
-      setMsg("Enter a 4–6 digit PIN.");
+      setMsg("Please enter a 4 to 6 digit PIN.");
       return;
     }
     setMemories((prev) => ({
@@ -2484,18 +1914,14 @@ function LockConfigModal({
     onClose();
   };
 
-  const enrollBiometrics = async () => {
+  const setupBio = async () => {
     const res = await registerBiometricLock();
     if (!res.ok || !res.credentialId) {
-      setMsg(res.error ?? "Biometric enrollment unavailable.");
+      setMsg(res.error ?? "Biometrics not available.");
       return;
     }
     setMemories((prev) => ({
-      lock: {
-        ...prev.lock,
-        biometricCredentialId: res.credentialId!,
-        locked: true,
-      },
+      lock: { ...prev.lock, biometricCredentialId: res.credentialId!, locked: true },
     }));
     onClose();
   };
@@ -2503,73 +1929,69 @@ function LockConfigModal({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-[980] grid place-items-center bg-wine/85 p-4 backdrop-blur-sm anim-fade"
+      className="fixed inset-0 z-[980] grid place-items-center bg-wine/80 p-4 backdrop-blur-sm anim-fade"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-2xl border-2 border-marble bg-marble p-6 text-wine"
+        className="w-full max-w-sm rounded-2xl border-2 border-marble bg-marble p-6 text-wine"
       >
         <div className="flex items-center justify-between">
-          <h3 className="font-display text-[26px] text-wine">Memories Vault Lock</h3>
-          <button
-            type="button"
-            onClick={onClose}
-            className="h-9 w-9 rounded-full border-2 border-wine font-ui text-[17px]"
-          >
+          <h3 className="font-display text-[23px] text-wine">Lock Memories</h3>
+          <button type="button" onClick={onClose} className="font-ui text-[18px]">
             ✕
           </button>
         </div>
-        <p className="mt-2 font-body text-[19.5px] italic text-wine opacity-75">
-          Protect your timeline, gallery and journal with a PIN or device biometrics.
+
+        <p className="mt-1.5 font-body text-[19px] text-wine opacity-75">
+          Set a PIN or use device biometrics.
         </p>
 
-        <form onSubmit={savePin} className="mt-4 space-y-3">
+        <form onSubmit={savePin} className="mt-4 space-y-2.5">
           <input
             type="password"
             inputMode="numeric"
             maxLength={6}
-            placeholder={pinHash ? "Replace 4–6 digit PIN" : "Set 4–6 digit PIN"}
+            placeholder="4–6 digit PIN"
             value={pin}
             onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-            className="field text-center tracking-[0.4em]"
+            className="field py-2.5 text-center tracking-[0.35em]"
           />
-          <button type="submit" className="btn-wine w-full">
-            Save PIN & Lock Now
+          <button
+            type="submit"
+            className="w-full rounded-pill bg-wine py-2.5 font-ui text-[15.5px] text-marble"
+          >
+            Save PIN & Lock
           </button>
         </form>
 
-        <div className="mt-3">
-          <button type="button" onClick={() => void enrollBiometrics()} className="btn-ghost w-full">
-            {biometricCredentialId ? "✓ Biometrics Active · Re-enroll" : "Register Device Biometrics"}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => void setupBio()}
+          className="mt-2.5 w-full rounded-pill border border-wine py-2 font-ui text-[15px] text-wine"
+        >
+          {biometricCredentialId ? "Update Biometrics" : "Use Biometrics"}
+        </button>
 
         {(pinHash || biometricCredentialId) && (
           <button
             type="button"
             onClick={() => {
-              setMemories({
-                lock: { pinHash: null, biometricCredentialId: null, locked: false },
-              });
+              setMemories({ lock: { pinHash: null, biometricCredentialId: null, locked: false } });
               onClose();
             }}
-            className="mt-3 w-full font-ui text-[15px] uppercase tracking-[0.14em] text-wine opacity-65 hover:opacity-100"
+            className="mt-3 w-full font-ui text-[14px] underline text-wine opacity-70"
           >
-            Remove Vault Lock
+            Remove lock
           </button>
         )}
 
-        {msg && (
-          <p className="mt-3 rounded-xl border-2 border-wine bg-marbleDim px-3.5 py-2 font-ui text-[15.5px] text-wine">
-            {msg}
-          </p>
-        )}
+        {msg && <p className="mt-3 font-ui text-[14.5px] text-wine">{msg}</p>}
       </div>
     </div>
   );
 }
 
-function VaultLockScreen({
+function LockScreen({
   pinHash,
   biometricCredentialId,
   onUnlock,
@@ -2589,7 +2011,7 @@ function VaultLockScreen({
       onUnlock();
       return;
     }
-    setErr("Incorrect PIN.");
+    setErr("Wrong PIN. Try again.");
     setPin("");
   };
 
@@ -2597,24 +2019,19 @@ function VaultLockScreen({
     if (!biometricCredentialId) return;
     const ok = await verifyBiometricLock(biometricCredentialId);
     if (ok) onUnlock();
-    else setErr("Biometric check did not complete — enter your PIN.");
+    else setErr("Biometric check cancelled.");
   };
 
   return (
-    <main className="grid min-h-[100svh] w-screen place-items-center bg-wine px-6 py-12 pl-20 text-marble sm:px-28">
-      <div className="w-full max-w-md rounded-2xl border-2 border-marble bg-wineDeep p-7 text-center anim-fade-up">
+    <main className="grid min-h-[100svh] w-screen place-items-center bg-wine px-6 text-marble">
+      <div className="w-full max-w-sm rounded-2xl border border-marble/40 bg-wineDeep p-7 text-center">
         <div className="mx-auto flex justify-center">
-          <MemorySphere glyph="memories" size={96} tone="wine" />
+          <MemorySphere glyph="memories" size={84} tone="wine" />
         </div>
-        <p className="mt-4 font-ui text-[16px] uppercase tracking-[0.26em] text-marble opacity-75">
-          Sealed Sanctuary
-        </p>
-        <h1 className="mt-1 font-display text-[34px] tracking-[0.1em] text-marble">
-          MEMORIES LOCKED
-        </h1>
+        <h1 className="mt-4 font-display text-[28px] text-marble">Memories Locked</h1>
 
         {pinHash && (
-          <form onSubmit={tryPin} className="mt-6 space-y-3.5">
+          <form onSubmit={tryPin} className="mt-5 space-y-3">
             <input
               type="password"
               inputMode="numeric"
@@ -2625,11 +2042,14 @@ function VaultLockScreen({
                 setErr(null);
                 setPin(e.target.value.replace(/\D/g, ""));
               }}
-              placeholder="••••"
-              className="w-full rounded-xl border-2 border-marble bg-wine px-4 py-3 text-center font-display text-[28px] tracking-[0.5em] text-marble outline-none"
+              placeholder="Enter PIN"
+              className="w-full rounded-xl border border-marble/50 bg-wine px-4 py-2.5 text-center font-ui text-[22px] tracking-[0.3em] text-marble outline-none"
             />
-            <button type="submit" className="btn-gold w-full">
-              Unlock with PIN
+            <button
+              type="submit"
+              className="w-full rounded-pill bg-marble py-2.5 font-ui text-[16px] text-wine"
+            >
+              Unlock
             </button>
           </form>
         )}
@@ -2638,20 +2058,20 @@ function VaultLockScreen({
           <button
             type="button"
             onClick={() => void tryBio()}
-            className="mt-3 w-full rounded-pill border-2 border-marble px-5 py-3 font-ui text-[16.5px] uppercase tracking-[0.16em] text-marble transition-colors hover:bg-marble hover:text-wine"
+            className="mt-2.5 w-full rounded-pill border border-marble/60 py-2.5 font-ui text-[15.5px] text-marble"
           >
-            Unlock with Biometrics
+            Use Biometrics
           </button>
         )}
 
-        {err && <p className="mt-3 font-ui text-[16px] text-marble opacity-85">{err}</p>}
+        {err && <p className="mt-3 font-ui text-[15px] text-marble opacity-85">{err}</p>}
 
         <button
           type="button"
           onClick={onBack}
-          className="mt-6 font-ui text-[15px] uppercase tracking-[0.18em] text-marble opacity-65 hover:opacity-100"
+          className="mt-5 font-ui text-[14.5px] text-marble opacity-65 hover:opacity-100"
         >
-          ← Back to Atlas World
+          ← Back
         </button>
       </div>
     </main>
