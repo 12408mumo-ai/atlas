@@ -3,28 +3,39 @@
 import { useEffect, useRef } from "react";
 
 /* ------------------------------------------------------------------ */
-/*  AiGlobeSphere — 3D spinning celestial AI sphere                   */
-/*  Strict two-colour rendering (#28282A charcoal + #F5E8D3 cream),   */
-/*  front/back depth projection, Fibonacci star nodes & orbital ring. */
+/*  AiGlobeSphere — Continuously spinning celestial AI sphere         */
+/*  Fixed internal high-DPI canvas so GPU scale/translate transitions */
+/*  between center (/) and left-side dock never flicker or reset.     */
 /* ------------------------------------------------------------------ */
 
 export function AiGlobeSphere({
   speaking = false,
+  onLightSurface = false,
   onClick,
+  ariaLabel = "Atlas AI spinning orb",
 }: {
   speaking?: boolean;
+  onLightSurface?: boolean;
   onClick?: () => void;
+  ariaLabel?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pointer = useRef({ tx: 0, ty: 0, cx: 0, cy: 0 });
   const speakingRef = useRef(speaking);
+  const lightRef = useRef(onLightSurface);
   speakingRef.current = speaking;
+  lightRef.current = onLightSurface;
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
+    const LOGICAL = 380;
+    const DPR = 2;
+    canvas.width = LOGICAL * DPR;
+    canvas.height = LOGICAL * DPR;
 
     const NODES = 200;
     const golden = Math.PI * (3 - Math.sqrt(5));
@@ -38,16 +49,6 @@ export function AiGlobeSphere({
 
     let raf = 0;
     const t0 = performance.now();
-
-    const resize = () => {
-      const box = canvas.getBoundingClientRect();
-      const dpr = Math.min(2, window.devicePixelRatio || 1);
-      canvas.width = Math.max(1, Math.round(box.width * dpr));
-      canvas.height = Math.max(1, Math.round(box.height * dpr));
-    };
-    resize();
-    const ro = new ResizeObserver(resize);
-    ro.observe(canvas);
 
     const project = (
       x: number,
@@ -82,12 +83,15 @@ export function AiGlobeSphere({
       cx: number,
       cy: number,
       R: number,
+      rgb: string,
       frontAlpha: number,
       backAlpha: number,
       lineWidth: number
     ) => {
       for (let pass = 0; pass < 2; pass++) {
         const wantFront = pass === 1;
+        const alpha = wantFront ? frontAlpha : backAlpha;
+        if (alpha <= 0) continue;
         ctx.beginPath();
         let penDown = false;
         for (let i = 0; i < pts.length; i++) {
@@ -106,7 +110,7 @@ export function AiGlobeSphere({
             penDown = false;
           }
         }
-        ctx.strokeStyle = `rgba(245, 232, 211, ${wantFront ? frontAlpha : backAlpha})`;
+        ctx.strokeStyle = `rgba(${rgb}, ${alpha})`;
         ctx.lineWidth = lineWidth;
         ctx.stroke();
       }
@@ -114,10 +118,9 @@ export function AiGlobeSphere({
 
     const tick = (now: number) => {
       const dt = (now - t0) / 1000;
-      const dpr = Math.min(2, window.devicePixelRatio || 1);
-      const w = canvas.width / dpr;
-      const h = canvas.height / dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const w = LOGICAL;
+      const h = LOGICAL;
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
       ctx.clearRect(0, 0, w, h);
 
       pointer.current.cx += (pointer.current.tx - pointer.current.cx) * 0.06;
@@ -126,12 +129,17 @@ export function AiGlobeSphere({
       const cx = w / 2;
       const cy = h / 2;
       const isSpeaking = speakingRef.current;
+      const onLight = lightRef.current;
+      const creamRgb = "245, 232, 211";
+      const wineRgb = "40, 40, 42";
+      const outerRingRgb = onLight ? wineRgb : creamRgb;
+
       const voiceMod = isSpeaking
         ? 1 + (Math.sin(dt * 8.5) * 0.025 + Math.sin(dt * 13.2) * 0.015)
         : 1 + Math.sin(dt * 1.6) * 0.012;
       const R = Math.min(w, h) * 0.34 * voiceMod;
 
-      const spin = dt * (isSpeaking ? 0.78 : 0.58) + pointer.current.cx * 0.7;
+      const spin = dt * (isSpeaking ? 0.85 : 0.68) + pointer.current.cx * 0.7;
       const tiltX = 0.28 + pointer.current.cy * 0.32;
       const tiltZ = -0.34;
 
@@ -141,9 +149,9 @@ export function AiGlobeSphere({
       const RING_STEPS = 96;
       for (let i = 0; i <= RING_STEPS; i++) {
         const a = (i / RING_STEPS) * Math.PI * 2;
-        ringPts.push(project(Math.cos(a), 0, Math.sin(a), -dt * 0.38, 0.42, 0.24));
+        ringPts.push(project(Math.cos(a), 0, Math.sin(a), -dt * 0.45, 0.42, 0.24));
       }
-      drawCurve(ringPts, cx, cy, ringR, 0, 0.28, 1.6);
+      drawCurve(ringPts, cx, cy, ringR, outerRingRgb, 0, 0.32, 2.0);
 
       // 2. Solid charcoal sphere core
       ctx.beginPath();
@@ -164,7 +172,7 @@ export function AiGlobeSphere({
           pts.push(project(Math.cos(th) * r, y, Math.sin(th) * r, spin, tiltX, tiltZ));
         }
         const eq = deg === 0;
-        drawCurve(pts, cx, cy, R, eq ? 0.92 : 0.54, eq ? 0.22 : 0.13, eq ? 2.1 : 1.25);
+        drawCurve(pts, cx, cy, R, creamRgb, eq ? 0.94 : 0.56, eq ? 0.24 : 0.14, eq ? 2.4 : 1.45);
       }
 
       // 4. Longitude meridians
@@ -179,7 +187,7 @@ export function AiGlobeSphere({
           const sa = Math.sin(a);
           pts.push(project(ca * cl, sa, ca * sl, spin, tiltX, tiltZ));
         }
-        drawCurve(pts, cx, cy, R, 0.64, 0.14, 1.3);
+        drawCurve(pts, cx, cy, R, creamRgb, 0.68, 0.15, 1.5);
       }
 
       // 5. Fibonacci AI star/neural nodes
@@ -188,20 +196,28 @@ export function AiGlobeSphere({
         const [px, py, pz] = project(ux, uy, uz, spin, tiltX, tiltZ);
         const sx = cx + px * R;
         const sy = cy - py * R;
-        const alpha = pz >= 0 ? 0.35 + pz * 0.65 : 0.08;
-        const dotR = pz >= 0 ? 1.5 + pz * 1.45 : 1.0;
+        const alpha = pz >= 0 ? 0.38 + pz * 0.62 : 0.09;
+        const dotR = pz >= 0 ? 1.6 + pz * 1.55 : 1.05;
         ctx.beginPath();
         ctx.arc(sx, sy, dotR, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(245, 232, 211, ${alpha.toFixed(3)})`;
+        ctx.fillStyle = `rgba(${creamRgb}, ${alpha.toFixed(3)})`;
         ctx.fill();
       }
 
-      // 6. Outer rim of the celestial sphere
+      // 6. Outer rim of the celestial sphere (crisp on both dark and cream surfaces)
       ctx.beginPath();
       ctx.arc(cx, cy, R, 0, Math.PI * 2);
-      ctx.strokeStyle = "#F5E8D3";
-      ctx.lineWidth = 2.6;
+      ctx.strokeStyle = onLight ? "#28282A" : "#F5E8D3";
+      ctx.lineWidth = onLight ? 3.8 : 2.8;
       ctx.stroke();
+
+      if (onLight) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, R - 2.6, 0, Math.PI * 2);
+        ctx.strokeStyle = "#F5E8D3";
+        ctx.lineWidth = 1.8;
+        ctx.stroke();
+      }
 
       // Dual voice waves while Atlas AI speaks
       if (isSpeaking) {
@@ -209,23 +225,23 @@ export function AiGlobeSphere({
           const wave = (dt * 1.15 + k * 0.5) % 1;
           ctx.beginPath();
           ctx.arc(cx, cy, R * (1.03 + wave * 0.24), 0, Math.PI * 2);
-          ctx.strokeStyle = `rgba(245, 232, 211, ${(1 - wave) * 0.62})`;
-          ctx.lineWidth = 2;
+          ctx.strokeStyle = `rgba(${outerRingRgb}, ${(1 - wave) * 0.65})`;
+          ctx.lineWidth = 2.2;
           ctx.stroke();
         }
       }
 
       // 7. Front half of outer AI orbital ring + 3 orbiting beacons
-      drawCurve(ringPts, cx, cy, ringR, 0.78, 0, 2.0);
+      drawCurve(ringPts, cx, cy, ringR, outerRingRgb, 0.85, 0, 2.4);
       for (let b = 0; b < 3; b++) {
-        const a = -dt * 0.38 + (b * Math.PI * 2) / 3;
+        const a = -dt * 0.45 + (b * Math.PI * 2) / 3;
         const [bx, by, bz] = project(Math.cos(a), 0, Math.sin(a), 0, 0.42, 0.24);
         if (bz >= -0.15) {
           const sx = cx + bx * ringR;
           const sy = cy - by * ringR;
           ctx.beginPath();
-          ctx.arc(sx, sy, bz >= 0 ? 4.5 : 3, 0, Math.PI * 2);
-          ctx.fillStyle = "#F5E8D3";
+          ctx.arc(sx, sy, bz >= 0 ? 4.8 : 3.2, 0, Math.PI * 2);
+          ctx.fillStyle = onLight ? "#28282A" : "#F5E8D3";
           ctx.fill();
         }
       }
@@ -236,7 +252,6 @@ export function AiGlobeSphere({
     raf = requestAnimationFrame(tick);
     return () => {
       cancelAnimationFrame(raf);
-      ro.disconnect();
     };
   }, []);
 
@@ -246,6 +261,7 @@ export function AiGlobeSphere({
       onClick={onClick}
       onPointerMove={(e) => {
         const rect = e.currentTarget.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
         pointer.current.tx = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
         pointer.current.ty = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
       }}
@@ -253,8 +269,8 @@ export function AiGlobeSphere({
         pointer.current.tx = 0;
         pointer.current.ty = 0;
       }}
-      aria-label="Atlas AI spinning globe — tap to hear voice greeting"
-      className="group relative mx-auto block h-[310px] w-[310px] cursor-pointer outline-none focus-visible:ring-4 focus-visible:ring-marble sm:h-[400px] sm:w-[400px]"
+      aria-label={ariaLabel}
+      className="group relative block h-full w-full cursor-pointer outline-none focus-visible:ring-4 focus-visible:ring-marble rounded-full"
     >
       <canvas ref={canvasRef} className="h-full w-full" />
     </button>

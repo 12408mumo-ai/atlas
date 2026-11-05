@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ServiceWorkerRegister } from "@/components/PwaInstall";
+import { PersistentAiOrb } from "@/components/PersistentAiOrb";
 
 export const metadata: Metadata = {
   title: "Atlas — the world you carry",
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <ServiceWorkerRegister />
+        <PersistentAiOrb />
         {children}
       </body>
     </html>
