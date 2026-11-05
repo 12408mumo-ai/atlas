@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ScrollFrame } from "@/components/ScrollFrame";
 import { MeanderWine, LaurelDivider, GoldDots } from "@/components/Ornaments";
-import { InstallAppButton } from "@/components/PwaInstall";
 import { signIn, getSession } from "@/lib/store";
 
 export default function LoginPage() {
@@ -67,12 +66,9 @@ export default function LoginPage() {
             </span>
             <span className="font-display text-[22px] tracking-[0.42em] text-marble">ATLAS</span>
           </Link>
-          <div className="flex items-center gap-4">
-            <span className="hidden font-ui text-[18px] uppercase tracking-[0.24em] text-marble opacity-85 lg:block">
-              Ἄτλας · he who holds the sky
-            </span>
-            <InstallAppButton tone="dark" label="Download app" />
-          </div>
+          <span className="hidden font-ui text-[18px] uppercase tracking-[0.24em] text-marble opacity-85 sm:block">
+            Ἄτλας · he who holds the sky
+          </span>
         </header>
 
         <div className="grid flex-1 items-center gap-12 pb-14 md:grid-cols-[minmax(0,520px)_1fr]">

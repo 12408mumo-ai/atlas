@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { getSession, clearSession } from "@/lib/store";
 import { MeanderWine } from "./Ornaments";
 import { AtlasSideIcon } from "./AtlasSideIcon";
-import { InstallAppButton } from "./PwaInstall";
 
 export function TopBar() {
   const router = useRouter();
@@ -59,9 +58,6 @@ export function TopBar() {
           </nav>
 
           <div className="relative flex shrink-0 items-center gap-2.5">
-            <div className="hidden sm:block">
-              <InstallAppButton tone="light" label="Download" className="px-4 py-2 text-[16.5px]" />
-            </div>
             <button
               onClick={() => setMenu((m) => !m)}
               className="grid h-11 w-11 place-items-center rounded-full border-2 border-wine bg-marble font-ui text-[18px] uppercase tracking-widest text-wine transition-colors hover:bg-wine hover:text-marble"
@@ -74,9 +70,6 @@ export function TopBar() {
                 <p className="px-3 py-2 font-ui text-[17px] uppercase tracking-[0.2em] text-wine opacity-65">The bearer</p>
                 <p className="truncate px-3 pb-2 font-body text-[21px] text-wine">{name}</p>
                 <div className="my-2 h-[2px] bg-wine/25" />
-                <div className="px-1 pb-1 sm:hidden">
-                  <InstallAppButton tone="light" label="Download app" className="w-full" />
-                </div>
                 <button
                   onClick={() => {
                     clearSession();

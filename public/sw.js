@@ -1,4 +1,4 @@
-const CACHE_NAME = "atlas-pwa-v1";
+const CACHE_NAME = "atlas-pwa-v2";
 const PRECACHE_URLS = [
   "/",
   "/login",
@@ -9,6 +9,10 @@ const PRECACHE_URLS = [
   "/icons/maskable-512.png",
   "/apple-touch-icon.png",
   "/assets/atlas-flat.png",
+  "/audio/greeting-morning.mp3",
+  "/audio/greeting-afternoon.mp3",
+  "/audio/greeting-evening.mp3",
+  "/audio/greeting-night.mp3",
 ];
 
 self.addEventListener("install", (event) => {
@@ -37,7 +41,6 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
-  // Let Next.js dev HMR / dynamic streams pass straight to network
   if (url.pathname.startsWith("/_next/webpack-hmr")) return;
 
   event.respondWith(
