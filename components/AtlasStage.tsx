@@ -4,9 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 /* ------------------------------------------------------------------ */
-/*  The Stage — flat two-colour edition                               */
-/*  Atlas kneels with the world above him. Five pillar spheres orbit  */
-/*  it; each sphere carries its own emblem image and opens a page.    */
+/*  AtlasStage — full-viewport sanctuary                              */
+/*  Nothing else on the screen: only the god Atlas carrying the       */
+/*  world and the spinning spheres moving around it. Press a sphere   */
+/*  and its doorway opens.                                            */
 /* ------------------------------------------------------------------ */
 
 export type Pillar = {
@@ -16,7 +17,6 @@ export type Pillar = {
   href: string;
   image: string;
   blurb: string;
-  count: string;
   orbit: { radius: number; tilt: number; speed: number; phase: number; lift: number };
 };
 
@@ -28,8 +28,7 @@ export const PILLARS: Pillar[] = [
     href: "/work",
     image: "/assets/emblems/work.png",
     blurb: "Client projects, tasks, time, income and your own ventures.",
-    count: "3 projects",
-    orbit: { radius: 1.42, tilt: -16, speed: 60, phase: 0.35, lift: 0.05 },
+    orbit: { radius: 1.48, tilt: -17, speed: 54, phase: 0.35, lift: 0.06 },
   },
   {
     key: "study",
@@ -38,8 +37,7 @@ export const PILLARS: Pillar[] = [
     href: "/study",
     image: "/assets/emblems/study.png",
     blurb: "Timetable, courses, assignments, exams and self-learning.",
-    count: "4 courses",
-    orbit: { radius: 1.9, tilt: 13, speed: 78, phase: 2.4, lift: -0.85 },
+    orbit: { radius: 1.94, tilt: 14, speed: 70, phase: 2.35, lift: -0.78 },
   },
   {
     key: "people",
@@ -48,8 +46,7 @@ export const PILLARS: Pillar[] = [
     href: "/people",
     image: "/assets/emblems/people.png",
     blurb: "Everyone who matters — dates, promises, gifts, check-ins.",
-    count: "4 souls",
-    orbit: { radius: 1.66, tilt: 29, speed: 47, phase: 4.2, lift: 1.0 },
+    orbit: { radius: 1.72, tilt: 28, speed: 46, phase: 4.15, lift: 0.96 },
   },
   {
     key: "life",
@@ -58,8 +55,7 @@ export const PILLARS: Pillar[] = [
     href: "/life",
     image: "/assets/emblems/life.png",
     blurb: "Health, money, habits and the 1–5 of how you actually feel.",
-    count: "4 habits",
-    orbit: { radius: 2.1, tilt: -31, speed: 69, phase: 5.5, lift: -0.2 },
+    orbit: { radius: 2.16, tilt: -29, speed: 64, phase: 5.45, lift: -0.18 },
   },
   {
     key: "memories",
@@ -68,8 +64,16 @@ export const PILLARS: Pillar[] = [
     href: "/memories",
     image: "/assets/emblems/memories.png",
     blurb: "Every log, journal and milestone — the timeline of you.",
-    count: "this day",
-    orbit: { radius: 2.36, tilt: 5, speed: 92, phase: 1.2, lift: 1.75 },
+    orbit: { radius: 2.42, tilt: 6, speed: 82, phase: 1.2, lift: 1.58 },
+  },
+  {
+    key: "atlas",
+    name: "Atlas AI",
+    greek: "Ὁ Τιτάν",
+    href: "/atlas",
+    image: "/icons/icon-192.png",
+    blurb: "Speak with the Titan AI that weighs and plans your world.",
+    orbit: { radius: 1.62, tilt: -8, speed: 50, phase: 3.25, lift: -0.44 },
   },
 ];
 
@@ -86,8 +90,8 @@ export default function AtlasStage() {
   const imgRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sphereRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const hoveredRef = useRef<string | null>(null);
   const [geo, setGeo] = useState<Geo | null>(null);
-  const [hovered, setHovered] = useState<string | null>(null);
   const [intro, setIntro] = useState(false);
   const [opening, setOpening] = useState<Pillar | null>(null);
   const t0 = useRef<number>(0);
@@ -125,12 +129,17 @@ export default function AtlasStage() {
 
   const orbits = useMemo(() => {
     if (!geo) return null;
-    const maxRx = Math.min(geo.cx, geo.w - geo.cx) - 64;
+    const edgePad = geo.w < 540 ? 52 : 76;
+    const maxRx = Math.max(70, Math.min(geo.cx, geo.w - geo.cx) - edgePad);
+    const wideBoost = Math.min(1.38, Math.max(1, geo.w / Math.max(1, geo.r * 5.4)));
     return PILLARS.map((p) => {
       const oy = geo.cy + p.orbit.lift * geo.r;
-      const roomUp = Math.max(52, oy - 86);
-      const roomDown = Math.max(52, geo.h - 86 - oy);
-      const rx = Math.max(60, Math.min(p.orbit.radius * geo.r, maxRx, roomUp / ORBIT_SKEW, roomDown / ORBIT_SKEW));
+      const roomUp = Math.max(52, oy - 64);
+      const roomDown = Math.max(52, geo.h - 76 - oy);
+      const rx = Math.max(
+        64,
+        Math.min(p.orbit.radius * geo.r * wideBoost, maxRx, roomUp / ORBIT_SKEW, roomDown / ORBIT_SKEW)
+      );
       return { key: p.key, rx, ry: rx * ORBIT_SKEW, oy };
     });
   }, [geo]);
@@ -138,12 +147,12 @@ export default function AtlasStage() {
   const open = useCallback(
     (p: Pillar) => {
       setOpening(p);
-      window.setTimeout(() => router.push(p.href), 380);
+      window.setTimeout(() => router.push(p.href), 360);
     },
     [router]
   );
 
-  /* ---- flat rings ---- */
+  /* ---- flat orbital rings ---- */
   useEffect(() => {
     if (!geo || !canvasRef.current || !orbits) return;
     const canvas = canvasRef.current;
@@ -165,21 +174,24 @@ export default function AtlasStage() {
       ctx.rotate((p.orbit.tilt * Math.PI) / 180);
       ctx.beginPath();
       ctx.ellipse(0, 0, ring.rx, ring.ry, 0, 0, Math.PI * 2);
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1.8;
       ctx.strokeStyle =
         p.key === "people" || p.key === "life"
-          ? "rgba(245, 232, 211, 0.30)"
-          : "rgba(245, 232, 211, 0.56)";
+          ? "rgba(245, 232, 211, 0.28)"
+          : "rgba(245, 232, 211, 0.52)";
       ctx.stroke();
       ctx.restore();
     });
   }, [geo, orbits]);
 
-  /* ---- motion: spheres ride their rings ---- */
+  /* ---- motion: spheres spin and ride their orbital rings ---- */
   useEffect(() => {
     if (!geo || !orbits) return;
     let raf = 0;
     t0.current = performance.now();
+    const baseSize = geo.w < 540 ? 66 : 84;
+    const depthSwing = geo.w < 540 ? 6 : 9;
+
     const tick = (now: number) => {
       const t = (now - t0.current) / 1000;
       PILLARS.forEach((p, i) => {
@@ -193,13 +205,15 @@ export default function AtlasStage() {
         const x = geo.cx + ex * Math.cos(tilt) - ey * Math.sin(tilt);
         const y = ring.oy + ex * Math.sin(tilt) + ey * Math.cos(tilt);
         const depth = Math.sin(a); // −1 behind, +1 in front
-        el.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%) scale(${intro ? 1 : 0.2})`;
+        const isHovered = hoveredRef.current === p.key;
+        const scale = intro ? (isHovered ? 1.1 : 1) : 0.2;
+        el.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%) scale(${scale})`;
         el.style.opacity = intro ? "1" : "0";
-        el.style.zIndex = String(100 + Math.round(depth * 40));
-        // spheres behind the world are sunk: smaller, dimmed with a flat veil
+        el.style.zIndex = String(isHovered ? 300 : 100 + Math.round(depth * 40));
+
         const veil = el.querySelector<HTMLElement>("[data-veil]");
-        if (veil) veil.style.opacity = String(0.35 - depth * 0.3);
-        el.style.width = el.style.height = `${84 + depth * 9}px`;
+        if (veil) veil.style.opacity = String(isHovered ? 0 : Math.max(0, 0.34 - depth * 0.3));
+        el.style.width = el.style.height = `${baseSize + depth * depthSwing}px`;
       });
       raf = requestAnimationFrame(tick);
     };
@@ -208,100 +222,107 @@ export default function AtlasStage() {
   }, [geo, orbits, intro]);
 
   return (
-    <div className="relative px-4 sm:px-6">
-      <div
-        ref={wrapRef}
-        className="relative mx-auto h-[74svh] min-h-[540px] w-full max-w-[1180px] overflow-hidden rounded-[20px] border-[3px] border-wine bg-wine sm:h-[84svh] sm:min-h-[660px]"
-      >
-        {/* the Titan, flat and full-bleed */}
-        <div className="absolute inset-0 grid place-items-center">
-          <img
-            ref={imgRef}
-            src="/assets/atlas-flat.png"
-            alt="Flat illustration of Atlas kneeling, holding the world above him"
-            onLoad={measure}
-            className="h-full w-auto max-w-none select-none object-contain"
-            draggable={false}
-          />
-        </div>
-
-        {/* rings */}
-        <canvas ref={canvasRef} className="pointer-events-none absolute inset-0" aria-hidden />
-
-        {/* the five spheres */}
-        <div className="absolute inset-0">
-          {PILLARS.map((p, i) => (
-            <div
-              key={p.key}
-              ref={(el) => {
-                sphereRefs.current[i] = el;
-              }}
-              className="absolute left-0 top-0 h-[84px] w-[84px] will-change-transform"
-              style={{ opacity: 0 }}
-            >
-              <button
-                onClick={() => open(p)}
-                onMouseEnter={() => setHovered(p.key)}
-                onMouseLeave={() => setHovered(null)}
-                onFocus={() => setHovered(p.key)}
-                onBlur={() => setHovered(null)}
-                aria-label={`${p.name} — ${p.blurb}`}
-                className="group relative block h-full w-full rounded-full border-[3px] border-marble bg-marble outline-none focus-visible:ring-4 focus-visible:ring-marble"
-              >
-                <span className="absolute inset-[3px] overflow-hidden rounded-full">
-                  <img
-                    src={p.image}
-                    alt=""
-                    className="h-full w-full scale-110 object-cover transition-transform duration-500 group-hover:scale-[1.2]"
-                    draggable={false}
-                  />
-                  {/* flat charcoal veil for depth behind the world */}
-                  <span data-veil className="pointer-events-none absolute inset-0 bg-wine" style={{ opacity: 0.3 }} />
-                </span>
-                {/* name plate under the sphere */}
-                <span className="pointer-events-none absolute left-1/2 top-[calc(100%+8px)] -translate-x-1/2 whitespace-nowrap rounded-pill border-2 border-wine bg-marble px-3.5 py-1 font-ui text-[16.5px] uppercase tracking-[0.16em] text-wine">
-                  {p.name}
-                </span>
-              </button>
-            </div>
-          ))}
-        </div>
-
-        {/* flat caption */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-4 z-[400] px-4 text-center">
-          <p className="inline-block rounded-pill border-2 border-marble bg-wine px-5 py-2 font-ui text-[17px] uppercase tracking-[0.18em] text-marble">
-            {hovered ? PILLARS.find((p) => p.key === hovered)?.blurb : "Touch a sphere to open it"}
-          </p>
-        </div>
+    <div
+      ref={wrapRef}
+      className="relative h-[100svh] w-screen overflow-hidden bg-wine select-none"
+    >
+      {/* The god Atlas, kneeling and carrying the world */}
+      <div className="absolute inset-0 grid place-items-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          ref={imgRef}
+          src="/assets/atlas-flat.png"
+          alt="Atlas kneeling, holding the world above him"
+          onLoad={measure}
+          className="h-[92svh] max-h-[94svh] w-auto max-w-[92vw] select-none object-contain"
+          draggable={false}
+        />
       </div>
 
-      {/* accessible doorway list */}
-      <div className="mx-auto mt-3.5 grid max-w-[1180px] grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
-        {PILLARS.map((p) => (
-          <button
+      {/* Clickable celestial world sphere held by Atlas (opens Atlas AI) */}
+      {geo && (
+        <button
+          type="button"
+          onClick={() => open(PILLARS.find((p) => p.key === "atlas")!)}
+          aria-label="Open Atlas AI"
+          style={{
+            left: geo.cx,
+            top: geo.cy,
+            width: geo.r * 2,
+            height: geo.r * 2,
+          }}
+          className="absolute z-[90] -translate-x-1/2 -translate-y-1/2 cursor-pointer rounded-full outline-none focus-visible:ring-4 focus-visible:ring-marble"
+        />
+      )}
+
+      {/* Orbital paths */}
+      <canvas ref={canvasRef} className="pointer-events-none absolute inset-0" aria-hidden />
+
+      {/* The spinning spheres moving around the world */}
+      <div className="absolute inset-0">
+        {PILLARS.map((p, i) => (
+          <div
             key={p.key}
-            onClick={() => open(p)}
-            onMouseEnter={() => setHovered(p.key)}
-            onMouseLeave={() => setHovered(null)}
-            className="group flex items-center gap-3 rounded-pill border-2 border-wine bg-marble px-4 py-3 text-left transition-colors hover:bg-wine"
+            ref={(el) => {
+              sphereRefs.current[i] = el;
+            }}
+            className="absolute left-0 top-0 h-[84px] w-[84px] transition-[transform] duration-75 will-change-transform"
+            style={{ opacity: 0 }}
           >
-            <span className="h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 border-wine group-hover:border-marble">
-              <img src={p.image} alt="" className="h-full w-full object-cover" draggable={false} />
-            </span>
-            <span className="min-w-0">
-              <span className="block font-ui text-[18px] uppercase tracking-[0.16em] text-wine group-hover:text-marble">{p.name}</span>
-              <span className="block truncate font-body text-[18.5px] italic text-wine opacity-65 group-hover:text-marble group-hover:opacity-80">
-                {p.greek}
+            <button
+              type="button"
+              onClick={() => open(p)}
+              onMouseEnter={() => {
+                hoveredRef.current = p.key;
+              }}
+              onMouseLeave={() => {
+                hoveredRef.current = null;
+              }}
+              onFocus={() => {
+                hoveredRef.current = p.key;
+              }}
+              onBlur={() => {
+                hoveredRef.current = null;
+              }}
+              aria-label={`Open ${p.name}`}
+              className="group relative block h-full w-full cursor-pointer rounded-full border-[3px] border-marble bg-marble outline-none focus-visible:ring-4 focus-visible:ring-marble"
+            >
+              <span className="absolute inset-[3px] overflow-hidden rounded-full">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={p.image}
+                  alt=""
+                  className="h-full w-full scale-110 object-cover transition-transform duration-500 group-hover:scale-[1.22]"
+                  draggable={false}
+                />
+                {/* delicate spinning celestial meridian overlay so each orb visibly spins */}
+                <svg
+                  viewBox="0 0 64 64"
+                  className="pointer-events-none absolute inset-0 h-full w-full opacity-45"
+                  style={{ animation: `orbitSpin ${14 + i * 2.5}s linear infinite` }}
+                  aria-hidden
+                >
+                  <ellipse cx="32" cy="32" rx="28" ry="11" fill="none" stroke="#28282A" strokeWidth="1.4" />
+                  <ellipse cx="32" cy="32" rx="11" ry="28" fill="none" stroke="#28282A" strokeWidth="1.4" />
+                </svg>
+                {/* flat charcoal veil for depth when behind the world */}
+                <span data-veil className="pointer-events-none absolute inset-0 bg-wine" style={{ opacity: 0.3 }} />
               </span>
-            </span>
-          </button>
+
+              {/* Sphere label */}
+              <span className="pointer-events-none absolute left-1/2 top-[calc(100%+7px)] -translate-x-1/2 whitespace-nowrap rounded-pill border-2 border-wine bg-marble px-3 py-0.5 font-ui text-[16px] uppercase tracking-[0.14em] text-wine">
+                {p.name}
+              </span>
+            </button>
+          </div>
         ))}
       </div>
 
-      {/* doorway flash */}
+      {/* Doorway transition when a sphere is pressed */}
       {opening && (
         <div className="pointer-events-none fixed inset-0 z-[900] grid place-items-center anim-fade bg-wine/95">
           <div className="text-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={opening.image} alt="" className="mx-auto h-28 w-28 rounded-full border-[3px] border-marble object-cover" />
             <p className="mt-5 font-display text-[clamp(34px,6.8vw,64px)] tracking-[0.2em] text-marble">
               {opening.name.toUpperCase()}
