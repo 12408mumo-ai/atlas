@@ -1,6 +1,7 @@
 "use client";
 
 import { getState, setState, todayISO, type AtlasState } from "./store";
+import { addMemoryEntry, nowHHMM } from "./memories";
 
 /* ------------------------------------------------------------------ */
 /*  ATLAS AI — the mind of the Titan.                                  */
@@ -377,6 +378,16 @@ function executeAction(a: AtlasAction): { label: string; ok: boolean } {
                 : pp
             ),
           }));
+          addMemoryEntry({
+            kind: "autolog",
+            title: `Deadline met — ${t.title} (${p.name})`,
+            text: `Completed task in ${p.name}.`,
+            date: todayISO(),
+            time: nowHHMM(),
+            section: "Work",
+            peopleTags: [],
+            linkedIds: [],
+          });
           return ok(`completed task “${t.title}”`);
         }
       }
@@ -442,6 +453,8 @@ function executeAction(a: AtlasAction): { label: string; ok: boolean } {
     }
     case "add_journal": {
       const title = str("title") || "Noted by Atlas";
+      const jKind = str("kind");
+      const moodVal = Math.min(5, Math.max(1, num("mood", 4) || 4));
       setState((st) => ({
         journal: [
           {
@@ -449,12 +462,25 @@ function executeAction(a: AtlasAction): { label: string; ok: boolean } {
             date: todayISO(),
             title,
             text: str("text") || title,
-            mood: Math.min(5, Math.max(1, num("mood", 3) || 3)),
-            kind: (["journal", "milestone", "log"].includes(str("kind")) ? str("kind") : "journal") as "journal",
+            mood: moodVal,
+            kind: (["journal", "milestone", "log"].includes(jKind) ? jKind : "journal") as "journal",
           },
           ...st.journal,
         ],
       }));
+      addMemoryEntry({
+        kind: jKind === "milestone" ? "milestone" : jKind === "log" ? "autolog" : "journal",
+        milestoneCategory: jKind === "milestone" ? "Achievement" : undefined,
+        pinned: jKind === "milestone" ? true : undefined,
+        title,
+        text: str("text") || title,
+        date: todayISO(),
+        time: nowHHMM(),
+        section: "Life",
+        peopleTags: [],
+        mood: moodVal,
+        linkedIds: [],
+      });
       return ok(`memory “${title}” kept`);
     }
     case "add_ledger": {
