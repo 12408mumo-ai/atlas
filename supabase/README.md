@@ -1,12 +1,21 @@
 # Supabase setup for Atlas
 
 1. In your Supabase project, open **SQL Editor**.
-2. Run `migrations/202611050001_atlas_user_data.sql`.
+2. Run `migrations/202611050001_atlas_user_data.sql`, then `migrations/202611050002_supabase_services.sql` in order.
 3. In Supabase Auth, enable email/password sign-in and choose whether to require email confirmation.
 4. Copy the project URL and publishable (or legacy anon) key into `env.example`, then set the same values in Vercel for Preview and Production as appropriate.
 5. For local development, copy the values into a local `.env.local` file. Do not commit that file.
 
-The app uses Supabase Auth and Row Level Security. A user's complete Atlas world state, Memories data, assistant chat history, and non-secret assistant preferences are stored in separate JSONB columns in one row keyed by their Supabase Auth user ID. This matches the current app models and keeps every row private through RLS. Cloudflare R2 file bytes stay in R2; their object keys, owner, and metadata have a separate `atlas_media_assets` table.
+The app uses Supabase Auth and Row Level Security. A user's complete Atlas world state, Memories data, assistant chat history, and non-secret assistant preferences are stored in separate JSONB columns in one row keyed by their Supabase Auth user ID. This keeps the existing `supabase-js` sync compatible while storing all current app domains (Work, Study, People, Life, Memories, plans and assistant data).
+
+The second migration adds:
+- `profiles`, created from Supabase Auth metadata, with a user-only RLS policy.
+- `atlas_media_assets`, which stores Cloudflare R2 object keys and file metadata; file bytes stay in R2.
+- `timetable_import_jobs`, for a PDF extraction Edge Function to update.
+- `atlas_notification_outbox` and `enqueue_due_atlas_reminders()`, which queues due project tasks and study deadlines. The migration schedules it every 15 minutes with `pg_cron` when available.
+- Realtime publication entries for the app data, media metadata, timetable import jobs and notification queue.
+
+The PDF extraction, AI proxy, signed R2 links and notification delivery are Edge Functions/server code, not SQL. This SQL creates the database tables and queue functions they use.
 
 ## Key handling
 
