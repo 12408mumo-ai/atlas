@@ -63,7 +63,7 @@ export const PILLARS: Pillar[] = [
     name: "Atlas AI",
     greek: "Ὁ Τιτάν",
     href: "/atlas",
-    image: "/icons/sphere-192.png?v=4",
+    image: "/icons/icon-512.png?v=5",
     blurb: "Speak with the Titan AI that weighs and plans your world.",
     orbit: { rx: 1.52, rz: 1.82, tiltZ: -10, pitchX: -4, liftY: -0.12, period: 11.4, phase: 4.91 },
   },

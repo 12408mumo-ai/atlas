@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { AtlasLogo } from "@/components/AtlasLogo";
 
 export function PageShell({
   children,
@@ -30,6 +31,7 @@ export function PageShell({
           >
             ←
           </Link>
+          <AtlasLogo size={48} ring />
           <h1 className="font-display text-[clamp(34px,5vw,56px)] leading-[1.05] tracking-[0.06em] text-wine">
             {title}
           </h1>

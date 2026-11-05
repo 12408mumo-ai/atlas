@@ -15,12 +15,12 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon.ico?v=4", sizes: "any" },
-      { url: "/icons/sphere-192.png?v=4", sizes: "192x192", type: "image/png" },
-      { url: "/icons/sphere-512.png?v=4", sizes: "512x512", type: "image/png" },
+      { url: "/favicon.ico?v=5", sizes: "any" },
+      { url: "/icons/icon-192.png?v=5", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png?v=5", sizes: "512x512", type: "image/png" },
     ],
-    shortcut: ["/icons/sphere-192.png?v=4"],
-    apple: [{ url: "/sphere-apple-touch-icon.png?v=4", sizes: "180x180", type: "image/png" }],
+    shortcut: ["/icons/icon-192.png?v=5"],
+    apple: [{ url: "/apple-touch-icon.png?v=5", sizes: "180x180", type: "image/png" }],
   },
 };
 

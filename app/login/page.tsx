@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ScrollFrame } from "@/components/ScrollFrame";
+import { AtlasLogo } from "@/components/AtlasLogo";
 import { signIn, createAccount, getSession } from "@/lib/store";
 
 export default function LoginPage() {
@@ -52,6 +53,7 @@ export default function LoginPage() {
       <div className="w-full max-w-[480px] anim-fade-up">
         <ScrollFrame width={480}>
           <div className="text-center">
+            <AtlasLogo size={72} className="mx-auto mb-4" ring />
             <h1 className="font-display text-[40px] leading-none tracking-[0.14em] text-wine sm:text-[46px]">
               {mode === "sign-in" ? "LOGIN" : "CREATE ACCOUNT"}
             </h1>

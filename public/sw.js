@@ -1,11 +1,11 @@
-const CACHE_NAME = "atlas-pwa-v10";
+const CACHE_NAME = "atlas-pwa-v11";
 const PRECACHE_URLS = [
   "/manifest.webmanifest",
-  "/favicon.ico?v=4",
-  "/icons/sphere-192.png?v=4",
-  "/icons/sphere-512.png?v=4",
-  "/icons/sphere-maskable-512.png?v=4",
-  "/sphere-apple-touch-icon.png?v=4",
+  "/favicon.ico?v=5",
+  "/icons/icon-192.png?v=5",
+  "/icons/icon-512.png?v=5",
+  "/icons/maskable-512.png?v=5",
+  "/apple-touch-icon.png?v=5",
   "/assets/atlas-body-3d.png?v=4",
   "/assets/atlas-body-depth.png?v=4",
   "/assets/celestial-globe-map.jpg?v=4",
