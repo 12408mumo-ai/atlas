@@ -1,4 +1,4 @@
-const CACHE_NAME = "atlas-pwa-v9";
+const CACHE_NAME = "atlas-pwa-v10";
 const PRECACHE_URLS = [
   "/manifest.webmanifest",
   "/favicon.ico?v=4",

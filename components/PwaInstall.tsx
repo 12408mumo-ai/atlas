@@ -11,7 +11,7 @@ export function ServiceWorkerRegister() {
 
     const onControllerChange = () => {
       if (!hadController || refreshing) return;
-      const reloadKey = "atlas-sw-reloaded-v9";
+      const reloadKey = "atlas-sw-reloaded-v10";
       if (sessionStorage.getItem(reloadKey)) return;
       refreshing = true;
       sessionStorage.setItem(reloadKey, "1");
@@ -21,7 +21,7 @@ export function ServiceWorkerRegister() {
     navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
 
     navigator.serviceWorker
-      .register("/sw.js?v=9", { updateViaCache: "none" })
+      .register("/sw.js?v=10", { updateViaCache: "none" })
       .then((reg) => {
         reg.update().catch(() => undefined);
       })

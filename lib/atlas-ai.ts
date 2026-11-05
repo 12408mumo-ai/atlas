@@ -1,6 +1,6 @@
 "use client";
 
-import { getState, setState, todayISO, type AtlasState } from "./store";
+import { getState, setState, todayISO, type Assignment, type AtlasState } from "./store";
 import { addMemoryEntry, nowHHMM } from "./memories";
 
 /* ------------------------------------------------------------------ */
@@ -398,7 +398,7 @@ function executeAction(a: AtlasAction): { label: string; ok: boolean } {
       if (!name) return fail("add project — no name");
       setState((st) => ({
         projects: [
-          { id: uid("p"), name, client: str("client") || "—", rate: num("rate"), hours: 0, status: "active", tasks: [] },
+          { id: uid("p"), name, client: str("client") || "—", projectType: str("type") === "own product" ? "own product" : str("type") === "side tool" ? "side tool" : "client", rate: num("rate"), hours: 0, status: "active", deadline: isoFrom(a.deadline), notes: str("notes") || "", tasks: [] },
           ...st.projects,
         ],
       }));
@@ -489,7 +489,7 @@ function executeAction(a: AtlasAction): { label: string; ok: boolean } {
       if (!label || !amount) return fail("ledger — needs label and amount");
       setState((st) => ({
         ledger: [
-          { id: uid("l"), label, amount: Math.abs(amount), kind: str("kind") === "income" ? "income" : "expense", date: todayISO(), bucket: str("bucket") || "Atlas" },
+          { id: uid("l"), label, amount: Math.abs(amount), kind: str("kind") === "income" ? "income" : "expense", date: todayISO(), bucket: str("bucket") || "Atlas", client: str("client") || "—", status: str("kind") === "income" ? "sent" : "expense" },
           ...st.ledger,
         ],
       }));
@@ -506,7 +506,7 @@ function executeAction(a: AtlasAction): { label: string; ok: boolean } {
       if (!title) return fail("add assignment — no title");
       setState((st) => ({
         assignments: [
-          { id: uid("a"), title, course: str("course") || "—", due: isoFrom(a.due), status: "open", weight: num("weight", 10) },
+          { id: uid("a"), title, course: str("course") || "—", due: isoFrom(a.due), status: "open", weight: num("weight", 10), kind: (str("kind") === "CAT" || str("kind") === "exam" || str("kind") === "project" ? str("kind") : "assignment") as Assignment["kind"] },
           ...st.assignments,
         ],
       }));

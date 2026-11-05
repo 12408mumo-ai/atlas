@@ -13,9 +13,12 @@ export type Project = {
   id: string;
   name: string;
   client: string;
+  projectType: "client" | "own product" | "side tool";
   rate: number;
   hours: number;
   status: "active" | "paused" | "done";
+  deadline: string;
+  notes: string;
   tasks: { id: string; title: string; due: string; done: boolean }[];
 };
 
@@ -26,6 +29,8 @@ export type Ledger = {
   kind: "income" | "expense";
   date: string;
   bucket: string;
+  client: string;
+  status: "sent" | "paid" | "expense";
 };
 
 export type Course = {
@@ -35,9 +40,23 @@ export type Course = {
   progress: number;
   status: "active" | "complete" | "planned";
   next: string;
+  subjectType: "school" | "self-learning";
+  credits: number;
+  notes: string;
 };
 
-export type Slot = { id: string; day: string; time: string; title: string; place: string };
+export type HoursLog = { id: string; projectId: string; date: string; hours: number };
+
+export type StudySession = { id: string; subject: string; date: string; durationMin: number };
+
+export type Slot = {
+  id: string;
+  day: string;
+  time: string;
+  title: string;
+  place: string;
+  lecturer: string;
+};
 
 export type Assignment = {
   id: string;
@@ -46,6 +65,7 @@ export type Assignment = {
   due: string;
   status: "open" | "submitted" | "graded";
   weight: number;
+  kind: "assignment" | "CAT" | "exam" | "project";
 };
 
 export type Skill = { id: string; name: string; hours: number; sessions: number; status: string };
@@ -92,6 +112,8 @@ export type AtlasState = {
   skills: Skill[];
   people: Person[];
   habits: Habit[];
+  hoursLogs: HoursLog[];
+  studySessions: StudySession[];
   health: { sleep: number; workouts: number; water: number; meals: number };
   money: { spend: number; savings: number; subscriptions: { id: string; name: string; cost: number; renew: string }[] };
   mood: { day: string; score: number }[];
@@ -117,9 +139,12 @@ export const seed = (): AtlasState => ({
       id: "p1",
       name: "Marble & Mortar identity",
       client: "Kavala Studio",
+      projectType: "client",
       rate: 65,
       hours: 42.5,
       status: "active",
+      deadline: dayOffset(21),
+      notes: "Wordmark refinement and the type specimen. Client review deck already sent.",
       tasks: [
         { id: "t1", title: "Wordmark refinement v3", due: dayOffset(2), done: false },
         { id: "t2", title: "Type specimen sheet", due: dayOffset(5), done: false },
@@ -130,9 +155,12 @@ export const seed = (): AtlasState => ({
       id: "p2",
       name: "Fieldnotes — newsletter build",
       client: "Own venture",
+      projectType: "own product",
       rate: 0,
       hours: 18,
       status: "active",
+      deadline: "",
+      notes: "Own newsletter. Substack to site sync plus one issue a month.",
       tasks: [
         { id: "t4", title: "Substack → site sync", due: dayOffset(4), done: false },
         { id: "t5", title: "Issue #12 layout", due: dayOffset(9), done: false },
@@ -142,39 +170,56 @@ export const seed = (): AtlasState => ({
       id: "p3",
       name: "Aegean maps — cartography UI",
       client: "Delos Labs",
+      projectType: "client",
       rate: 80,
       hours: 61,
       status: "paused",
+      deadline: "",
+      notes: "Waiting on dataset access from Delos before resuming.",
       tasks: [{ id: "t6", title: "Waiting on dataset access", due: dayOffset(12), done: false }],
+    },
+    {
+      id: "p4",
+      name: "Atlas helper — time tracker",
+      client: "Own venture",
+      projectType: "side tool",
+      rate: 0,
+      hours: 9,
+      status: "active",
+      deadline: "",
+      notes: "A small personal tool for logging hours. No client, just useful.",
+      tasks: [],
     },
   ],
   ledger: [
-    { id: "l1", label: "Kavala Studio — milestone 2", amount: 2400, kind: "income", date: dayOffset(-8), bucket: "Client" },
-    { id: "l2", label: "Delos Labs — retainer", amount: 1600, kind: "income", date: dayOffset(-15), bucket: "Client" },
-    { id: "l3", label: "Adobe CC + Figma", amount: 78, kind: "expense", date: dayOffset(-6), bucket: "Software" },
-    { id: "l4", label: "Studio rent", amount: 420, kind: "expense", date: dayOffset(-3), bucket: "Space" },
-    { id: "l5", label: "Domain + hosting", amount: 34, kind: "expense", date: dayOffset(-11), bucket: "Software" },
+    { id: "l1", label: "Kavala Studio — milestone 2", amount: 2400, kind: "income", date: dayOffset(-8), bucket: "Client", client: "Kavala Studio", status: "paid" },
+    { id: "l2", label: "Delos Labs — retainer", amount: 1600, kind: "income", date: dayOffset(-15), bucket: "Client", client: "Delos Labs", status: "sent" },
+    { id: "l3", label: "Adobe CC + Figma", amount: 78, kind: "expense", date: dayOffset(-6), bucket: "Software", client: "—", status: "expense" },
+    { id: "l4", label: "Studio rent", amount: 420, kind: "expense", date: dayOffset(-3), bucket: "Space", client: "—", status: "expense" },
+    { id: "l5", label: "Domain + hosting", amount: 34, kind: "expense", date: dayOffset(-11), bucket: "Software", client: "—", status: "expense" },
   ],
   courses: [
-    { id: "c1", title: "Classical Greek — Level II", code: "GRK 204", progress: 62, status: "active", next: "Unit 7 · aorist tense" },
-    { id: "c2", title: "Design Systems", code: "DES 310", progress: 41, status: "active", next: "Tokens & theming" },
-    { id: "c3", title: "Statistics for Research", code: "STA 118", progress: 88, status: "active", next: "Regression review" },
-    { id: "c4", title: "Cartography & Place", code: "GEO 260", progress: 100, status: "complete", next: "—" },
+    { id: "c1", title: "Classical Greek — Level II", code: "GRK 204", progress: 62, status: "active", next: "Unit 7 · aorist tense", subjectType: "school", credits: 3, notes: "Aorist tense next. Reads Odyssey IX aloud in the weekly sessions." },
+    { id: "c2", title: "Design Systems", code: "DES 310", progress: 41, status: "active", next: "Tokens & theming", subjectType: "school", credits: 4, notes: "Tokens and theming module in progress." },
+    { id: "c3", title: "Statistics for Research", code: "STA 118", progress: 88, status: "active", next: "Regression review", subjectType: "school", credits: 3, notes: "Regression review before the midterm." },
+    { id: "c4", title: "Cartography & Place", code: "GEO 260", progress: 100, status: "complete", next: "—", subjectType: "school", credits: 3, notes: "Completed last term. Field map project graded." },
+    { id: "c5", title: "Type design — self-taught", code: "", progress: 35, status: "active", next: "Lowercase g", subjectType: "self-learning", credits: 0, notes: "Lowercase g and optical spacing. Practising daily." },
   ],
   timetable: [
-    { id: "s1", day: "Mon", time: "09:00", title: "Greek II", place: "Room 4 · Homer Hall" },
-    { id: "s2", day: "Mon", time: "14:00", title: "Design Systems", place: "Studio B" },
-    { id: "s3", day: "Tue", time: "11:00", title: "Statistics", place: "Lab 2" },
-    { id: "s4", day: "Wed", time: "09:00", title: "Greek II", place: "Room 4 · Homer Hall" },
-    { id: "s5", day: "Thu", time: "16:00", title: "Cartography tutorial", place: "Map room" },
-    { id: "s6", day: "Fri", time: "10:00", title: "Critique circle", place: "Studio A" },
+    { id: "s1", day: "Mon", time: "09:00", title: "Greek II", place: "Room 4 · Homer Hall", lecturer: "Dr. Achieng" },
+    { id: "s2", day: "Mon", time: "14:00", title: "Design Systems", place: "Studio B", lecturer: "Prof. Lindqvist" },
+    { id: "s3", day: "Tue", time: "11:00", title: "Statistics", place: "Lab 2", lecturer: "Dr. Otieno" },
+    { id: "s4", day: "Wed", time: "09:00", title: "Greek II", place: "Room 4 · Homer Hall", lecturer: "Dr. Achieng" },
+    { id: "s5", day: "Thu", time: "16:00", title: "Cartography tutorial", place: "Map room", lecturer: "Prof. Lindqvist" },
+    { id: "s6", day: "Fri", time: "10:00", title: "Critique circle", place: "Studio A", lecturer: "Studio tutors" },
   ],
   assignments: [
-    { id: "a1", title: "Translation: Odyssey IX, 1–120", course: "GRK 204", due: dayOffset(3), status: "open", weight: 15 },
-    { id: "a2", title: "Token architecture brief", course: "DES 310", due: dayOffset(6), status: "open", weight: 25 },
-    { id: "a3", title: "Problem set 5", course: "STA 118", due: dayOffset(1), status: "submitted", weight: 10 },
-    { id: "a4", title: "Field map: my neighbourhood", course: "GEO 260", due: dayOffset(-9), status: "graded", weight: 30 },
-    { id: "a5", title: "Mid-term exam", course: "GRK 204", due: dayOffset(14), status: "open", weight: 30 },
+    { id: "a1", title: "Translation: Odyssey IX, 1–120", course: "GRK 204", due: dayOffset(3), status: "open", weight: 15, kind: "assignment" },
+    { id: "a2", title: "Token architecture brief", course: "DES 310", due: dayOffset(6), status: "open", weight: 25, kind: "assignment" },
+    { id: "a3", title: "Problem set 5", course: "STA 118", due: dayOffset(1), status: "submitted", weight: 10, kind: "assignment" },
+    { id: "a4", title: "Field map: my neighbourhood", course: "GEO 260", due: dayOffset(-9), status: "graded", weight: 30, kind: "project" },
+    { id: "a5", title: "Mid-term exam", course: "GRK 204", due: dayOffset(14), status: "open", weight: 30, kind: "exam" },
+    { id: "a6", title: "CAT — Greek syntax quiz", course: "GRK 204", due: dayOffset(11), status: "open", weight: 10, kind: "CAT" },
   ],
   skills: [
     { id: "k1", name: "Ancient Greek translation", hours: 34, sessions: 22, status: "Compounding" },
@@ -226,6 +271,18 @@ export const seed = (): AtlasState => ({
       gift: "—",
       notes: "Offered to introduce me to the Delos team.",
     },
+  ],
+  hoursLogs: [
+    { id: "hl1", projectId: "p1", date: dayOffset(-1), hours: 6 },
+    { id: "hl2", projectId: "p1", date: dayOffset(-2), hours: 4.5 },
+    { id: "hl3", projectId: "p3", date: dayOffset(-4), hours: 3 },
+    { id: "hl4", projectId: "p2", date: dayOffset(-3), hours: 2.5 },
+  ],
+  studySessions: [
+    { id: "ss1", subject: "Greek II", date: dayOffset(-1), durationMin: 50 },
+    { id: "ss2", subject: "Statistics", date: dayOffset(-2), durationMin: 40 },
+    { id: "ss3", subject: "Type design", date: dayOffset(-3), durationMin: 75 },
+    { id: "ss4", subject: "Greek II", date: dayOffset(-5), durationMin: 60 },
   ],
   habits: [
     { id: "h1", name: "Morning walk", streak: 12, doneToday: true, glyph: "footsteps" },
@@ -421,6 +478,119 @@ export function toggleTask(projectId: string, taskId: string) {
       p.id !== projectId
         ? p
         : { ...p, tasks: p.tasks.map((t) => (t.id === taskId ? { ...t, done: !t.done } : t)) }
+    ),
+  }));
+}
+
+export function addProject(name: string, projectType: Project["projectType"]) {
+  setState((s) => ({
+    projects: [
+      ...s.projects,
+      {
+        id: `p${Date.now()}`,
+        name: name.trim(),
+        client: projectType === "client" ? "New client" : "Own venture",
+        projectType,
+        rate: 0,
+        hours: 0,
+        status: "active",
+        deadline: "",
+        notes: "",
+        tasks: [],
+      },
+    ],
+  }));
+}
+
+export function addHoursLog(projectId: string, hours: number, date?: string) {
+  setState((s) => ({
+    hoursLogs: [
+      { id: `hl${Date.now()}`, projectId, date: date || todayISO(), hours },
+      ...s.hoursLogs,
+    ],
+  }));
+}
+
+export function addStudySession(subject: string, durationMin: number, date?: string) {
+  setState((s) => ({
+    studySessions: [
+      { id: `ss${Date.now()}`, subject: subject.trim(), date: date || todayISO(), durationMin },
+      ...s.studySessions,
+    ],
+  }));
+}
+
+export function addInvoice(client: string, amount: number) {
+  setState((s) => ({
+    ledger: [
+      {
+        id: `l${Date.now()}`,
+        label: `${client} — invoice`,
+        amount,
+        kind: "income",
+        date: todayISO(),
+        bucket: "Client",
+        client,
+        status: "sent",
+      },
+      ...s.ledger,
+    ],
+  }));
+}
+
+export function addDeadline(
+  title: string,
+  kind: Assignment["kind"],
+  subject: string,
+  due: string
+) {
+  setState((s) => ({
+    assignments: [
+      {
+        id: `a${Date.now()}`,
+        title: title.trim(),
+        course: subject.trim() || "—",
+        due,
+        status: "open",
+        weight: 10,
+        kind,
+      },
+      ...s.assignments,
+    ],
+  }));
+}
+
+export function addSubject(
+  name: string,
+  subjectType: Course["subjectType"],
+  code: string,
+  credits: number,
+  notes: string
+) {
+  setState((s) => ({
+    courses: [
+      ...s.courses,
+      {
+        id: `c${Date.now()}`,
+        title: name.trim(),
+        code: code.trim(),
+        progress: 0,
+        status: "active",
+        next: "—",
+        subjectType,
+        credits,
+        notes: notes.trim(),
+      },
+    ],
+  }));
+}
+
+export function toggleDeadline(id: string) {
+  setState((s) => ({
+    assignments: s.assignments.map((a) =>
+      a.id === id
+        ? { ...a, status: a.status === "open" ? "submitted" : a.status === "submitted" ? "open" : a.status }
+        : a
     ),
   }));
 }
