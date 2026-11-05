@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 /* ------------------------------------------------------------------ */
-/*  The Stage — flat three-colour edition                             */
+/*  The Stage — flat two-colour edition                               */
 /*  Atlas kneels with the world above him. Five pillar spheres orbit  */
 /*  it; each sphere carries its own emblem image and opens a page.    */
 /* ------------------------------------------------------------------ */
@@ -73,7 +73,7 @@ export const PILLARS: Pillar[] = [
   },
 ];
 
-/** the white sphere inside atlas-flat.png, as fractions of the image box */
+/** the warm-cream sphere inside atlas-flat.png, as fractions of the image box */
 const WORLD = { cx: 0.4993, cy: 0.2827, r: 0.2715 };
 /** how flat the orbital rings are drawn */
 const ORBIT_SKEW = 0.36;
@@ -125,11 +125,11 @@ export default function AtlasStage() {
 
   const orbits = useMemo(() => {
     if (!geo) return null;
-    const maxRx = Math.min(geo.cx, geo.w - geo.cx) - 54;
+    const maxRx = Math.min(geo.cx, geo.w - geo.cx) - 64;
     return PILLARS.map((p) => {
       const oy = geo.cy + p.orbit.lift * geo.r;
-      const roomUp = Math.max(48, oy - 78);
-      const roomDown = Math.max(48, geo.h - 70 - oy);
+      const roomUp = Math.max(52, oy - 86);
+      const roomDown = Math.max(52, geo.h - 86 - oy);
       const rx = Math.max(60, Math.min(p.orbit.radius * geo.r, maxRx, roomUp / ORBIT_SKEW, roomDown / ORBIT_SKEW));
       return { key: p.key, rx, ry: rx * ORBIT_SKEW, oy };
     });
@@ -166,8 +166,10 @@ export default function AtlasStage() {
       ctx.beginPath();
       ctx.ellipse(0, 0, ring.rx, ring.ry, 0, 0, Math.PI * 2);
       ctx.lineWidth = 2;
-      ctx.strokeStyle = p.key === "people" || p.key === "life" ? "#5a1220" : "#c6a15b";
-      ctx.globalAlpha = 0.5;
+      ctx.strokeStyle =
+        p.key === "people" || p.key === "life"
+          ? "rgba(245, 232, 211, 0.30)"
+          : "rgba(245, 232, 211, 0.56)";
       ctx.stroke();
       ctx.restore();
     });
@@ -197,7 +199,7 @@ export default function AtlasStage() {
         // spheres behind the world are sunk: smaller, dimmed with a flat veil
         const veil = el.querySelector<HTMLElement>("[data-veil]");
         if (veil) veil.style.opacity = String(0.35 - depth * 0.3);
-        el.style.width = el.style.height = `${76 + depth * 8}px`;
+        el.style.width = el.style.height = `${84 + depth * 9}px`;
       });
       raf = requestAnimationFrame(tick);
     };
@@ -206,10 +208,10 @@ export default function AtlasStage() {
   }, [geo, orbits, intro]);
 
   return (
-    <div className="relative">
+    <div className="relative px-4 sm:px-6">
       <div
         ref={wrapRef}
-        className="relative mx-auto h-[74svh] min-h-[520px] w-full max-w-[1120px] overflow-hidden rounded-[20px] border-[3px] border-wine bg-wine sm:h-[84svh] sm:min-h-[640px]"
+        className="relative mx-auto h-[74svh] min-h-[540px] w-full max-w-[1180px] overflow-hidden rounded-[20px] border-[3px] border-wine bg-wine sm:h-[84svh] sm:min-h-[660px]"
       >
         {/* the Titan, flat and full-bleed */}
         <div className="absolute inset-0 grid place-items-center">
@@ -234,7 +236,7 @@ export default function AtlasStage() {
               ref={(el) => {
                 sphereRefs.current[i] = el;
               }}
-              className="absolute left-0 top-0 h-[76px] w-[76px] will-change-transform"
+              className="absolute left-0 top-0 h-[84px] w-[84px] will-change-transform"
               style={{ opacity: 0 }}
             >
               <button
@@ -244,7 +246,7 @@ export default function AtlasStage() {
                 onFocus={() => setHovered(p.key)}
                 onBlur={() => setHovered(null)}
                 aria-label={`${p.name} — ${p.blurb}`}
-                className="group relative block h-full w-full rounded-full border-[3px] border-gold bg-marble outline-none focus-visible:ring-4 focus-visible:ring-gold"
+                className="group relative block h-full w-full rounded-full border-[3px] border-marble bg-marble outline-none focus-visible:ring-4 focus-visible:ring-marble"
               >
                 <span className="absolute inset-[3px] overflow-hidden rounded-full">
                   <img
@@ -253,11 +255,11 @@ export default function AtlasStage() {
                     className="h-full w-full scale-110 object-cover transition-transform duration-500 group-hover:scale-[1.2]"
                     draggable={false}
                   />
-                  {/* flat wine veil for depth behind the world */}
+                  {/* flat charcoal veil for depth behind the world */}
                   <span data-veil className="pointer-events-none absolute inset-0 bg-wine" style={{ opacity: 0.3 }} />
                 </span>
                 {/* name plate under the sphere */}
-                <span className="pointer-events-none absolute left-1/2 top-[calc(100%+8px)] -translate-x-1/2 whitespace-nowrap rounded-pill border-2 border-gold bg-marble px-3 py-1 font-ui text-[12.5px] uppercase tracking-[0.22em] text-wine">
+                <span className="pointer-events-none absolute left-1/2 top-[calc(100%+8px)] -translate-x-1/2 whitespace-nowrap rounded-pill border-2 border-wine bg-marble px-3.5 py-1 font-ui text-[16.5px] uppercase tracking-[0.16em] text-wine">
                   {p.name}
                 </span>
               </button>
@@ -267,28 +269,28 @@ export default function AtlasStage() {
 
         {/* flat caption */}
         <div className="pointer-events-none absolute inset-x-0 bottom-4 z-[400] px-4 text-center">
-          <p className="inline-block rounded-pill border-2 border-gold bg-wine px-4 py-1.5 font-ui text-[13px] uppercase tracking-[0.3em] text-marble">
+          <p className="inline-block rounded-pill border-2 border-marble bg-wine px-5 py-2 font-ui text-[17px] uppercase tracking-[0.18em] text-marble">
             {hovered ? PILLARS.find((p) => p.key === hovered)?.blurb : "Touch a sphere to open it"}
           </p>
         </div>
       </div>
 
       {/* accessible doorway list */}
-      <div className="mx-auto mt-3 grid max-w-[1120px] grid-cols-2 gap-2 sm:grid-cols-5">
+      <div className="mx-auto mt-3.5 grid max-w-[1180px] grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
         {PILLARS.map((p) => (
           <button
             key={p.key}
             onClick={() => open(p)}
             onMouseEnter={() => setHovered(p.key)}
             onMouseLeave={() => setHovered(null)}
-            className="group flex items-center gap-3 rounded-pill border-2 border-wine bg-marble px-3 py-2.5 text-left transition-colors hover:bg-wine"
+            className="group flex items-center gap-3 rounded-pill border-2 border-wine bg-marble px-4 py-3 text-left transition-colors hover:bg-wine"
           >
-            <span className="h-8 w-8 shrink-0 overflow-hidden rounded-full border-2 border-gold">
+            <span className="h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 border-wine group-hover:border-marble">
               <img src={p.image} alt="" className="h-full w-full object-cover" draggable={false} />
             </span>
             <span className="min-w-0">
-              <span className="block font-ui text-[14px] uppercase tracking-[0.22em] text-wine group-hover:text-gold">{p.name}</span>
-              <span className="block truncate font-body text-[14px] italic text-wine opacity-60 group-hover:text-marble group-hover:opacity-80">
+              <span className="block font-ui text-[18px] uppercase tracking-[0.16em] text-wine group-hover:text-marble">{p.name}</span>
+              <span className="block truncate font-body text-[18.5px] italic text-wine opacity-65 group-hover:text-marble group-hover:opacity-80">
                 {p.greek}
               </span>
             </span>
@@ -300,11 +302,11 @@ export default function AtlasStage() {
       {opening && (
         <div className="pointer-events-none fixed inset-0 z-[900] grid place-items-center anim-fade bg-wine/95">
           <div className="text-center">
-            <img src={opening.image} alt="" className="mx-auto h-24 w-24 rounded-full border-[3px] border-gold object-cover" />
-            <p className="mt-5 font-display text-[clamp(28px,6vw,56px)] tracking-[0.22em] text-gold">
+            <img src={opening.image} alt="" className="mx-auto h-28 w-28 rounded-full border-[3px] border-marble object-cover" />
+            <p className="mt-5 font-display text-[clamp(34px,6.8vw,64px)] tracking-[0.2em] text-marble">
               {opening.name.toUpperCase()}
             </p>
-            <p className="mt-2 font-body text-[16px] italic tracking-[0.2em] text-marble opacity-70">{opening.greek}</p>
+            <p className="mt-2 font-body text-[21px] italic tracking-[0.18em] text-marble opacity-75">{opening.greek}</p>
           </div>
         </div>
       )}

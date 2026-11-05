@@ -90,8 +90,8 @@ export default function AtlasSettingsPage() {
 
   if (!loaded) {
     return (
-      <PageShell greek="Θυσίαστήριον" title="Atlas Assistant Settings">
-        <p className="font-body text-[16px] italic text-wine opacity-60">Raising the altar…</p>
+      <PageShell greek="Θυσιαστήριον" title="Atlas Assistant Settings">
+        <p className="font-body text-[20px] italic text-wine opacity-65">Raising the altar…</p>
       </PageShell>
     );
   }
@@ -107,40 +107,40 @@ export default function AtlasSettingsPage() {
         </Link>
       }
     >
-      <div className="grid gap-3 lg:grid-cols-[1.5fr_1fr]">
+      <div className="grid gap-3.5 lg:grid-cols-[1.5fr_1fr]">
         {/* ================= THE KEY ================= */}
         <Panel title="The key that powers Atlas" hint="Bring your own key — it is stored only in this browser">
           <div className="space-y-4">
             {/* provider */}
             <div>
-              <label className="mb-1.5 block font-ui text-[13.5px] uppercase tracking-[0.22em] text-wine opacity-70">
+              <label className="mb-1.5 block font-ui text-[17.5px] uppercase tracking-[0.18em] text-wine opacity-75">
                 Provider
               </label>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
                 {(Object.keys(PROVIDERS) as AIProvider[]).map((p) => (
                   <button
                     key={p}
                     onClick={() => setProvider(p)}
-                    className={`rounded-xl border-2 px-3 py-2.5 font-ui text-[13.5px] uppercase tracking-[0.14em] transition-colors ${
-                      form.provider === p ? "border-wine bg-wine text-marble" : "border-wine bg-marble text-wine hover:bg-gold/40"
+                    className={`rounded-xl border-2 px-3 py-2.5 font-ui text-[17.5px] uppercase tracking-[0.11em] transition-colors ${
+                      form.provider === p ? "border-wine bg-wine text-marble" : "border-wine bg-marble text-wine hover:bg-marbleDim"
                     }`}
                   >
                     {PROVIDERS[p].label.split(" — ")[0]}
                   </button>
                 ))}
               </div>
-              <p className="mt-1.5 font-body text-[15px] italic text-wine opacity-60">{provider.keyHint}</p>
+              <p className="mt-2 font-body text-[19.5px] italic text-wine opacity-65">{provider.keyHint}</p>
             </div>
 
             {/* api key */}
             <div>
-              <label className="mb-1.5 block font-ui text-[13.5px] uppercase tracking-[0.22em] text-wine opacity-70">
+              <label className="mb-1.5 block font-ui text-[17.5px] uppercase tracking-[0.18em] text-wine opacity-75">
                 API key
               </label>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <input
                   type={showKey ? "text" : "password"}
-                  className="field flex-1"
+                  className="field min-w-[220px] flex-1"
                   placeholder="Paste the key here…"
                   value={form.apiKey}
                   onChange={(e) => patch({ apiKey: e.target.value })}
@@ -157,14 +157,14 @@ export default function AtlasSettingsPage() {
                 )}
               </div>
               {form.apiKey && !showKey && (
-                <p className="mt-1.5 font-ui text-[14px] tracking-[0.08em] text-wine opacity-50">Held key: {maskedKey}</p>
+                <p className="mt-1.5 font-ui text-[18px] tracking-[0.06em] text-wine opacity-60">Held key: {maskedKey}</p>
               )}
             </div>
 
             {/* base url for custom */}
             {form.provider === "custom" && (
               <div>
-                <label className="mb-1.5 block font-ui text-[13.5px] uppercase tracking-[0.22em] text-wine opacity-70">
+                <label className="mb-1.5 block font-ui text-[17.5px] uppercase tracking-[0.18em] text-wine opacity-75">
                   Base URL · OpenAI-compatible
                 </label>
                 <input
@@ -179,7 +179,7 @@ export default function AtlasSettingsPage() {
 
             {/* model */}
             <div>
-              <label className="mb-1.5 block font-ui text-[13.5px] uppercase tracking-[0.22em] text-wine opacity-70">
+              <label className="mb-1.5 block font-ui text-[17.5px] uppercase tracking-[0.18em] text-wine opacity-75">
                 Model — the mind to test
               </label>
               {!customModel ? (
@@ -189,10 +189,10 @@ export default function AtlasSettingsPage() {
                       <button
                         key={m.id}
                         onClick={() => patch({ model: m.id })}
-                        className={`rounded-pill border-2 px-3.5 py-2 font-ui text-[13.5px] uppercase tracking-[0.12em] transition-colors ${
+                        className={`rounded-pill border-2 px-4 py-2 font-ui text-[17.5px] uppercase tracking-[0.1em] transition-colors ${
                           form.model === m.id
                             ? "border-wine bg-wine text-marble"
-                            : "border-wine bg-marble text-wine hover:bg-gold/40"
+                            : "border-wine bg-marble text-wine hover:bg-marbleDim"
                         }`}
                       >
                         {m.label}
@@ -200,7 +200,7 @@ export default function AtlasSettingsPage() {
                     ))}
                     <button
                       onClick={() => setCustomModel(true)}
-                      className="rounded-pill border-2 border-dashed border-wine px-3.5 py-2 font-ui text-[13.5px] uppercase tracking-[0.12em] text-wine opacity-70 transition-opacity hover:opacity-100"
+                      className="rounded-pill border-2 border-dashed border-wine px-4 py-2 font-ui text-[17.5px] uppercase tracking-[0.1em] text-wine opacity-75 transition-opacity hover:opacity-100"
                     >
                       Other…
                     </button>
@@ -222,43 +222,41 @@ export default function AtlasSettingsPage() {
                   )}
                 </div>
               )}
-              <p className="mt-1.5 font-ui text-[14px] tracking-[0.06em] text-wine opacity-50">
-                Armed with: <span className="text-gold">{form.model || "—"}</span>
+              <p className="mt-2 font-ui text-[18px] tracking-[0.05em] text-wine opacity-65">
+                Armed with: <span className="font-semibold text-wine opacity-100">{form.model || "—"}</span>
               </p>
             </div>
 
             {/* save + test */}
-            <div className="flex flex-wrap items-center gap-2 border-t-2 border-gold pt-4">
+            <div className="flex flex-wrap items-center gap-2.5 border-t-2 border-wine/20 pt-4">
               <button onClick={save} className="btn-wine">
                 Lay the key
               </button>
               <button
                 onClick={() => void runTest()}
                 disabled={test.phase === "running" || !form.apiKey || !form.model}
-                className="btn-gold"
+                className="btn-marble"
               >
                 {test.phase === "running" ? "Probing…" : "Test the key"}
               </button>
               {savedAt && (
-                <p className="font-ui text-[13px] uppercase tracking-[0.18em] text-wine opacity-60">laid at {savedAt}</p>
+                <p className="font-ui text-[17px] uppercase tracking-[0.15em] text-wine opacity-65">laid at {savedAt}</p>
               )}
             </div>
 
             {/* test verdict */}
             {test.phase !== "idle" && (
               <div
-                className={`rounded-xl border-2 px-4 py-3 ${
+                className={`rounded-xl border-2 px-4 py-3.5 ${
                   test.phase === "ok"
                     ? "border-wine bg-wine text-marble"
-                    : test.phase === "fail"
-                      ? "border-wine bg-marbleDim text-wine"
-                      : "border-gold bg-marbleDim text-wine"
+                    : "border-wine bg-marbleDim text-wine"
                 }`}
               >
-                <p className="font-ui text-[13.5px] uppercase tracking-[0.22em]">
+                <p className="font-ui text-[17.5px] uppercase tracking-[0.18em]">
                   {test.phase === "ok" ? "✦ The model answers" : test.phase === "fail" ? "✕ The key was refused" : "…"}
                 </p>
-                <p className="mt-1 whitespace-pre-wrap font-body text-[16px] leading-snug opacity-90">{test.detail}</p>
+                <p className="mt-1 whitespace-pre-wrap font-body text-[20px] leading-snug opacity-90">{test.detail}</p>
                 {test.phase === "ok" && (
                   <Link href="/atlas" className="btn-gold btn-sm mt-3">
                     Go speak with Atlas →
@@ -270,26 +268,28 @@ export default function AtlasSettingsPage() {
         </Panel>
 
         {/* ================= VOICE + SECURITY ================= */}
-        <div className="space-y-3">
+        <div className="space-y-3.5">
           <Panel title="The voice of the Titan" hint="Speech is poured from your browser's own voices" tone="wine">
             <div className="space-y-4">
               <label className="flex cursor-pointer items-center justify-between gap-3">
-                <span className="font-body text-[16px] text-marble">Atlas speaks his replies aloud</span>
+                <span className="font-body text-[20.5px] text-marble">Atlas speaks his replies aloud</span>
                 <button
                   role="switch"
                   aria-checked={form.speak}
                   onClick={() => patch({ speak: !form.speak })}
-                  className={`relative h-7 w-12 shrink-0 rounded-pill border-2 border-gold transition-colors ${form.speak ? "bg-gold" : "bg-transparent"}`}
+                  className={`relative h-8 w-14 shrink-0 rounded-pill border-2 border-marble transition-colors ${
+                    form.speak ? "bg-marble" : "bg-transparent"
+                  }`}
                 >
                   <span
-                    className={`absolute top-0.5 rounded-full transition-all ${form.speak ? "left-6 bg-wine" : "left-0.5 bg-gold"}`}
-                    style={{ height: 18, width: 18 }}
+                    className={`absolute top-1 rounded-full transition-all ${form.speak ? "left-7 bg-wine" : "left-1 bg-marble"}`}
+                    style={{ height: 20, width: 20 }}
                   />
                 </button>
               </label>
 
               <div>
-                <label className="mb-1.5 block font-ui text-[13.5px] uppercase tracking-[0.22em] text-gold">
+                <label className="mb-1.5 block font-ui text-[17.5px] uppercase tracking-[0.18em] text-marble">
                   Choose his voice
                 </label>
                 <select
@@ -309,7 +309,7 @@ export default function AtlasSettingsPage() {
                     </option>
                   ))}
                 </select>
-                <p className="mt-1.5 font-body text-[15px] italic text-marble opacity-60">
+                <p className="mt-2 font-body text-[19.5px] italic text-marble opacity-70">
                   Choosing a voice plays a short preview.
                 </p>
               </div>
@@ -321,8 +321,8 @@ export default function AtlasSettingsPage() {
           </Panel>
 
           <Panel title="On safety" hint="Where the key lives">
-            <ul className="space-y-2.5 font-body text-[16px] leading-snug text-wine opacity-80">
-              <li>· The key is kept in this browser's <em>local storage</em> only — no server of ours ever sees it.</li>
+            <ul className="space-y-2.5 font-body text-[20px] leading-snug text-wine opacity-85">
+              <li>· The key is kept in this browser&apos;s <em>local storage</em> only — no server of ours ever sees it.</li>
               <li>· Calls go straight from your browser to the provider you chose.</li>
               <li>· “Lift” removes the key at once; clearing browser data does too.</li>
               <li>· Use a key with a spend limit while you test which model works best.</li>

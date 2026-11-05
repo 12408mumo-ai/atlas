@@ -3,21 +3,21 @@
 @tailwind utilities;
 
 /* ------------------------------------------------------------------ */
-/*  ATLAS — three colours only, no gradients                          */
-/*  Marble White · Deep Wine Red · Antique Gold                       */
+/*  ATLAS — two colours only, no gradients                            */
+/*  Warm Cream (#F5E8D3) · Charcoal (#28282A)                         */
 /* ------------------------------------------------------------------ */
 :root {
   --font-display: "trajan-pro-3", "mrs-eaves", "Cinzel", "Cormorant Garamond", Georgia, serif;
   --font-body: "adobe-garamond-pro", "mrs-eaves", "Cormorant Garamond", Georgia, serif;
   --font-ui: "brandon-grotesque", "proxima-nova", "Jost", system-ui, sans-serif;
 
-  --marble: #f4efe6;
-  --marble-dim: #ded6c7;
-  --wine: #5a1220;
-  --wine-deep: #4a0f1b;
-  --gold: #c6a15b;
-  --gold-soft: #d9bf8d;
-  --ink: #2a1216;
+  --marble: #F5E8D3;
+  --marble-dim: #E6D5BA;
+  --wine: #28282A;
+  --wine-deep: #1D1D1F;
+  --gold: #F5E8D3;
+  --gold-soft: #DFCEB4;
+  --ink: #1D1D1F;
 }
 
 * { -webkit-tap-highlight-color: transparent; }
@@ -27,6 +27,7 @@ body {
   background-color: var(--marble);
   color: var(--wine);
   font-family: var(--font-body), Georgia, serif;
+  font-size: 20px;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -42,11 +43,11 @@ body {
 @layer components {
   .eyebrow {
     font-family: var(--font-ui), system-ui, sans-serif;
-    font-size: 13px;
-    letter-spacing: 0.42em;
+    font-size: 17px;
+    letter-spacing: 0.28em;
     text-transform: uppercase;
     color: var(--wine);
-    opacity: 0.72;
+    opacity: 0.76;
   }
 
   .rule-gold { height: 2px; background: var(--gold); }
@@ -54,14 +55,14 @@ body {
 
   .gold-text { color: var(--gold); }
 
-  /* flat panel: marble surface, wine line */
+  /* flat panel: warm cream surface, charcoal line */
   .panel {
     background: var(--marble);
     border: 2px solid var(--wine);
     border-radius: 16px;
   }
 
-  /* flat panel on wine field: wine surface, gold line */
+  /* flat panel on charcoal field: charcoal surface, cream line */
   .panel-wine {
     background: var(--wine);
     border: 2px solid var(--gold);
@@ -77,49 +78,49 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    padding: 0.8rem 1.5rem;
+    gap: 0.55rem;
+    padding: 0.85rem 1.65rem;
     font-family: var(--font-ui), system-ui, sans-serif;
-    font-size: 14px;
+    font-size: 18px;
     font-weight: 500;
-    letter-spacing: 0.22em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
     border-radius: 999px;
     border: 2px solid var(--wine);
     transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
   }
 
-  .btn-gold { background: var(--gold); color: var(--wine); border-color: var(--gold); }
-  .btn-gold:hover { background: var(--wine); color: var(--marble); border-color: var(--wine); }
-  .btn-gold:disabled { opacity: 0.45; }
+  .btn-gold { background: var(--gold); color: var(--wine); border-color: var(--wine); }
+  .btn-gold:hover { background: var(--wine-deep); color: var(--marble); border-color: var(--marble); }
+  .btn-gold:disabled, .btn-wine:disabled, .btn-marble:disabled, .btn-ghost:disabled { opacity: 0.45; }
 
   .btn-wine { background: var(--wine); color: var(--marble); border-color: var(--wine); }
-  .btn-wine:hover { background: var(--gold); color: var(--wine); border-color: var(--wine); }
+  .btn-wine:hover { background: var(--marble); color: var(--wine); border-color: var(--wine); }
 
-  .btn-marble { background: var(--marble); color: var(--wine); }
-  .btn-marble:hover { background: var(--wine); color: var(--marble); }
+  .btn-marble { background: var(--marble); color: var(--wine); border-color: var(--wine); }
+  .btn-marble:hover { background: var(--wine); color: var(--marble); border-color: var(--wine); }
 
-  .btn-ghost { background: transparent; color: var(--wine); }
-  .btn-ghost:hover { background: var(--wine); color: var(--marble); }
+  .btn-ghost { background: transparent; color: var(--wine); border-color: var(--wine); }
+  .btn-ghost:hover { background: var(--wine); color: var(--marble); border-color: var(--wine); }
 
-  .btn-sm { padding: 0.5rem 1rem; font-size: 13.5px; letter-spacing: 0.18em; }
+  .btn-sm { padding: 0.55rem 1.15rem; font-size: 17px; letter-spacing: 0.14em; }
 
-  /* ---- inputs: flat marble, wine rule ---- */
+  /* ---- inputs: flat warm cream, charcoal rule ---- */
   .field {
     width: 100%;
     background: var(--marble);
     border: 2px solid var(--wine);
     border-radius: 10px;
-    padding: 0.7rem 0.95rem;
+    padding: 0.8rem 1.05rem;
     font-family: var(--font-ui), system-ui, sans-serif;
-    font-size: 16px;
+    font-size: 20px;
     letter-spacing: 0.02em;
     color: var(--wine);
     outline: none;
     transition: border-color 0.18s ease, box-shadow 0.18s ease;
   }
-  .field::placeholder { color: var(--wine); opacity: 0.42; }
-  .field:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(198, 161, 91, 0.35); }
+  .field::placeholder { color: var(--wine); opacity: 0.45; }
+  .field:focus { border-color: var(--wine); box-shadow: 0 0 0 3px rgba(40, 40, 42, 0.22); }
 
   /* legacy aliases used across the pillar pages */
   .glass { background: var(--marble); border: 2px solid var(--wine); border-radius: 16px; }
