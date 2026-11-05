@@ -10,6 +10,11 @@ import {
   type AtlasState,
   type Person,
 } from "./store";
+import {
+  getSupabaseBrowserClient,
+  loadAtlasCloudRow,
+  saveAtlasMemoriesState,
+} from "@/lib/supabase";
 
 /* ------------------------------------------------------------------ */
 /*  Memories Store (Simple Everyday Language)                         */
@@ -501,6 +506,23 @@ export function seedMemories(): MemoriesState {
 let memState: MemoriesState = seedMemories();
 const memListeners = new Set<() => void>();
 let memHydrated = false;
+let memUserId: string | null = null;
+let memSaveTimer: ReturnType<typeof setTimeout> | null = null;
+
+function memoriesCacheKey() {
+  return memUserId ? `${MEM_KEY}.${memUserId}` : MEM_KEY;
+}
+
+function normalizeMemories(parsed: Partial<MemoriesState>, keepEmptyEntries = false): MemoriesState {
+  const defaults = seedMemories();
+  return {
+    ...defaults,
+    ...parsed,
+    entries: Array.isArray(parsed.entries) && (keepEmptyEntries || parsed.entries.length > 0) ? parsed.entries : defaults.entries,
+    albums: Array.from(new Set([...defaults.albums, ...(parsed.albums ?? [])])),
+    lock: { ...defaults.lock, ...(parsed.lock ?? {}) },
+  };
+}
 
 function ensureCousinInPeople() {
   const s = getState();
@@ -524,34 +546,70 @@ function ensureCousinInPeople() {
   }
 }
 
+async function syncMemoriesFromCloud() {
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) return;
+  const { data: authData, error: authError } = await supabase.auth.getSession();
+  if (authError) throw authError;
+  const userId = authData.session?.user.id;
+  if (!userId) return;
+  if (memUserId !== userId) memState = seedMemories();
+  memUserId = userId;
+
+  // Use only this authenticated user's cache while loading their cloud record.
+  try {
+    const cached = localStorage.getItem(memoriesCacheKey());
+    if (cached) memState = normalizeMemories(JSON.parse(cached) as Partial<MemoriesState>, true);
+  } catch {}
+  memListeners.forEach((listener) => listener());
+
+  const cloud = await loadAtlasCloudRow();
+  if (!cloud) return;
+  const remote = cloud.row?.memories_state;
+  if (remote && Object.keys(remote).length > 0) {
+    memState = normalizeMemories(remote as Partial<MemoriesState>, true);
+  } else {
+    memState = memState ?? seedMemories();
+    await saveAtlasMemoriesState(memState as unknown as Record<string, unknown>, memUserId);
+  }
+  try {
+    localStorage.setItem(memoriesCacheKey(), JSON.stringify(memState));
+  } catch {}
+  memListeners.forEach((listener) => listener());
+}
+
 export function hydrateMemories() {
   if (memHydrated || typeof window === "undefined") return;
   memHydrated = true;
   ensureCousinInPeople();
+  const cloudConfigured = Boolean(getSupabaseBrowserClient());
+  if (cloudConfigured) memState = seedMemories();
   try {
-    const raw = localStorage.getItem(MEM_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as Partial<MemoriesState>;
-      const defaults = seedMemories();
-      memState = {
-        ...defaults,
-        ...parsed,
-        entries: Array.isArray(parsed.entries) && parsed.entries.length > 0 ? parsed.entries : defaults.entries,
-        albums: Array.from(new Set([...defaults.albums, ...(parsed.albums ?? [])])),
-        lock: { ...defaults.lock, ...(parsed.lock ?? {}) },
-      };
-    }
+    const raw = cloudConfigured ? null : localStorage.getItem(memoriesCacheKey());
+    if (raw) memState = normalizeMemories(JSON.parse(raw) as Partial<MemoriesState>);
   } catch {
     memState = seedMemories();
   }
   memListeners.forEach((l) => l());
+  void syncMemoriesFromCloud().catch((error) => {
+    console.error("Could not sync Memories with Supabase.", error);
+  });
 }
 
 function persistMemories() {
   if (typeof window !== "undefined") {
     try {
-      localStorage.setItem(MEM_KEY, JSON.stringify(memState));
+      localStorage.setItem(memoriesCacheKey(), JSON.stringify(memState));
     } catch {}
+  }
+  if (memUserId && getSupabaseBrowserClient()) {
+    if (memSaveTimer) clearTimeout(memSaveTimer);
+    const userId = memUserId;
+    memSaveTimer = setTimeout(() => {
+      void saveAtlasMemoriesState(memState as unknown as Record<string, unknown>, userId).catch((error) => {
+        console.error("Could not save Memories to Supabase.", error);
+      });
+    }, 400);
   }
   memListeners.forEach((l) => l());
 }

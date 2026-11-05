@@ -3,13 +3,16 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ScrollFrame } from "@/components/ScrollFrame";
-import { signIn, getSession } from "@/lib/store";
+import { signIn, createAccount, getSession } from "@/lib/store";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [mode, setMode] = useState<"sign-in" | "sign-up">("sign-in");
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -18,19 +21,30 @@ export default function LoginPage() {
     router.prefetch("/hub");
   }, [router]);
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setNotice(null);
     setBusy(true);
-    setTimeout(() => {
-      const res = signIn(email.trim(), password);
+    try {
+      const res = mode === "sign-in"
+        ? await signIn(email, password)
+        : await createAccount(email, password, name);
       if (!res.ok) {
-        setError(res.error ?? "Something went wrong.");
-        setBusy(false);
+        setError(res.error ?? "Could not continue. Please try again.");
+        return;
+      }
+      if (mode === "sign-up" && "needsEmailConfirmation" in res && res.needsEmailConfirmation) {
+        setNotice("Check your email to confirm your account, then sign in.");
+        setMode("sign-in");
         return;
       }
       router.push("/hub");
-    }, 320);
+    } catch (authError) {
+      setError(authError instanceof Error ? authError.message : "Could not connect. Please try again.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -39,11 +53,25 @@ export default function LoginPage() {
         <ScrollFrame width={480}>
           <div className="text-center">
             <h1 className="font-display text-[40px] leading-none tracking-[0.14em] text-wine sm:text-[46px]">
-              LOGIN
+              {mode === "sign-in" ? "LOGIN" : "CREATE ACCOUNT"}
             </h1>
           </div>
 
           <form onSubmit={submit} className="mt-6 space-y-4">
+            {mode === "sign-up" && (
+              <label className="block">
+                <span className="font-ui text-[17px] uppercase tracking-[0.22em] text-wine opacity-75">
+                  Name
+                </span>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  autoComplete="name"
+                  className="mt-1.5 w-full rounded-[10px] border-2 border-wine bg-marble px-3.5 py-3 font-ui text-[20px] text-wine outline-none transition-shadow focus:border-wine focus:ring-2 focus:ring-wine/25"
+                />
+              </label>
+            )}
             <label className="block">
               <span className="font-ui text-[17px] uppercase tracking-[0.22em] text-wine opacity-75">
                 Email
@@ -67,20 +95,37 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                autoComplete="current-password"
+                autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
+                minLength={mode === "sign-up" ? 8 : undefined}
                 required
                 className="mt-1.5 w-full rounded-[10px] border-2 border-wine bg-marble px-3.5 py-3 font-ui text-[20px] text-wine outline-none transition-shadow placeholder:text-wine placeholder:opacity-40 focus:border-wine focus:ring-2 focus:ring-wine/25"
               />
             </label>
 
             {error && (
-              <p className="rounded-[10px] border-2 border-wine bg-marbleDim px-3.5 py-2.5 font-ui text-[18px] tracking-[0.03em] text-wine">
+              <p role="alert" className="rounded-[10px] border-2 border-wine bg-marbleDim px-3.5 py-2.5 font-ui text-[18px] tracking-[0.03em] text-wine">
                 {error}
+              </p>
+            )}
+            {notice && (
+              <p role="status" className="rounded-[10px] border-2 border-wine bg-marble px-3.5 py-2.5 font-ui text-[18px] tracking-[0.03em] text-wine">
+                {notice}
               </p>
             )}
 
             <button type="submit" disabled={busy} className="btn-wine mt-2 w-full">
-              {busy ? "Entering…" : "Enter"}
+              {busy ? "Please wait…" : mode === "sign-in" ? "Enter" : "Create account"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMode((current) => current === "sign-in" ? "sign-up" : "sign-in");
+                setError(null);
+                setNotice(null);
+              }}
+              className="w-full py-2 font-ui text-[18px] text-wine underline underline-offset-4"
+            >
+              {mode === "sign-in" ? "Create an account" : "Already have an account? Sign in"}
             </button>
           </form>
         </ScrollFrame>
