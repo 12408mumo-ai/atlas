@@ -877,7 +877,13 @@ function GalleryView({
   const [caption, setCaption] = useState("");
   const [album, setAlbum] = useState("Trips");
   const [people, setPeople] = useState("");
-  const [preview, setPreview] = useState<{ src: string; mediaType: "photo" | "video" } | null>(null);
+  const [preview, setPreview] = useState<{
+    src: string;
+    mediaType: "photo" | "video";
+    file: File;
+  } | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const mediaList = useMemo(() => {
     return entries
@@ -904,43 +910,101 @@ function GalleryView({
   const onPickFile = (ev: React.ChangeEvent<HTMLInputElement>) => {
     const file = ev.target.files?.[0];
     if (!file) return;
+    setUploadError(null);
     const isVideo = file.type.startsWith("video/");
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === "string") {
-        setPreview({ src: reader.result, mediaType: isVideo ? "video" : "photo" });
+        setPreview({
+          src: reader.result,
+          mediaType: isVideo ? "video" : "photo",
+          file,
+        });
       }
     };
     reader.readAsDataURL(file);
   };
 
-  const saveMedia = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!preview) return;
-    addMemoryEntry({
-      kind: "media",
-      title: caption.trim() || `Uploaded ${preview.mediaType}`,
-      text: "",
-      date: todayISO(),
-      time: nowHHMM(),
-      section: "Life",
-      peopleTags: people
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
-      mood: 5,
-      linkedIds: [],
-      media: {
-        id: `med-${Date.now()}`,
-        mediaType: preview.mediaType,
-        src: preview.src,
-        album,
-      },
+  /** Ask the server for a signed R2 PUT, then send the file there. */
+  const uploadToStorage = async (
+    file: File
+  ): Promise<{ src: string; key: string }> => {
+    const res = await fetch("/api/r2/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contentType: file.type,
+        size: file.size,
+        filename: file.name,
+      }),
     });
-    setCaption("");
-    setPeople("");
-    setPreview(null);
-    setShowUpload(false);
+
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data?.ok) {
+      throw new Error(data?.error ?? "Could not start the upload.");
+    }
+
+    const put = await fetch(data.uploadUrl, {
+      method: data.method ?? "PUT",
+      headers: data.headers ?? {},
+      body: file,
+    });
+    if (!put.ok) {
+      throw new Error("Cloudflare rejected the upload. Please try again.");
+    }
+
+    return { src: data.readUrl, key: data.key };
+  };
+
+  const saveMedia = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!preview || uploading) return;
+
+    setUploading(true);
+    setUploadError(null);
+
+    try {
+      let src = preview.src;
+      try {
+        const uploaded = await uploadToStorage(preview.file);
+        src = uploaded.src;
+      } catch (storageError) {
+        // If Cloudflare is not ready yet, keep the file locally so the entry
+        // is not lost. Once storage is live the file lives in R2.
+        setUploadError(
+          storageError instanceof Error
+            ? storageError.message
+            : "Upload failed."
+        );
+      }
+
+      addMemoryEntry({
+        kind: "media",
+        title: caption.trim() || `Uploaded ${preview.mediaType}`,
+        text: "",
+        date: todayISO(),
+        time: nowHHMM(),
+        section: "Life",
+        peopleTags: people
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+        mood: 5,
+        linkedIds: [],
+        media: {
+          id: `med-${Date.now()}`,
+          mediaType: preview.mediaType,
+          src,
+          album,
+        },
+      });
+      setCaption("");
+      setPeople("");
+      setPreview(null);
+      setShowUpload(false);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const monthTitle = (ym: string) => {
@@ -1019,11 +1083,16 @@ function GalleryView({
           </div>
           <button
             type="submit"
-            disabled={!preview}
+            disabled={!preview || uploading}
             className="rounded-pill bg-wine px-5 py-2 font-ui text-[15px] text-marble disabled:opacity-40"
           >
-            Save
+            {uploading ? "Uploading…" : "Save"}
           </button>
+          {uploadError && (
+            <p className="font-ui text-[14px] text-wine opacity-70">
+              {uploadError} The file was kept in this browser instead.
+            </p>
+          )}
         </form>
       )}
 
