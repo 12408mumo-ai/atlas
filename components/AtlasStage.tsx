@@ -8,7 +8,7 @@ import * as THREE from "three";
 /*  AtlasStage — Clean 3D Page-Selection Stage (/hub)                 */
 /*  • Plain flat background (no galaxy/starfield background)          */
 /*  • Watertight 3D sculpted marble Atlas statue + 3D celestial globe */
-/*  • 6 spinning 3D spheres orbiting in 3D space with ZERO visible    */
+/*  • 4 spinning 3D spheres orbiting in 3D space with ZERO visible    */
 /*    orbit lines, visibly eclipsing & disappearing behind the globe  */
 /* ------------------------------------------------------------------ */
 
@@ -41,31 +41,13 @@ export const PILLARS: Pillar[] = [
     orbit: { rx: 1.66, rz: 1.92, tiltZ: -19, pitchX: 5, liftY: 0.06, period: 12.5, phase: 0.2 },
   },
   {
-    key: "study",
-    name: "Study",
-    greek: "Μάθησις",
-    href: "/study",
-    image: "/assets/emblems/study.png",
-    blurb: "Timetable, courses, assignments, exams and self-learning.",
-    orbit: { rx: 1.96, rz: 2.12, tiltZ: 16, pitchX: -5, liftY: -0.1, period: 14.8, phase: 1.35 },
-  },
-  {
     key: "people",
     name: "People",
     greek: "Ἄνθρωποι",
     href: "/people",
     image: "/assets/emblems/people.png",
     blurb: "Everyone who matters — dates, promises, gifts, check-ins.",
-    orbit: { rx: 1.8, rz: 2.02, tiltZ: 25, pitchX: 4, liftY: 0.12, period: 13.6, phase: 2.55 },
-  },
-  {
-    key: "life",
-    name: "Life",
-    greek: "Βίος",
-    href: "/life",
-    image: "/assets/emblems/life.png",
-    blurb: "Health, money, habits and the 1–5 of how you actually feel.",
-    orbit: { rx: 2.14, rz: 2.24, tiltZ: -24, pitchX: -6, liftY: -0.08, period: 16.2, phase: 3.72 },
+    orbit: { rx: 1.8, rz: 2.02, tiltZ: 25, pitchX: 4, liftY: 0.12, period: 13.6, phase: 1.77 },
   },
   {
     key: "memories",
@@ -74,7 +56,7 @@ export const PILLARS: Pillar[] = [
     href: "/memories",
     image: "/assets/emblems/memories.png",
     blurb: "Every log, journal and milestone — the timeline of you.",
-    orbit: { rx: 2.32, rz: 2.36, tiltZ: 9, pitchX: 4, liftY: 0.14, period: 17.6, phase: 4.85 },
+    orbit: { rx: 2.32, rz: 2.36, tiltZ: 9, pitchX: 4, liftY: 0.14, period: 17.6, phase: 3.34 },
   },
   {
     key: "atlas",
@@ -83,7 +65,7 @@ export const PILLARS: Pillar[] = [
     href: "/atlas",
     image: "/icons/sphere-192.png?v=4",
     blurb: "Speak with the Titan AI that weighs and plans your world.",
-    orbit: { rx: 1.52, rz: 1.82, tiltZ: -10, pitchX: -4, liftY: -0.12, period: 11.4, phase: 5.68 },
+    orbit: { rx: 1.52, rz: 1.82, tiltZ: -10, pitchX: -4, liftY: -0.12, period: 11.4, phase: 4.91 },
   },
 ];
 
@@ -855,7 +837,7 @@ export default function AtlasStage() {
 
   return (
     <div className="relative h-[100svh] w-screen overflow-hidden bg-wine select-none">
-      {/* 3D WebGL Canvas (Plain background + 3D Atlas + 3D Globe + 6 3D Orbiting Spheres) */}
+      {/* 3D WebGL Canvas (Plain background + 3D Atlas + 3D Globe + 4 3D Orbiting Spheres) */}
       <div ref={mountRef} className="absolute inset-0 h-full w-full" />
 
       {/* 3D-projected sphere labels (automatically disappear when occluded behind the 3D globe) */}
