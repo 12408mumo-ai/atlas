@@ -1,4 +1,4 @@
-const CACHE_NAME = "atlas-pwa-v2";
+const CACHE_NAME = "atlas-pwa-v3";
 const PRECACHE_URLS = [
   "/",
   "/login",
@@ -8,7 +8,9 @@ const PRECACHE_URLS = [
   "/icons/icon-512.png",
   "/icons/maskable-512.png",
   "/apple-touch-icon.png",
-  "/assets/atlas-flat.png",
+  "/assets/atlas-body-3d.png",
+  "/assets/atlas-body-depth.png",
+  "/assets/celestial-globe-map.jpg",
   "/audio/greeting-morning.mp3",
   "/audio/greeting-afternoon.mp3",
   "/audio/greeting-evening.mp3",
