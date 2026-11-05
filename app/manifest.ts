@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
+    id: "/?v=4",
     name: "Atlas — The World You Carry",
     short_name: "Atlas",
     description:
@@ -14,19 +15,19 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#28282A",
     icons: [
       {
-        src: "/icons/icon-192.png",
+        src: "/icons/sphere-192.png?v=4",
         sizes: "192x192",
         type: "image/png",
         purpose: "any",
       },
       {
-        src: "/icons/icon-512.png",
+        src: "/icons/sphere-512.png?v=4",
         sizes: "512x512",
         type: "image/png",
         purpose: "any",
       },
       {
-        src: "/icons/maskable-512.png",
+        src: "/icons/sphere-maskable-512.png?v=4",
         sizes: "512x512",
         type: "image/png",
         purpose: "maskable",

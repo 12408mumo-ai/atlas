@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 import * as THREE from "three";
 
 /* ------------------------------------------------------------------ */
-/*  AtlasStage — Full-viewport 3D Sanctuary                           */
-/*  • Moving 3D spiral space galaxy background that follows cursor    */
-/*  • 3D sculpted marble Atlas statue + rotating 3D celestial globe   */
-/*  • 6 spinning 3D spheres orbiting in 3D around the globe, visibly  */
-/*    slipping behind the globe & disappearing (no visible orbit      */
-/*    lines)                                                          */
+/*  AtlasStage — Full-viewport 3D Sanctuary (/hub)                    */
+/*  • Vivid moving 3D spiral space galaxy that follows cursor         */
+/*  • Watertight 3D sculpted marble Atlas statue + 3D celestial globe */
+/*  • 6 spinning 3D spheres orbiting in deep 3D space with ZERO       */
+/*    visible orbit lines, visibly eclipsing & disappearing behind    */
+/*    the 3D globe on every orbit                                     */
 /* ------------------------------------------------------------------ */
 
 export type Pillar = {
@@ -39,7 +39,7 @@ export const PILLARS: Pillar[] = [
     href: "/work",
     image: "/assets/emblems/work.png",
     blurb: "Client projects, tasks, time, income and your own ventures.",
-    orbit: { rx: 1.68, rz: 1.58, tiltZ: -18, pitchX: 6, liftY: 0.08, period: 16, phase: 0.25 },
+    orbit: { rx: 1.66, rz: 1.92, tiltZ: -19, pitchX: 5, liftY: 0.06, period: 12.5, phase: 0.2 },
   },
   {
     key: "study",
@@ -48,7 +48,7 @@ export const PILLARS: Pillar[] = [
     href: "/study",
     image: "/assets/emblems/study.png",
     blurb: "Timetable, courses, assignments, exams and self-learning.",
-    orbit: { rx: 2.1, rz: 1.86, tiltZ: 15, pitchX: -5, liftY: -0.18, period: 20, phase: 1.38 },
+    orbit: { rx: 1.96, rz: 2.12, tiltZ: 16, pitchX: -5, liftY: -0.1, period: 14.8, phase: 1.35 },
   },
   {
     key: "people",
@@ -57,7 +57,7 @@ export const PILLARS: Pillar[] = [
     href: "/people",
     image: "/assets/emblems/people.png",
     blurb: "Everyone who matters — dates, promises, gifts, check-ins.",
-    orbit: { rx: 1.86, rz: 1.72, tiltZ: 24, pitchX: 5, liftY: 0.22, period: 18, phase: 2.58 },
+    orbit: { rx: 1.8, rz: 2.02, tiltZ: 25, pitchX: 4, liftY: 0.12, period: 13.6, phase: 2.55 },
   },
   {
     key: "life",
@@ -66,7 +66,7 @@ export const PILLARS: Pillar[] = [
     href: "/life",
     image: "/assets/emblems/life.png",
     blurb: "Health, money, habits and the 1–5 of how you actually feel.",
-    orbit: { rx: 2.3, rz: 1.98, tiltZ: -23, pitchX: -6, liftY: -0.12, period: 22, phase: 3.78 },
+    orbit: { rx: 2.14, rz: 2.24, tiltZ: -24, pitchX: -6, liftY: -0.08, period: 16.2, phase: 3.72 },
   },
   {
     key: "memories",
@@ -75,31 +75,31 @@ export const PILLARS: Pillar[] = [
     href: "/memories",
     image: "/assets/emblems/memories.png",
     blurb: "Every log, journal and milestone — the timeline of you.",
-    orbit: { rx: 2.54, rz: 2.14, tiltZ: 8, pitchX: 4, liftY: 0.26, period: 25, phase: 4.88 },
+    orbit: { rx: 2.32, rz: 2.36, tiltZ: 9, pitchX: 4, liftY: 0.14, period: 17.6, phase: 4.85 },
   },
   {
     key: "atlas",
     name: "Atlas AI",
     greek: "Ὁ Τιτάν",
     href: "/atlas",
-    image: "/icons/icon-192.png",
+    image: "/icons/sphere-192.png?v=4",
     blurb: "Speak with the Titan AI that weighs and plans your world.",
-    orbit: { rx: 1.54, rz: 1.5, tiltZ: -9, pitchX: -5, liftY: -0.2, period: 15, phase: 5.72 },
+    orbit: { rx: 1.52, rz: 1.82, tiltZ: -10, pitchX: -4, liftY: -0.12, period: 11.4, phase: 5.68 },
   },
 ];
 
-/* Exact 3D monument proportions calibrated to atlas-body-3d.png (768x1152) */
-const STATUE_H = 6.6;
-const STATUE_W = (STATUE_H * 2) / 3; // 4.4
-const STATUE_CENTER_Y = -0.34;
+/* Exact monument calibration matching cleaned atlas-body-3d.png (768x1152) */
+const STATUE_H = 6.55;
+const STATUE_W = (STATUE_H * 2) / 3; // 4.3667
+const STATUE_CENTER_Y = -0.36;
 const GLOBE_X = (0.50371 - 0.5) * STATUE_W;
 const GLOBE_Y = STATUE_CENTER_Y + (0.5 - 0.19141) * STATUE_H;
 const GLOBE_Z = 0.0;
-const R_GLOBE = 0.2293 * STATUE_W * 1.012; // ~1.021
-const R_ORB = 0.245;
+const R_GLOBE = 0.2293 * STATUE_W * 1.016; // ~1.017
+const R_ORB = 0.255;
 
 /* ------------------------------------------------------------------ */
-/*  Custom GLSL shaders for the 3D Spiral Space Galaxy & Starfield    */
+/*  Custom GLSL Shaders: Spiral Space Galaxy, Starfield & Rim Glow    */
 /* ------------------------------------------------------------------ */
 
 const GALAXY_VERT = /* glsl */ `
@@ -118,33 +118,34 @@ varying float vAlpha;
 void main() {
   vec3 pos = position;
 
-  // Differential galactic swirl: inner core stars orbit faster than outer spiral arms
-  float swirl = uTime * (0.06 + 0.18 / (0.65 + aArmRadius * 0.28));
+  // Continuous differential spiral galaxy rotation
+  float angularVel = 0.085 + 0.24 / (0.55 + aArmRadius * 0.26);
+  float swirl = uTime * angularVel;
   float cs = cos(swirl);
   float sn = sin(swirl);
   vec2 spun = vec2(pos.x * cs - pos.z * sn, pos.x * sn + pos.z * cs);
   pos.x = spun.x;
   pos.z = spun.y;
-  pos.y += sin(uTime * 0.55 + aPhase * 6.2831) * 0.09;
+  pos.y += sin(uTime * 0.7 + aPhase * 6.2831) * 0.11;
 
   vec4 worldPos = modelMatrix * vec4(pos, 1.0);
 
-  // Cosmic attraction + luminescence wake following the cursor across space
+  // Gravitational + luminescence wave following the cursor across the screen
   vec2 toCursor = uCursorWorld.xy - worldPos.xy;
   float cDist = length(toCursor);
-  float wake = exp(-cDist * cDist * 0.075);
-  worldPos.xy += toCursor * (wake * 0.24);
-  worldPos.z += wake * 0.55;
+  float wake = exp(-cDist * cDist * 0.095);
+  worldPos.xy += toCursor * (wake * 0.30);
+  worldPos.z += wake * 0.75;
 
   vec4 mvPosition = viewMatrix * worldPos;
   gl_Position = projectionMatrix * mvPosition;
 
-  float twinkle = 0.76 + 0.24 * sin(uTime * 2.2 + aPhase * 6.2831);
-  vColor = mix(aColor, vec3(0.99, 0.95, 0.88), wake * 0.65);
-  vAlpha = clamp(twinkle + wake * 0.45, 0.0, 1.0);
+  float twinkle = 0.78 + 0.22 * sin(uTime * 2.5 + aPhase * 6.2831);
+  vColor = mix(aColor, vec3(1.0, 0.96, 0.88), wake * 0.75);
+  vAlpha = clamp(twinkle + wake * 0.55, 0.0, 1.0);
 
-  float sizeAtten = (215.0 * uPixelRatio) / max(1.5, -mvPosition.z);
-  gl_PointSize = clamp(aSize * sizeAtten * (1.0 + wake * 0.55), 1.0, 52.0);
+  float sizeAtten = (275.0 * uPixelRatio) / max(1.5, -mvPosition.z);
+  gl_PointSize = clamp(aSize * sizeAtten * (1.0 + wake * 0.65), 1.4, 60.0);
 }
 `;
 
@@ -162,24 +163,23 @@ varying float vAlpha;
 
 void main() {
   vec3 pos = position;
-  // Gentle continuous cosmic drift in deep background space (always behind z = -5)
-  pos.x += sin(uTime * 0.12 + aPhase * 6.2831) * 0.45;
-  pos.y += cos(uTime * 0.10 + aPhase * 9.4247) * 0.35;
+  pos.x += sin(uTime * 0.16 + aPhase * 6.2831) * 0.55;
+  pos.y += cos(uTime * 0.13 + aPhase * 9.4247) * 0.42;
 
   vec4 worldPos = modelMatrix * vec4(pos, 1.0);
   vec2 toCursor = uCursorWorld.xy - worldPos.xy;
-  float wake = exp(-dot(toCursor, toCursor) * 0.06);
-  worldPos.xy += toCursor * (wake * 0.18);
+  float wake = exp(-dot(toCursor, toCursor) * 0.075);
+  worldPos.xy += toCursor * (wake * 0.24);
 
   vec4 mvPosition = viewMatrix * worldPos;
   gl_Position = projectionMatrix * mvPosition;
 
-  float twinkle = 0.68 + 0.32 * sin(uTime * 2.6 + aPhase * 12.566);
-  vColor = mix(aColor, vec3(0.98, 0.94, 0.86), wake * 0.5);
-  vAlpha = clamp(twinkle + wake * 0.35, 0.0, 1.0);
+  float twinkle = 0.72 + 0.28 * sin(uTime * 2.8 + aPhase * 12.566);
+  vColor = mix(aColor, vec3(1.0, 0.95, 0.86), wake * 0.6);
+  vAlpha = clamp(twinkle + wake * 0.4, 0.0, 1.0);
 
-  float sizeAtten = (195.0 * uPixelRatio) / max(2.0, -mvPosition.z);
-  gl_PointSize = clamp(aSize * sizeAtten, 1.0, 32.0);
+  float sizeAtten = (230.0 * uPixelRatio) / max(2.0, -mvPosition.z);
+  gl_PointSize = clamp(aSize * sizeAtten, 1.2, 36.0);
 }
 `;
 
@@ -192,25 +192,54 @@ void main() {
   float d = length(uv) * 2.0;
   if (d > 1.0) discard;
 
-  float core = exp(-d * d * 7.5);
-  float halo = pow(max(0.0, 1.0 - d), 2.4) * 0.48;
+  float core = exp(-d * d * 5.2);
+  float halo = pow(max(0.0, 1.0 - d), 2.1) * 0.62;
   float strength = clamp(core + halo, 0.0, 1.0);
 
-  gl_FragColor = vec4(vColor * (0.85 + core * 0.45), strength * vAlpha);
+  gl_FragColor = vec4(vColor * (0.95 + core * 0.55), strength * vAlpha);
 }
 `;
 
-function createNebulaGlowTexture(): THREE.CanvasTexture {
+const GLOBE_RIM_VERT = /* glsl */ `
+varying vec3 vNormalW;
+varying vec3 vViewDir;
+
+void main() {
+  vec4 worldPos = modelMatrix * vec4(position, 1.0);
+  vNormalW = normalize(mat3(modelMatrix) * normal);
+  vViewDir = normalize(cameraPosition - worldPos.xyz);
+  gl_Position = projectionMatrix * viewMatrix * worldPos;
+}
+`;
+
+const GLOBE_RIM_FRAG = /* glsl */ `
+varying vec3 vNormalW;
+varying vec3 vViewDir;
+
+void main() {
+  float fresnel = pow(1.0 - clamp( abs(dot(vNormalW, vViewDir)), 0.0, 1.0 ), 3.2);
+  gl_FragColor = vec4(vec3(0.96, 0.91, 0.82), fresnel * 0.42);
+}
+`;
+
+function createNebulaGlowTexture(warm: boolean): THREE.CanvasTexture {
   const s = 128;
   const c = document.createElement("canvas");
   c.width = s;
   c.height = s;
   const ctx = c.getContext("2d")!;
   const grad = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
-  grad.addColorStop(0, "rgba(255, 244, 224, 0.55)");
-  grad.addColorStop(0.35, "rgba(216, 198, 174, 0.22)");
-  grad.addColorStop(0.7, "rgba(110, 124, 165, 0.07)");
-  grad.addColorStop(1, "rgba(0, 0, 0, 0)");
+  if (warm) {
+    grad.addColorStop(0, "rgba(255, 245, 224, 0.85)");
+    grad.addColorStop(0.32, "rgba(245, 232, 211, 0.42)");
+    grad.addColorStop(0.68, "rgba(182, 160, 134, 0.14)");
+    grad.addColorStop(1, "rgba(0, 0, 0, 0)");
+  } else {
+    grad.addColorStop(0, "rgba(205, 218, 248, 0.65)");
+    grad.addColorStop(0.38, "rgba(122, 142, 192, 0.30)");
+    grad.addColorStop(0.72, "rgba(68, 82, 128, 0.10)");
+    grad.addColorStop(1, "rgba(0, 0, 0, 0)");
+  }
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, s, s);
   const tex = new THREE.CanvasTexture(c);
@@ -219,88 +248,165 @@ function createNebulaGlowTexture(): THREE.CanvasTexture {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Build spherical texture for each orbiting 3D pillar sphere        */
+/*  Sculpted 3D Marble + Medallion Textures for Orbiting 3D Spheres   */
 /* ------------------------------------------------------------------ */
 
-function createPillarOrbTexture(pillar: Pillar, onUpdate: () => void): THREE.CanvasTexture {
+function createPillarOrbTextures(
+  pillar: Pillar
+): { map: THREE.CanvasTexture; bumpMap: THREE.CanvasTexture } {
   const cw = 512;
   const ch = 256;
+
   const canvas = document.createElement("canvas");
   canvas.width = cw;
   canvas.height = ch;
   const ctx = canvas.getContext("2d")!;
 
-  const drawBase = (emblem?: HTMLImageElement) => {
-    ctx.fillStyle = "#F5E8D3";
+  const bCanvas = document.createElement("canvas");
+  bCanvas.width = cw;
+  bCanvas.height = ch;
+  const bCtx = bCanvas.getContext("2d")!;
+
+  const draw = (emblem?: HTMLImageElement) => {
+    // Rich warm sculpted marble tone (avoids blowing out to flat white under 3D lights)
+    const baseGrad = ctx.createLinearGradient(0, 0, 0, ch);
+    baseGrad.addColorStop(0, "#B8A58B");
+    baseGrad.addColorStop(0.18, "#DFCCB2");
+    baseGrad.addColorStop(0.5, "#EFE0C9");
+    baseGrad.addColorStop(0.82, "#DFCCB2");
+    baseGrad.addColorStop(1, "#B8A58B");
+    ctx.fillStyle = baseGrad;
     ctx.fillRect(0, 0, cw, ch);
 
-    ctx.strokeStyle = "rgba(40, 40, 42, 0.22)";
-    ctx.lineWidth = 1.5;
+    bCtx.fillStyle = "#888888";
+    bCtx.fillRect(0, 0, cw, ch);
+
+    // Subtle classical marble veining across the sphere
+    ctx.save();
+    ctx.strokeStyle = "rgba(95, 80, 65, 0.14)";
+    ctx.lineWidth = 1.6;
+    for (let v = 0; v < 14; v++) {
+      ctx.beginPath();
+      let y = ((v + 0.5) / 14) * ch;
+      ctx.moveTo(0, y);
+      for (let x = 16; x <= cw; x += 16) {
+        y += Math.sin(x * 0.045 + v * 1.9) * 2.4;
+        ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Engraved celestial parallels & meridians (recessed in bumpMap)
+    ctx.strokeStyle = "rgba(40, 40, 42, 0.34)";
+    bCtx.strokeStyle = "#303030";
+    ctx.lineWidth = 1.6;
+    bCtx.lineWidth = 2.4;
+
     for (let lat = 1; lat < 6; lat++) {
       const y = (lat / 6) * ch;
       ctx.beginPath();
       ctx.moveTo(0, y);
       ctx.lineTo(cw, y);
       ctx.stroke();
+
+      bCtx.beginPath();
+      bCtx.moveTo(0, y);
+      bCtx.lineTo(cw, y);
+      bCtx.stroke();
     }
 
-    for (let lon = 0; lon < 8; lon++) {
-      const x = (lon / 8) * cw;
+    for (let lon = 0; lon < 12; lon++) {
+      const x = (lon / 12) * cw;
       ctx.beginPath();
       ctx.moveTo(x, 0);
       ctx.lineTo(x, ch);
       ctx.stroke();
+
+      bCtx.beginPath();
+      bCtx.moveTo(x, 0);
+      bCtx.lineTo(x, ch);
+      bCtx.stroke();
     }
 
-    ctx.strokeStyle = "rgba(40, 40, 42, 0.42)";
-    ctx.lineWidth = 3;
+    // Carved charcoal equatorial band
+    ctx.fillStyle = "rgba(40, 40, 42, 0.16)";
+    ctx.fillRect(0, ch * 0.44, cw, ch * 0.12);
+    ctx.strokeStyle = "rgba(40, 40, 42, 0.58)";
+    ctx.lineWidth = 2.8;
     ctx.beginPath();
-    ctx.moveTo(0, ch / 2);
-    ctx.lineTo(cw, ch / 2);
+    ctx.moveTo(0, ch * 0.44);
+    ctx.lineTo(cw, ch * 0.44);
+    ctx.moveTo(0, ch * 0.56);
+    ctx.lineTo(cw, ch * 0.56);
     ctx.stroke();
 
-    if (emblem) {
-      const rMed = 58;
-      for (const cx of [cw * 0.25, cw * 0.75]) {
-        const cy = ch * 0.5;
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(cx, cy, rMed + 4, 0, Math.PI * 2);
-        ctx.fillStyle = "#28282A";
-        ctx.fill();
+    // 3 sculpted emblem medallions spaced 120° around the sphere so one is always visible as it spins
+    const rMed = 48;
+    for (const cx of [cw / 6, cw / 2, (cw * 5) / 6]) {
+      const cy = ch * 0.5;
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, rMed + 6, 0, Math.PI * 2);
+      ctx.fillStyle = "#28282A";
+      ctx.fill();
 
+      ctx.beginPath();
+      ctx.arc(cx, cy, rMed + 2, 0, Math.PI * 2);
+      ctx.strokeStyle = "#F5E8D3";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      if (emblem) {
         ctx.beginPath();
         ctx.arc(cx, cy, rMed, 0, Math.PI * 2);
         ctx.clip();
         ctx.fillStyle = "#F5E8D3";
         ctx.fillRect(cx - rMed, cy - rMed, rMed * 2, rMed * 2);
         ctx.drawImage(emblem, cx - rMed, cy - rMed, rMed * 2, rMed * 2);
-        ctx.restore();
       }
+      ctx.restore();
+
+      // Raised medallion relief in bumpMap
+      bCtx.save();
+      bCtx.beginPath();
+      bCtx.arc(cx, cy, rMed + 6, 0, Math.PI * 2);
+      bCtx.fillStyle = "#D8D8D8";
+      bCtx.fill();
+      bCtx.beginPath();
+      bCtx.arc(cx, cy, rMed, 0, Math.PI * 2);
+      bCtx.fillStyle = "#B8B8B8";
+      bCtx.fill();
+      bCtx.restore();
     }
   };
 
-  drawBase();
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.wrapS = THREE.RepeatWrapping;
-  tex.wrapT = THREE.ClampToEdgeWrapping;
-  tex.anisotropy = 4;
+  draw();
+
+  const map = new THREE.CanvasTexture(canvas);
+  map.colorSpace = THREE.SRGBColorSpace;
+  map.wrapS = THREE.RepeatWrapping;
+  map.wrapT = THREE.ClampToEdgeWrapping;
+  map.anisotropy = 8;
+
+  const bumpMap = new THREE.CanvasTexture(bCanvas);
+  bumpMap.wrapS = THREE.RepeatWrapping;
+  bumpMap.wrapT = THREE.ClampToEdgeWrapping;
 
   const img = new Image();
   img.crossOrigin = "anonymous";
   img.onload = () => {
-    drawBase(img);
-    tex.needsUpdate = true;
-    onUpdate();
+    draw(img);
+    map.needsUpdate = true;
+    bumpMap.needsUpdate = true;
   };
   img.src = pillar.image;
 
-  return tex;
+  return { map, bumpMap };
 }
 
 /* ------------------------------------------------------------------ */
-/*  Build volumetric 3D high-relief marble mesh for Atlas statue      */
+/*  Watertight 3D Sculpted Marble Atlas Mesh + Multi-Tiered Plinth    */
 /* ------------------------------------------------------------------ */
 
 async function buildSculptedAtlasMesh(
@@ -313,12 +419,12 @@ async function buildSculptedAtlasMesh(
     im.crossOrigin = "anonymous";
     im.onload = () => resolve(im);
     im.onerror = reject;
-    im.src = "/assets/atlas-body-depth.png";
+    im.src = "/assets/atlas-body-depth.png?v=4";
   });
 
   const albedoImg = albedoTex.image as HTMLImageElement;
-  const gw = 192;
-  const gh = 288;
+  const gw = 196;
+  const gh = 294;
 
   const dCanvas = document.createElement("canvas");
   dCanvas.width = gw;
@@ -364,7 +470,7 @@ async function buildSculptedAtlasMesh(
   const uvs = new Float32Array(totalFront * 2 * 2);
   const validVert = new Uint8Array(totalFront);
 
-  const globeClearRadiusSq = (R_GLOBE + 0.04) * (R_GLOBE + 0.04);
+  const globeClearRadiusSq = (R_GLOBE + 0.045) * (R_GLOBE + 0.045);
 
   for (let r = 0; r < vRows; r++) {
     const vFrac = r / (vRows - 1);
@@ -380,30 +486,45 @@ async function buildSculptedAtlasMesh(
       const alpha = alphaPixels[idx * 4 + 3] / 255;
       const hNorm = depthPixels[idx * 4] / 255;
 
-      if (alpha > 0.025) validVert[idx] = 1;
+      if (alpha > 0.18) validVert[idx] = 1;
 
-      // Exact 3D sphere clearance so Atlas's laurel-crowned head, shoulders & clasping fingers
-      // always wrap cleanly OVER the front curvature of the rotating 3D Celestial Globe
       const dxG = xWorld - GLOBE_X;
       const dyG = yWorld - GLOBE_Y;
       const rSqG = dxG * dxG + dyG * dyG;
       const sphereSurfaceZ =
-        rSqG < globeClearRadiusSq ? Math.sqrt(globeClearRadiusSq - rSqG) + 0.035 : 0;
+        rSqG < globeClearRadiusSq ? Math.sqrt(globeClearRadiusSq - rSqG) + 0.04 : 0;
 
+      // Deep 3D anatomical sculptural volumes (bowed head, raised elbows, chest, forward knee, pedestal)
       const headEnv =
-        Math.exp(-Math.pow((xImg - 532) / 118, 2) - Math.pow((yImg - 465) / 115, 2)) * 0.58;
+        Math.exp(-Math.pow((xImg - 532) / 115, 2) - Math.pow((yImg - 462) / 112, 2)) * 0.72;
       const shoulderEnv =
-        Math.exp(-Math.pow((xImg - 516) / 235, 2) - Math.pow((yImg - 535) / 95, 2)) * 0.44;
-      const kneeEnv =
-        Math.exp(-Math.pow((xImg - 635) / 115, 2) - Math.pow((yImg - 1025) / 210, 2)) * 0.36;
+        Math.exp(-Math.pow((xImg - 516) / 245, 2) - Math.pow((yImg - 535) / 95, 2)) * 0.52;
+      const leftArmEnv =
+        Math.exp(-Math.pow((xImg - 255) / 95, 2) - Math.pow((yImg - 485) / 120, 2)) * 0.46;
+      const rightArmEnv =
+        Math.exp(-Math.pow((xImg - 785) / 95, 2) - Math.pow((yImg - 485) / 120, 2)) * 0.46;
       const torsoEnv =
-        Math.exp(-Math.pow((xImg - 505) / 185, 2) - Math.pow((yImg - 740) / 245, 2)) * 0.32;
+        Math.exp(-Math.pow((xImg - 500) / 180, 2) - Math.pow((yImg - 740) / 235, 2)) * 0.48;
+      const forwardKneeEnv =
+        Math.exp(-Math.pow((xImg - 638) / 112, 2) - Math.pow((yImg - 1030) / 215, 2)) * 0.62;
+      const plinthEnv =
+        yImg > 1280 ? Math.sqrt(Math.max(0, 1 - Math.pow((xImg - 512) / 345, 2))) * 0.55 : 0;
 
-      const outerTaper = sphereSurfaceZ > 0 ? 1.0 : Math.min(1, alpha * 1.9);
+      const edgeRound = sphereSurfaceZ > 0 ? 1.0 : Math.min(1, 0.35 + hNorm * 1.15);
       const baseSculptZ =
-        (0.14 + hNorm * 0.68 + headEnv + shoulderEnv + kneeEnv + torsoEnv) * outerTaper;
-      const zFront = Math.max(baseSculptZ, sphereSurfaceZ > 0 ? sphereSurfaceZ + hNorm * 0.14 : 0);
-      const zBack = -0.24 - hNorm * 0.38 * outerTaper;
+        0.16 +
+        (hNorm * 0.78 +
+          headEnv +
+          shoulderEnv +
+          leftArmEnv +
+          rightArmEnv +
+          torsoEnv +
+          forwardKneeEnv +
+          plinthEnv) *
+          edgeRound;
+
+      const zFront = Math.max(baseSculptZ, sphereSurfaceZ > 0 ? sphereSurfaceZ + hNorm * 0.16 : 0);
+      const zBack = -0.22 - (hNorm * 0.52 + torsoEnv * 0.4 + plinthEnv * 0.65);
 
       positions[idx * 3] = xWorld;
       positions[idx * 3 + 1] = yWorld;
@@ -420,20 +541,63 @@ async function buildSculptedAtlasMesh(
     }
   }
 
+  // Cell validity grid + watertight side-wall stitching along every boundary edge
+  const cellCols = vCols - 1;
+  const cellRows = vRows - 1;
+  const cellValid = new Uint8Array(cellRows * cellCols);
   const indices: number[] = [];
-  for (let r = 0; r < vRows - 1; r++) {
-    for (let c = 0; c < vCols - 1; c++) {
+
+  for (let r = 0; r < cellRows; r++) {
+    for (let c = 0; c < cellCols; c++) {
       const i00 = r * vCols + c;
       const i10 = i00 + 1;
       const i01 = i00 + vCols;
       const i11 = i01 + 1;
       if (validVert[i00] && validVert[i10] && validVert[i01] && validVert[i11]) {
+        cellValid[r * cellCols + c] = 1;
+        // Front shell (CCW +Z)
         indices.push(i00, i01, i10, i10, i01, i11);
+        // Back shell (CCW -Z)
         const b00 = totalFront + i00;
         const b10 = totalFront + i10;
         const b01 = totalFront + i01;
         const b11 = totalFront + i11;
         indices.push(b00, b10, b01, b10, b11, b01);
+      }
+    }
+  }
+
+  const isCellValid = (r: number, c: number) =>
+    r >= 0 && r < cellRows && c >= 0 && c < cellCols && cellValid[r * cellCols + c] === 1;
+
+  // Stitch solid 3D side walls around the entire silhouette perimeter
+  for (let r = 0; r < cellRows; r++) {
+    for (let c = 0; c < cellCols; c++) {
+      if (!isCellValid(r, c)) continue;
+      const i00 = r * vCols + c;
+      const i10 = i00 + 1;
+      const i01 = i00 + vCols;
+      const i11 = i01 + 1;
+      const b00 = totalFront + i00;
+      const b10 = totalFront + i10;
+      const b01 = totalFront + i01;
+      const b11 = totalFront + i11;
+
+      // Top boundary (+Y outward normal)
+      if (!isCellValid(r - 1, c)) {
+        indices.push(i00, i10, b00, i10, b10, b00);
+      }
+      // Bottom boundary (-Y outward normal)
+      if (!isCellValid(r + 1, c)) {
+        indices.push(i11, i01, b11, i01, b01, b11);
+      }
+      // Left boundary (-X outward normal)
+      if (!isCellValid(r, c - 1)) {
+        indices.push(i01, i00, b01, i00, b00, b01);
+      }
+      // Right boundary (+X outward normal)
+      if (!isCellValid(r, c + 1)) {
+        indices.push(i10, i11, b10, i11, b11, b10);
       }
     }
   }
@@ -447,10 +611,10 @@ async function buildSculptedAtlasMesh(
   const mat = new THREE.MeshStandardMaterial({
     map: albedoTex,
     normalMap: normalTex,
-    normalScale: new THREE.Vector2(1.15, 1.15),
-    roughness: 0.55,
-    metalness: 0.05,
-    alphaTest: 0.16,
+    normalScale: new THREE.Vector2(1.45, 1.45),
+    roughness: 0.5,
+    metalness: 0.06,
+    alphaTest: 0.14,
     transparent: false,
     side: THREE.FrontSide,
   });
@@ -458,16 +622,20 @@ async function buildSculptedAtlasMesh(
   const mesh = new THREE.Mesh(geo, mat);
   group.add(mesh);
 
-  // Volumetric 3D cylindrical marble plinth backing
-  const plinthGeo = new THREE.CylinderGeometry(1.26, 1.36, 0.72, 64);
+  // Multi-tiered 3D cylindrical classical marble plinth backing
   const plinthMat = new THREE.MeshStandardMaterial({
-    color: new THREE.Color("#C9B9A1"),
-    roughness: 0.65,
-    metalness: 0.05,
+    color: new THREE.Color("#C7B59B"),
+    roughness: 0.58,
+    metalness: 0.06,
   });
-  const plinth = new THREE.Mesh(plinthGeo, plinthMat);
-  plinth.position.set(0.02, STATUE_CENTER_Y - STATUE_H * 0.5 + 0.42, -0.32);
-  group.add(plinth);
+
+  const upperDrum = new THREE.Mesh(new THREE.CylinderGeometry(1.24, 1.28, 0.56, 64), plinthMat);
+  upperDrum.position.set(0.0, STATUE_CENTER_Y - STATUE_H * 0.5 + 0.52, -0.22);
+  group.add(upperDrum);
+
+  const lowerPlinth = new THREE.Mesh(new THREE.CylinderGeometry(1.36, 1.42, 0.24, 64), plinthMat);
+  lowerPlinth.position.set(0.0, STATUE_CENTER_Y - STATUE_H * 0.5 + 0.16, -0.22);
+  group.add(lowerPlinth);
 
   return { group, hitMesh: mesh, normalTex };
 }
@@ -510,80 +678,83 @@ export default function AtlasStage() {
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.06;
-    renderer.setClearColor(new THREE.Color("#08080C"), 1);
+    renderer.toneMappingExposure = 1.04;
+    renderer.setClearColor(new THREE.Color("#07080E"), 1);
     container.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2("#08080C", 0.012);
 
     const camera = new THREE.PerspectiveCamera(
-      42,
+      45,
       container.clientWidth / Math.max(1, container.clientHeight),
       0.1,
       120
     );
     const getBaseCamZ = (w: number, h: number) => {
       const aspect = w / Math.max(1, h);
-      if (aspect < 0.65) return 11.4;
-      if (aspect < 0.95) return 10.2;
-      return 9.2;
+      if (aspect < 0.65) return 10.8;
+      if (aspect < 0.95) return 9.6;
+      return 8.55;
     };
-    camera.position.set(0, 0.14, getBaseCamZ(container.clientWidth, container.clientHeight));
-    camera.lookAt(0, 0.12, 0);
+    camera.position.set(0, 0.18, getBaseCamZ(container.clientWidth, container.clientHeight));
+    camera.lookAt(0, 0.1, 0);
 
-    /* ---- Sculptural 3D Lighting ---- */
-    const ambient = new THREE.AmbientLight("#F5E8D3", 0.68);
+    /* ---- Sculptural 3D Three-Point + Cursor Lighting ---- */
+    // Lower ambient + crisp directional key + cool cosmic rim = unmistakable 3D sphere & statue depth
+    const ambient = new THREE.AmbientLight("#F5E8D3", 0.34);
     scene.add(ambient);
 
-    const keyLight = new THREE.DirectionalLight("#FFF5E4", 1.55);
-    keyLight.position.set(2.8, 5.2, 6.4);
+    const hemiLight = new THREE.HemisphereLight("#FFF3DC", "#1B1E2B", 0.38);
+    scene.add(hemiLight);
+
+    const keyLight = new THREE.DirectionalLight("#FFF2DA", 1.48);
+    keyLight.position.set(4.2, 5.4, 5.8);
     scene.add(keyLight);
 
-    const rimLightLeft = new THREE.DirectionalLight("#E6D5BA", 0.72);
-    rimLightLeft.position.set(-5.5, 2.4, -2.8);
+    const rimLightLeft = new THREE.DirectionalLight("#9EB2DE", 0.92);
+    rimLightLeft.position.set(-6.2, 2.8, -3.6);
     scene.add(rimLightLeft);
 
-    const rimLightRight = new THREE.DirectionalLight("#D6DEEE", 0.52);
-    rimLightRight.position.set(5.2, -1.2, -3.2);
+    const rimLightRight = new THREE.DirectionalLight("#F5E8D3", 0.68);
+    rimLightRight.position.set(5.8, -1.5, -4.0);
     scene.add(rimLightRight);
 
-    const cursorLight = new THREE.PointLight("#F5E8D3", 2.4, 14, 1.6);
-    cursorLight.position.set(0, 1.6, 4.6);
+    const cursorLight = new THREE.PointLight("#FFEBC8", 2.15, 14, 1.5);
+    cursorLight.position.set(0, 1.6, 4.4);
     scene.add(cursorLight);
 
-    /* ---- 1. Moving 3D Spiral Space Galaxy Background ---- */
+    /* ---- 1. Vivid Moving 3D Spiral Space Galaxy Background ---- */
     const galaxyAnchor = new THREE.Group();
-    galaxyAnchor.position.set(0, 0.35, -16.5);
+    galaxyAnchor.position.set(0, 0.35, -10.2);
     scene.add(galaxyAnchor);
 
     const galaxyPlane = new THREE.Group();
-    galaxyPlane.rotation.set(0.66, 0.0, -0.26);
+    galaxyPlane.rotation.set(0.68, 0.0, -0.28);
     galaxyAnchor.add(galaxyPlane);
 
-    const STAR_COUNT = 9200;
+    const STAR_COUNT = 14000;
     const gPositions = new Float32Array(STAR_COUNT * 3);
     const gColors = new Float32Array(STAR_COUNT * 3);
     const gSizes = new Float32Array(STAR_COUNT);
     const gPhases = new Float32Array(STAR_COUNT);
     const gRadii = new Float32Array(STAR_COUNT);
 
-    const colCore = new THREE.Color("#FFF2DC");
+    const colCore = new THREE.Color("#FFF6E5");
     const colArmWarm = new THREE.Color("#F5E8D3");
-    const colArmMid = new THREE.Color("#C7CEE0");
-    const colOuter = new THREE.Color("#7B86A6");
+    const colArmMid = new THREE.Color("#BAC8EC");
+    const colOuter = new THREE.Color("#6D82B8");
     const tmpCol = new THREE.Color();
 
     const ARMS = 4;
     for (let i = 0; i < STAR_COUNT; i++) {
       const i3 = i * 3;
-      const isCore = i < 1500;
+      const isCore = i < 2400;
       const u = Math.random();
-      const radius = isCore ? Math.pow(u, 1.8) * 3.2 : 0.8 + Math.pow(u, 0.82) * 15.8;
+      const radius = isCore ? Math.pow(u, 1.7) * 2.8 : 0.65 + Math.pow(u, 0.8) * 13.5;
 
       const armAngle = ((i % ARMS) / ARMS) * Math.PI * 2;
-      const spiralTwist = radius * 0.46;
-      const scatterScale = isCore ? 0.55 : 0.32 + radius * 0.085;
+      const spiralTwist = radius * 0.52;
+      const scatterScale = isCore ? 0.5 : 0.26 + radius * 0.075;
 
       const g1 =
         Math.sqrt(-2 * Math.log(Math.max(1e-6, Math.random()))) *
@@ -595,16 +766,16 @@ export default function AtlasStage() {
         Math.sqrt(-2 * Math.log(Math.max(1e-6, Math.random()))) *
         Math.cos(Math.random() * Math.PI * 2);
 
-      const angle = armAngle + spiralTwist + g1 * (isCore ? 0.9 : 0.26);
-      gPositions[i3] = Math.cos(angle) * radius + g2 * scatterScale * 0.45;
-      gPositions[i3 + 1] = g3 * (isCore ? 0.52 : 0.24 + radius * 0.03);
-      gPositions[i3 + 2] = Math.sin(angle) * radius + g1 * scatterScale * 0.45;
+      const angle = armAngle + spiralTwist + g1 * (isCore ? 0.88 : 0.24);
+      gPositions[i3] = Math.cos(angle) * radius + g2 * scatterScale * 0.42;
+      gPositions[i3 + 1] = g3 * (isCore ? 0.46 : 0.2 + radius * 0.025);
+      gPositions[i3 + 2] = Math.sin(angle) * radius + g1 * scatterScale * 0.42;
 
-      const tNorm = Math.min(1, radius / 15.8);
-      if (tNorm < 0.18) {
-        tmpCol.copy(colCore).lerp(colArmWarm, tNorm / 0.18);
+      const tNorm = Math.min(1, radius / 13.5);
+      if (tNorm < 0.2) {
+        tmpCol.copy(colCore).lerp(colArmWarm, tNorm / 0.2);
       } else if (tNorm < 0.58) {
-        tmpCol.copy(colArmWarm).lerp(colArmMid, (tNorm - 0.18) / 0.4);
+        tmpCol.copy(colArmWarm).lerp(colArmMid, (tNorm - 0.2) / 0.38);
       } else {
         tmpCol.copy(colArmMid).lerp(colOuter, (tNorm - 0.58) / 0.42);
       }
@@ -613,8 +784,8 @@ export default function AtlasStage() {
       gColors[i3 + 2] = tmpCol.b;
 
       gSizes[i] = isCore
-        ? 1.4 + Math.pow(Math.random(), 2.2) * 3.6
-        : 0.75 + Math.pow(Math.random(), 2.8) * 3.1;
+        ? 1.5 + Math.pow(Math.random(), 2.0) * 3.8
+        : 0.9 + Math.pow(Math.random(), 2.4) * 3.4;
       gPhases[i] = Math.random();
       gRadii[i] = radius;
     }
@@ -629,7 +800,7 @@ export default function AtlasStage() {
     const galaxyUniforms = {
       uTime: { value: 0 },
       uPixelRatio: { value: dpr },
-      uCursorWorld: { value: new THREE.Vector3(0, 0, -16.5) },
+      uCursorWorld: { value: new THREE.Vector3(0, 0, -10.2) },
     };
 
     const galaxyMat = new THREE.ShaderMaterial({
@@ -644,34 +815,34 @@ export default function AtlasStage() {
     const galaxyPoints = new THREE.Points(galaxyGeo, galaxyMat);
     galaxyPlane.add(galaxyPoints);
 
-    // Soft volumetric galactic nebula clouds along the core & spiral arms
-    const nebulaTex = createNebulaGlowTexture();
+    // Rich volumetric galactic core & spiral-arm nebula clouds
+    const nebulaWarmTex = createNebulaGlowTexture(true);
+    const nebulaCoolTex = createNebulaGlowTexture(false);
     const nebulaSprites: THREE.Sprite[] = [];
     const nebulaMats: THREE.SpriteMaterial[] = [];
-    for (let n = 0; n < 24; n++) {
-      const isCenter = n < 4;
+    for (let n = 0; n < 38; n++) {
+      const isCenter = n < 6;
       const armA = ((n % ARMS) / ARMS) * Math.PI * 2;
-      const rad = isCenter ? n * 0.45 : 2.2 + ((n - 4) / 20) * 10.5;
-      const ang = armA + rad * 0.46;
+      const rad = isCenter ? n * 0.35 : 1.6 + ((n - 6) / 32) * 10.2;
+      const ang = armA + rad * 0.52;
       const sMat = new THREE.SpriteMaterial({
-        map: nebulaTex,
-        color: isCenter ? new THREE.Color("#F5E8D3") : new THREE.Color("#9AA6C4"),
+        map: isCenter || n % 3 === 0 ? nebulaWarmTex : nebulaCoolTex,
         transparent: true,
-        opacity: isCenter ? 0.16 : 0.075,
+        opacity: isCenter ? 0.28 : 0.14,
         depthWrite: false,
         blending: THREE.AdditiveBlending,
       });
       nebulaMats.push(sMat);
       const sp = new THREE.Sprite(sMat);
-      sp.position.set(Math.cos(ang) * rad, (Math.random() - 0.5) * 0.5, Math.sin(ang) * rad);
-      const sc = isCenter ? 6.5 : 4.2 + Math.random() * 3.2;
+      sp.position.set(Math.cos(ang) * rad, (Math.random() - 0.5) * 0.45, Math.sin(ang) * rad);
+      const sc = isCenter ? 5.8 : 3.6 + Math.random() * 2.8;
       sp.scale.set(sc, sc, 1);
       galaxyPlane.add(sp);
       nebulaSprites.push(sp);
     }
 
-    // Deep-space multi-depth starfield (separate non-orbiting shader so stars stay behind z = -5)
-    const FIELD_COUNT = 2200;
+    // Deep-space multi-depth ambient starfield
+    const FIELD_COUNT = 2600;
     const fPos = new Float32Array(FIELD_COUNT * 3);
     const fCol = new Float32Array(FIELD_COUNT * 3);
     const fSizes = new Float32Array(FIELD_COUNT);
@@ -679,15 +850,14 @@ export default function AtlasStage() {
 
     for (let i = 0; i < FIELD_COUNT; i++) {
       const i3 = i * 3;
-      fPos[i3] = (Math.random() - 0.5) * 44;
-      fPos[i3 + 1] = (Math.random() - 0.5) * 30;
-      fPos[i3 + 2] = -6 - Math.random() * 26;
-      const warmMix = Math.random();
-      tmpCol.copy(colArmWarm).lerp(colArmMid, warmMix * 0.7);
-      fCol[i3] = tmpCol.r * 0.85;
-      fCol[i3 + 1] = tmpCol.g * 0.85;
-      fCol[i3 + 2] = tmpCol.b * 0.85;
-      fSizes[i] = 0.55 + Math.pow(Math.random(), 3) * 2.1;
+      fPos[i3] = (Math.random() - 0.5) * 38;
+      fPos[i3 + 1] = (Math.random() - 0.5) * 26;
+      fPos[i3 + 2] = -5.5 - Math.random() * 22;
+      tmpCol.copy(colArmWarm).lerp(colArmMid, Math.random() * 0.75);
+      fCol[i3] = tmpCol.r * 0.92;
+      fCol[i3 + 1] = tmpCol.g * 0.92;
+      fCol[i3 + 2] = tmpCol.b * 0.92;
+      fSizes[i] = 0.7 + Math.pow(Math.random(), 2.6) * 2.4;
       fPhases[i] = Math.random();
     }
 
@@ -709,13 +879,13 @@ export default function AtlasStage() {
     const starField = new THREE.Points(fieldGeo, starFieldMat);
     scene.add(starField);
 
-    /* ---- 2. Monument Group: Rotating 3D Celestial Globe + 3D Atlas Statue ---- */
+    /* ---- 2. 3D Monument Group: Rotating Celestial Globe + Watertight 3D Atlas ---- */
     const monumentGroup = new THREE.Group();
     scene.add(monumentGroup);
 
     const texLoader = new THREE.TextureLoader();
 
-    const globeTex = texLoader.load("/assets/celestial-globe-map.jpg");
+    const globeTex = texLoader.load("/assets/celestial-globe-map.jpg?v=4");
     globeTex.colorSpace = THREE.SRGBColorSpace;
     globeTex.anisotropy = 8;
 
@@ -723,9 +893,9 @@ export default function AtlasStage() {
     const globeMat = new THREE.MeshStandardMaterial({
       map: globeTex,
       bumpMap: globeTex,
-      bumpScale: 0.022,
-      roughness: 0.54,
-      metalness: 0.06,
+      bumpScale: 0.048,
+      roughness: 0.52,
+      metalness: 0.07,
     });
     const globeMesh = new THREE.Mesh(globeGeo, globeMat);
     globeMesh.position.set(GLOBE_X, GLOBE_Y, GLOBE_Z);
@@ -733,10 +903,24 @@ export default function AtlasStage() {
     globeMesh.userData = { pillarKey: "atlas" };
     monumentGroup.add(globeMesh);
 
+    // Subtle spherical Fresnel atmospheric rim on the 3D globe (no lines!)
+    const globeRimGeo = new THREE.SphereGeometry(R_GLOBE * 1.022, 64, 64);
+    const globeRimMat = new THREE.ShaderMaterial({
+      vertexShader: GLOBE_RIM_VERT,
+      fragmentShader: GLOBE_RIM_FRAG,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      side: THREE.FrontSide,
+    });
+    const globeRimMesh = new THREE.Mesh(globeRimGeo, globeRimMat);
+    globeRimMesh.position.set(GLOBE_X, GLOBE_Y, GLOBE_Z);
+    monumentGroup.add(globeRimMesh);
+
     let statueHitMesh: THREE.Mesh | null = null;
     let statueNormalTex: THREE.DataTexture | null = null;
     let statueAlbedoTex: THREE.Texture | null = null;
-    texLoader.load("/assets/atlas-body-3d.png", (albedoTex) => {
+    texLoader.load("/assets/atlas-body-3d.png?v=4", (albedoTex) => {
       if (disposed) {
         albedoTex.dispose();
         return;
@@ -756,40 +940,46 @@ export default function AtlasStage() {
       });
     });
 
-    /* ---- 3. Six Orbiting 3D Spheres (NO visible orbit lines!) ---- */
+    /* ---- 3. Six Orbiting 3D Spheres (ZERO visible orbit lines!) ---- */
     const orbMeshes: THREE.Mesh[] = [];
-    const orbTextures: THREE.Texture[] = [];
+    const orbMaps: THREE.Texture[] = [];
+    const orbBumpMaps: THREE.Texture[] = [];
     const orbMaterials: THREE.MeshStandardMaterial[] = [];
     const orbPhaseAngles = PILLARS.map((p) => p.orbit.phase);
 
     PILLARS.forEach((p, i) => {
-      const tex = createPillarOrbTexture(p, () => {});
-      orbTextures.push(tex);
+      const { map, bumpMap } = createPillarOrbTextures(p);
+      orbMaps.push(map);
+      orbBumpMaps.push(bumpMap);
 
       const mat = new THREE.MeshStandardMaterial({
-        map: tex,
-        bumpMap: tex,
-        bumpScale: 0.012,
-        roughness: 0.36,
-        metalness: 0.1,
+        map,
+        bumpMap,
+        bumpScale: 0.024,
+        roughness: 0.42,
+        metalness: 0.08,
         emissive: new THREE.Color("#F5E8D3"),
-        emissiveIntensity: 0.04,
+        emissiveIntensity: 0.0,
       });
       orbMaterials.push(mat);
 
-      const mesh = new THREE.Mesh(new THREE.SphereGeometry(R_ORB, 48, 48), mat);
+      const mesh = new THREE.Mesh(new THREE.SphereGeometry(R_ORB, 56, 56), mat);
       mesh.rotation.z = ((i % 2 === 0 ? 1 : -1) * 14 * Math.PI) / 180;
       mesh.userData = { pillarIndex: i, pillarKey: p.key };
       monumentGroup.add(mesh);
       orbMeshes.push(mesh);
     });
 
-    /* ---- Cursor Tracking & Raycasting ---- */
+    /* ---- Cursor Tracking, Drag Turntable & 3D Raycasting ---- */
     const pointerTarget = { x: 0, y: 0 };
     const pointerSmooth = { x: 0, y: 0 };
     const pointerNdc = new THREE.Vector2(-99, -99);
     const raycaster = new THREE.Raycaster();
     let pointerInside = false;
+    let isDragging = false;
+    let dragMoved = false;
+    let dragStartX = 0;
+    let dragYawOffset = 0;
 
     const updatePointerFromClient = (clientX: number, clientY: number) => {
       const rect = container.getBoundingClientRect();
@@ -802,11 +992,29 @@ export default function AtlasStage() {
       pointerInside = true;
     };
 
-    const onPointerMove = (e: PointerEvent) => {
+    const onPointerDown = (e: PointerEvent) => {
+      isDragging = true;
+      dragMoved = false;
+      dragStartX = e.clientX;
       updatePointerFromClient(e.clientX, e.clientY);
     };
 
+    const onPointerMove = (e: PointerEvent) => {
+      if (isDragging) {
+        const dx = e.clientX - dragStartX;
+        if (Math.abs(dx) > 5) dragMoved = true;
+        dragStartX = e.clientX;
+        dragYawOffset = Math.max(-0.48, Math.min(0.48, dragYawOffset + dx * 0.0045));
+      }
+      updatePointerFromClient(e.clientX, e.clientY);
+    };
+
+    const onPointerUp = () => {
+      isDragging = false;
+    };
+
     const onPointerLeave = () => {
+      isDragging = false;
       pointerInside = false;
       pointerNdc.set(-99, -99);
       hoveredKeyRef.current = null;
@@ -832,11 +1040,17 @@ export default function AtlasStage() {
     };
 
     const onClickCanvas = (e: MouseEvent) => {
+      if (dragMoved) {
+        dragMoved = false;
+        return;
+      }
       const picked = pickSphereAt(e.clientX, e.clientY);
       if (picked) openPillar(picked);
     };
 
+    renderer.domElement.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("pointermove", onPointerMove, { passive: true });
+    window.addEventListener("pointerup", onPointerUp, { passive: true });
     container.addEventListener("pointerleave", onPointerLeave);
     renderer.domElement.addEventListener("click", onClickCanvas);
 
@@ -867,56 +1081,62 @@ export default function AtlasStage() {
       prevTime = now;
       const elapsed = now / 1000;
 
-      const damp = 1 - Math.exp(-dt * 5.2);
+      const damp = 1 - Math.exp(-dt * 5.8);
       pointerSmooth.x += (pointerTarget.x - pointerSmooth.x) * damp;
       pointerSmooth.y += (pointerTarget.y - pointerSmooth.y) * damp;
+      if (!isDragging) {
+        dragYawOffset *= Math.exp(-dt * 1.4);
+      }
 
-      // 1. Space Galaxy in continuous motion + following cursor across screen
+      // 1. Moving 3D Spiral Space Galaxy following cursor across screen
       galaxyUniforms.uTime.value = elapsed;
-      galaxyPlane.rotation.y = elapsed * 0.065;
+      galaxyPlane.rotation.y = elapsed * 0.09;
 
-      starField.position.x = pointerSmooth.x * 1.45;
-      starField.position.y = pointerSmooth.y * 1.05;
+      starField.position.x = pointerSmooth.x * 1.85;
+      starField.position.y = pointerSmooth.y * 1.35;
 
-      galaxyAnchor.position.x = pointerSmooth.x * 3.9;
-      galaxyAnchor.position.y = 0.35 + pointerSmooth.y * 2.45;
-      galaxyPlane.rotation.x = 0.66 - pointerSmooth.y * 0.25;
-      galaxyPlane.rotation.z = -0.26 - pointerSmooth.x * 0.28;
+      galaxyAnchor.position.x = pointerSmooth.x * 4.2;
+      galaxyAnchor.position.y = 0.35 + pointerSmooth.y * 2.75;
+      galaxyPlane.rotation.x = 0.68 - pointerSmooth.y * 0.3;
+      galaxyPlane.rotation.z = -0.28 - pointerSmooth.x * 0.32;
 
       galaxyUniforms.uCursorWorld.value.set(
-        pointerSmooth.x * 8.5,
-        pointerSmooth.y * 5.4,
-        -16.5
+        pointerSmooth.x * 6.8,
+        pointerSmooth.y * 4.6,
+        -10.2
       );
 
-      // 2. Subtle 3D camera & light parallax on the 3D Atlas statue & Celestial Globe
+      // 2. Unmistakable 3D turntable rotation & camera parallax on the 3D Atlas statue + Globe
       const w = container.clientWidth;
       const h = Math.max(1, container.clientHeight);
       const baseZ = getBaseCamZ(w, h);
-      camera.position.x = pointerSmooth.x * 0.58;
-      camera.position.y = 0.14 + pointerSmooth.y * 0.34;
+      camera.position.x = pointerSmooth.x * 0.72;
+      camera.position.y = 0.18 + pointerSmooth.y * 0.42;
       camera.position.z = baseZ;
-      camera.lookAt(0, 0.1, 0);
+      camera.lookAt(0, 0.08, 0);
 
-      monumentGroup.rotation.y = pointerSmooth.x * 0.095;
-      monumentGroup.rotation.x = -pointerSmooth.y * 0.045;
+      // Gentle autonomous 3D sculptural sway + responsive 3D cursor/drag turntable
+      const idleSwayY = Math.sin(elapsed * 0.52) * 0.14;
+      const idleSwayX = Math.cos(elapsed * 0.37) * 0.03;
+      monumentGroup.rotation.y = idleSwayY + pointerSmooth.x * 0.28 + dragYawOffset;
+      monumentGroup.rotation.x = idleSwayX - pointerSmooth.y * 0.09;
 
       cursorLight.position.set(
-        pointerSmooth.x * 4.4,
-        1.5 + pointerSmooth.y * 2.8,
-        4.8
+        pointerSmooth.x * 4.8,
+        1.5 + pointerSmooth.y * 3.1,
+        4.6
       );
 
       // Rotate the 3D Celestial Globe cradled in Atlas's sculpted hands
-      globeMesh.rotation.y = elapsed * 0.17;
+      globeMesh.rotation.y = elapsed * 0.24;
 
       const aspect = w / h;
-      const orbitWidthScale = aspect < 0.65 ? 0.7 : aspect < 0.95 ? 0.86 : 1.0;
+      const orbitWidthScale = aspect < 0.65 ? 0.72 : aspect < 0.95 ? 0.88 : 1.0;
 
       // 3. Advance all 6 orbiting 3D spheres along their invisible 3D orbits
       PILLARS.forEach((p, i) => {
         const isHovered = hoveredKeyRef.current === p.key;
-        const speedFactor = isHovered ? 0.28 : 1.0;
+        const speedFactor = isHovered ? 0.25 : 1.0;
         orbPhaseAngles[i] += (dt * Math.PI * 2 * speedFactor) / p.orbit.period;
 
         const theta = orbPhaseAngles[i];
@@ -936,17 +1156,17 @@ export default function AtlasStage() {
 
         const mesh = orbMeshes[i];
         mesh.position.set(GLOBE_X + x2, GLOBE_Y + p.orbit.liftY + y2, GLOBE_Z + z1);
-        mesh.rotation.y += dt * (0.85 + i * 0.11);
+        mesh.rotation.y += dt * (1.15 + i * 0.14);
 
-        const targetScale = isHovered ? 1.24 : 1.0;
+        const targetScale = isHovered ? 1.26 : 1.0;
         const curScale = mesh.scale.x + (targetScale - mesh.scale.x) * Math.min(1, dt * 12);
         mesh.scale.setScalar(curScale);
-        orbMaterials[i].emissiveIntensity = isHovered ? 0.26 : 0.04;
+        orbMaterials[i].emissiveIntensity = isHovered ? 0.22 : 0.0;
       });
 
       scene.updateMatrixWorld();
 
-      if (pointerInside) {
+      if (pointerInside && !isDragging) {
         raycaster.setFromCamera(pointerNdc, camera);
         const targets: THREE.Object3D[] = [...orbMeshes, globeMesh];
         if (statueHitMesh) targets.push(statueHitMesh);
@@ -962,7 +1182,7 @@ export default function AtlasStage() {
         }
       }
 
-      // Project floating labels & fade them out cleanly when occluded behind the 3D globe/statue
+      // Project floating labels & fade them out completely when occluded behind the 3D globe/statue
       globeMesh.getWorldPosition(globeWorldCenter);
 
       PILLARS.forEach((p, i) => {
@@ -983,8 +1203,8 @@ export default function AtlasStage() {
           if (tProj > 0 && tProj < distToOrb) {
             const perpSq = Math.max(0, toGlobe.lengthSq() - tProj * tProj);
             const perpDist = Math.sqrt(perpSq);
-            const outerEdge = R_GLOBE + R_ORB * 0.85;
-            const innerEdge = R_GLOBE - R_ORB * 0.35;
+            const outerEdge = R_GLOBE + R_ORB * 0.9;
+            const innerEdge = R_GLOBE - R_ORB * 0.25;
             const globeVis = Math.max(
               0,
               Math.min(1, (perpDist - innerEdge) / Math.max(0.01, outerEdge - innerEdge))
@@ -994,22 +1214,25 @@ export default function AtlasStage() {
 
           if (orbWorldPos.y < globeWorldCenter.y && orbWorldPos.y > STATUE_CENTER_Y - STATUE_H * 0.45) {
             const xDist = Math.abs(orbWorldPos.x - globeWorldCenter.x);
-            const torsoVis = Math.max(0, Math.min(1, (xDist - 0.68) / 0.36));
+            const torsoVis = Math.max(0, Math.min(1, (xDist - 0.72) / 0.36));
             visibility = Math.min(visibility, torsoVis);
           }
         }
 
         projVec.copy(orbWorldPos);
-        projVec.y -= R_ORB * 1.42 * mesh.scale.y;
+        projVec.y -= R_ORB * 1.44 * mesh.scale.y;
         projVec.project(camera);
 
         const sx = (projVec.x * 0.5 + 0.5) * w;
         const sy = (-projVec.y * 0.5 + 0.5) * h;
         const isHovered = hoveredKeyRef.current === p.key;
 
-        labelEl.style.transform = `translate3d(${sx.toFixed(1)}px, ${sy.toFixed(1)}px, 0) translate(-50%, 0) scale(${
-          isHovered ? 1.08 : 0.92 + visibility * 0.08
-        })`;
+        // Subtle depth scale on label matching 3D proximity
+        const depthFactor = Math.max(0.82, Math.min(1.12, 1 + (orbWorldPos.z - globeWorldCenter.z) * 0.06));
+        labelEl.style.transform = `translate3d(${sx.toFixed(1)}px, ${sy.toFixed(1)}px, 0) translate(-50%, 0) scale(${(
+          (isHovered ? 1.1 : depthFactor) *
+          (0.9 + visibility * 0.1)
+        ).toFixed(3)})`;
         labelEl.style.opacity = String(Number((visibility * (isHovered ? 1 : 0.94)).toFixed(3)));
         labelEl.style.pointerEvents = visibility > 0.45 ? "auto" : "none";
       });
@@ -1025,7 +1248,9 @@ export default function AtlasStage() {
       cancelAnimationFrame(raf);
       ro.disconnect();
       window.removeEventListener("resize", onResize);
+      renderer.domElement.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
       container.removeEventListener("pointerleave", onPointerLeave);
       renderer.domElement.removeEventListener("click", onClickCanvas);
 
@@ -1033,18 +1258,22 @@ export default function AtlasStage() {
       fieldGeo.dispose();
       galaxyMat.dispose();
       starFieldMat.dispose();
-      nebulaTex.dispose();
+      nebulaWarmTex.dispose();
+      nebulaCoolTex.dispose();
       nebulaMats.forEach((m) => m.dispose());
       nebulaSprites.length = 0;
       globeGeo.dispose();
       globeMat.dispose();
+      globeRimGeo.dispose();
+      globeRimMat.dispose();
       globeTex.dispose();
       statueAlbedoTex?.dispose();
       statueNormalTex?.dispose();
       statueHitMesh?.geometry.dispose();
       orbMeshes.forEach((m) => m.geometry.dispose());
       orbMaterials.forEach((m) => m.dispose());
-      orbTextures.forEach((t) => t.dispose());
+      orbMaps.forEach((t) => t.dispose());
+      orbBumpMaps.forEach((t) => t.dispose());
       renderer.dispose();
       if (renderer.domElement.parentNode === container) {
         container.removeChild(renderer.domElement);
@@ -1053,8 +1282,8 @@ export default function AtlasStage() {
   }, [openPillar]);
 
   return (
-    <div className="relative h-[100svh] w-screen overflow-hidden bg-[#08080C] select-none">
-      {/* 3D WebGL Canvas (Space Galaxy + 3D Atlas Statue + 3D Globe + 6 3D Orbiting Spheres) */}
+    <div className="relative h-[100svh] w-screen overflow-hidden bg-[#07080E] select-none">
+      {/* 3D WebGL Canvas (Space Galaxy + Watertight 3D Atlas + 3D Globe + 6 3D Orbiting Spheres) */}
       <div ref={mountRef} className="absolute inset-0 h-full w-full" />
 
       {/* 3D-projected sphere labels (automatically disappear when occluded behind the 3D globe) */}

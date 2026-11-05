@@ -62,7 +62,7 @@ export default function LoginPage() {
           <Link href="/" className="flex items-center gap-3">
             <span className="h-10 w-10 overflow-hidden rounded-full border-2 border-marble bg-wine">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/icons/icon-192.png" alt="" className="h-full w-full object-cover" />
+              <img src="/icons/sphere-192.png?v=4" alt="" className="h-full w-full object-cover" />
             </span>
             <span className="font-display text-[22px] tracking-[0.42em] text-marble">ATLAS</span>
           </Link>

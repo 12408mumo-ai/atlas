@@ -1,16 +1,14 @@
-const CACHE_NAME = "atlas-pwa-v3";
+const CACHE_NAME = "atlas-pwa-v4";
 const PRECACHE_URLS = [
-  "/",
-  "/login",
-  "/hub",
   "/manifest.webmanifest",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
-  "/icons/maskable-512.png",
-  "/apple-touch-icon.png",
-  "/assets/atlas-body-3d.png",
-  "/assets/atlas-body-depth.png",
-  "/assets/celestial-globe-map.jpg",
+  "/favicon.ico?v=4",
+  "/icons/sphere-192.png?v=4",
+  "/icons/sphere-512.png?v=4",
+  "/icons/sphere-maskable-512.png?v=4",
+  "/sphere-apple-touch-icon.png?v=4",
+  "/assets/atlas-body-3d.png?v=4",
+  "/assets/atlas-body-depth.png?v=4",
+  "/assets/celestial-globe-map.jpg?v=4",
   "/audio/greeting-morning.mp3",
   "/audio/greeting-afternoon.mp3",
   "/audio/greeting-evening.mp3",
@@ -22,7 +20,15 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE_URLS))
+      .then((cache) =>
+        Promise.all(
+          PRECACHE_URLS.map((u) =>
+            fetch(u, { cache: "reload" })
+              .then((res) => (res.ok ? cache.put(u, res) : undefined))
+              .catch(() => undefined)
+          )
+        )
+      )
       .catch(() => undefined)
   );
 });
@@ -45,6 +51,25 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith("/_next/webpack-hmr")) return;
 
+  // Always network-first bypassing stale HTTP cache for HTML navigations & Next data
+  if (req.mode === "navigate" || url.pathname.startsWith("/_next/")) {
+    event.respondWith(
+      fetch(req, { cache: "no-cache" })
+        .then((res) => {
+          if (res && res.status === 200 && res.type === "basic") {
+            const clone = res.clone();
+            caches
+              .open(CACHE_NAME)
+              .then((cache) => cache.put(req, clone))
+              .catch(() => undefined);
+          }
+          return res;
+        })
+        .catch(() => caches.match(req).then((cached) => cached || caches.match("/")))
+    );
+    return;
+  }
+
   event.respondWith(
     fetch(req)
       .then((res) => {
@@ -57,6 +82,6 @@ self.addEventListener("fetch", (event) => {
         }
         return res;
       })
-      .catch(() => caches.match(req).then((cached) => cached || caches.match("/")))
+      .catch(() => caches.match(req))
   );
 });
