@@ -552,9 +552,9 @@ export default function AtlasStage() {
     rimLightRight.position.set(5.8, -1.5, -4.0);
     scene.add(rimLightRight);
 
-    const cursorLight = new THREE.PointLight("#FFEBC8", 2.0, 14, 1.5);
-    cursorLight.position.set(0, 1.6, 4.4);
-    scene.add(cursorLight);
+    const fillLight = new THREE.PointLight("#FFEBC8", 1.55, 14, 1.5);
+    fillLight.position.set(0, 1.6, 4.6);
+    scene.add(fillLight);
 
     /* ---- 3D Monument Group: Rotating Celestial Globe + Watertight 3D Atlas ---- */
     const monumentGroup = new THREE.Group();
@@ -633,51 +633,21 @@ export default function AtlasStage() {
       orbMeshes.push(mesh);
     });
 
-    /* ---- Cursor Tracking, Drag Turntable & 3D Raycasting ---- */
-    const pointerTarget = { x: 0, y: 0 };
-    const pointerSmooth = { x: 0, y: 0 };
+    /* ---- Pointer Raycasting (Atlas statue remains completely stationary) ---- */
     const pointerNdc = new THREE.Vector2(-99, -99);
     const raycaster = new THREE.Raycaster();
     let pointerInside = false;
-    let isDragging = false;
-    let dragMoved = false;
-    let dragStartX = 0;
-    let dragYawOffset = 0;
 
-    const updatePointerFromClient = (clientX: number, clientY: number) => {
+    const onPointerMove = (e: PointerEvent) => {
       const rect = container.getBoundingClientRect();
       if (!rect.width || !rect.height) return;
-      const nx = ((clientX - rect.left) / rect.width) * 2 - 1;
-      const ny = -(((clientY - rect.top) / rect.height) * 2 - 1);
-      pointerTarget.x = Math.max(-1, Math.min(1, nx));
-      pointerTarget.y = Math.max(-1, Math.min(1, ny));
-      pointerNdc.set(pointerTarget.x, pointerTarget.y);
+      const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      const ny = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
+      pointerNdc.set(Math.max(-1, Math.min(1, nx)), Math.max(-1, Math.min(1, ny)));
       pointerInside = true;
     };
 
-    const onPointerDown = (e: PointerEvent) => {
-      isDragging = true;
-      dragMoved = false;
-      dragStartX = e.clientX;
-      updatePointerFromClient(e.clientX, e.clientY);
-    };
-
-    const onPointerMove = (e: PointerEvent) => {
-      if (isDragging) {
-        const dx = e.clientX - dragStartX;
-        if (Math.abs(dx) > 5) dragMoved = true;
-        dragStartX = e.clientX;
-        dragYawOffset = Math.max(-0.48, Math.min(0.48, dragYawOffset + dx * 0.0045));
-      }
-      updatePointerFromClient(e.clientX, e.clientY);
-    };
-
-    const onPointerUp = () => {
-      isDragging = false;
-    };
-
     const onPointerLeave = () => {
-      isDragging = false;
       pointerInside = false;
       pointerNdc.set(-99, -99);
       hoveredKeyRef.current = null;
@@ -703,17 +673,11 @@ export default function AtlasStage() {
     };
 
     const onClickCanvas = (e: MouseEvent) => {
-      if (dragMoved) {
-        dragMoved = false;
-        return;
-      }
       const picked = pickSphereAt(e.clientX, e.clientY);
       if (picked) openPillar(picked);
     };
 
-    renderer.domElement.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("pointermove", onPointerMove, { passive: true });
-    window.addEventListener("pointerup", onPointerUp, { passive: true });
     container.addEventListener("pointerleave", onPointerLeave);
     renderer.domElement.addEventListener("click", onClickCanvas);
 
@@ -744,32 +708,13 @@ export default function AtlasStage() {
       prevTime = now;
       const elapsed = now / 1000;
 
-      const damp = 1 - Math.exp(-dt * 5.8);
-      pointerSmooth.x += (pointerTarget.x - pointerSmooth.x) * damp;
-      pointerSmooth.y += (pointerTarget.y - pointerSmooth.y) * damp;
-      if (!isDragging) {
-        dragYawOffset *= Math.exp(-dt * 1.4);
-      }
-
       const w = container.clientWidth;
       const h = Math.max(1, container.clientHeight);
       const baseZ = getBaseCamZ(w, h);
-      camera.position.x = pointerSmooth.x * 0.72;
-      camera.position.y = 0.18 + pointerSmooth.y * 0.42;
-      camera.position.z = baseZ;
+      camera.position.set(0, 0.18, baseZ);
       camera.lookAt(0, 0.08, 0);
 
-      const idleSwayY = Math.sin(elapsed * 0.52) * 0.14;
-      const idleSwayX = Math.cos(elapsed * 0.37) * 0.03;
-      monumentGroup.rotation.y = idleSwayY + pointerSmooth.x * 0.28 + dragYawOffset;
-      monumentGroup.rotation.x = idleSwayX - pointerSmooth.y * 0.09;
-
-      cursorLight.position.set(
-        pointerSmooth.x * 4.8,
-        1.5 + pointerSmooth.y * 3.1,
-        4.6
-      );
-
+      // Keep the 3D Atlas god statue completely still; only the globe & spheres spin/orbit
       globeMesh.rotation.y = elapsed * 0.24;
 
       const aspect = w / h;
@@ -807,7 +752,7 @@ export default function AtlasStage() {
 
       scene.updateMatrixWorld();
 
-      if (pointerInside && !isDragging) {
+      if (pointerInside) {
         raycaster.setFromCamera(pointerNdc, camera);
         const targets: THREE.Object3D[] = [...orbMeshes, globeMesh];
         if (statueHitMesh) targets.push(statueHitMesh);
@@ -887,9 +832,7 @@ export default function AtlasStage() {
       cancelAnimationFrame(raf);
       ro.disconnect();
       window.removeEventListener("resize", onResize);
-      renderer.domElement.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("pointerup", onPointerUp);
       container.removeEventListener("pointerleave", onPointerLeave);
       renderer.domElement.removeEventListener("click", onClickCanvas);
 
