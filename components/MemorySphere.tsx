@@ -12,6 +12,7 @@ import { useEffect, useRef } from "react";
 
 export type SphereGlyph =
   | "memories"
+  | "people"
   | "timeline"
   | "gallery"
   | "calendar"
@@ -25,6 +26,7 @@ export function MemorySphere({
   tone = "wine",
   speed = 0.52,
   phaseOffset = 0,
+  initial = "",
 }: {
   glyph: SphereGlyph;
   size?: number;
@@ -32,6 +34,7 @@ export function MemorySphere({
   tone?: "wine" | "marble";
   speed?: number;
   phaseOffset?: number;
+  initial?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const activeRef = useRef(active);
@@ -56,6 +59,15 @@ export function MemorySphere({
       im.src = "/assets/emblems/memories.png";
       im.onload = () => {
         emblemImg = im;
+      };
+    }
+
+    let peopleEmblemImg: HTMLImageElement | null = null;
+    if (glyph === "people") {
+      const im = new Image();
+      im.src = "/assets/emblems/people.png";
+      im.onload = () => {
+        peopleEmblemImg = im;
       };
     }
 
@@ -94,13 +106,14 @@ export function MemorySphere({
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
 
-      if (glyph === "memories" && emblemImg) {
+      if ((glyph === "memories" || glyph === "people") && (emblemImg || peopleEmblemImg)) {
+        const emb = glyph === "people" ? peopleEmblemImg : emblemImg;
         ctx.beginPath();
         ctx.arc(0, 0, r * 0.92, 0, Math.PI * 2);
         ctx.clip();
         ctx.fillStyle = "#F5E8D3";
         ctx.fillRect(-r, -r, r * 2, r * 2);
-        ctx.drawImage(emblemImg, -r * 0.88, -r * 0.88, r * 1.76, r * 1.76);
+        if (emb) ctx.drawImage(emb, -r * 0.88, -r * 0.88, r * 1.76, r * 1.76);
       } else if (glyph === "timeline") {
         // Vertical thread with 3 chronicle nodes
         ctx.beginPath();
@@ -310,7 +323,16 @@ export function MemorySphere({
       ctx.fillStyle = darkCore ? "#28282A" : "#F5E8D3";
       ctx.fill();
 
-      drawGlyphIcon(cx + medOffsetX, cy, medR * 0.82, darkCore ? "#F5E8D3" : "#28282A");
+      if (initial) {
+        // Single initial letter, centered on the medallion front
+        ctx.font = `600 ${medR * 0.82}px Georgia, "Times New Roman", serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = darkCore ? "#F5E8D3" : "#28282A";
+        ctx.fillText(initial.toUpperCase(), cx + medOffsetX, cy + medR * 0.02);
+      } else {
+        drawGlyphIcon(cx + medOffsetX, cy, medR * 0.82, darkCore ? "#F5E8D3" : "#28282A");
+      }
       ctx.restore();
 
       // 6. Crisp outer sphere border (+ active outer ring)

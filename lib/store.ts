@@ -448,6 +448,31 @@ export function touchPerson(id: string) {
   }));
 }
 
+export function addPerson(name: string, relation: string) {
+  setState((s) => ({
+    people: [
+      ...s.people,
+      {
+        id: `pe${Date.now()}`,
+        name: name.trim(),
+        relation: relation.trim() || "Friend",
+        lastSeen: todayISO(),
+        cadenceDays: 21,
+        birthday: "",
+        promise: "—",
+        gift: "—",
+        notes: "",
+      },
+    ],
+  }));
+}
+
+export function updatePerson(id: string, patch: Partial<Person>) {
+  setState((s) => ({
+    people: s.people.map((p) => (p.id === id ? { ...p, ...patch } : p)),
+  }));
+}
+
 /* ------------------------------ plans ------------------------------ */
 
 export function addPlan(title: string, steps: string[], byAtlas = true) {
