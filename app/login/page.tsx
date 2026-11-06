@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ScrollFrame } from "@/components/ScrollFrame";
 import { AtlasLogo } from "@/components/AtlasLogo";
+import { VoiceLogin } from "@/components/VoiceLogin";
 import { signIn, createAccount, getSession } from "@/lib/store";
 
 export default function LoginPage() {
@@ -15,6 +16,13 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [voicePass, setVoicePass] = useState(false);
+
+  useEffect(() => {
+    const onVoiceLogin = () => setVoicePass(true);
+    window.addEventListener("atlas:voice-login", onVoiceLogin);
+    return () => window.removeEventListener("atlas:voice-login", onVoiceLogin);
+  }, []);
 
   useEffect(() => {
     const existing = getSession();
@@ -49,7 +57,17 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="grid min-h-[100svh] w-screen place-items-center overflow-x-hidden bg-wine py-10 pl-20 pr-5 sm:px-28">
+    <>
+      {voicePass && (
+        <VoiceLogin
+          onUnlock={() => {
+            setVoicePass(false);
+            router.push("/hub");
+          }}
+          onCancel={() => setVoicePass(false)}
+        />
+      )}
+      <main className="grid min-h-[100svh] w-screen place-items-center overflow-x-hidden bg-wine py-10 pl-20 pr-5 sm:px-28">
       <div className="w-full max-w-[480px] anim-fade-up">
         <ScrollFrame width={480}>
           <div className="text-center">
@@ -120,6 +138,13 @@ export default function LoginPage() {
             </button>
             <button
               type="button"
+              onClick={() => setVoicePass(true)}
+              className="w-full py-2 font-ui text-[18px] text-wine underline underline-offset-4"
+            >
+              Sign in by voice
+            </button>
+            <button
+              type="button"
               onClick={() => {
                 setMode((current) => current === "sign-in" ? "sign-up" : "sign-in");
                 setError(null);
@@ -133,5 +158,6 @@ export default function LoginPage() {
         </ScrollFrame>
       </div>
     </main>
+    </>
   );
 }

@@ -15,6 +15,7 @@ import {
   type AISettings,
 } from "@/lib/atlas-ai";
 import { loadAtlasCloudRow } from "@/lib/supabase";
+import { getStoredPin, setStoredPin } from "@/components/VoiceLogin";
 
 /* ------------------------------------------------------------------ */
 /*  Atlas Assistant Settings — the altar where a key is laid.         */
@@ -33,6 +34,8 @@ export default function AtlasSettingsPage() {
   const [test, setTest] = useState<TestState>({ phase: "idle", detail: "" });
   const [savedAt, setSavedAt] = useState("");
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [voicePin, setVoicePin] = useState("");
+  const [voicePinState, setVoicePinState] = useState<"idle" | "saved" | "cleared">("idle");
 
   useEffect(() => {
     let cancelled = false;
@@ -352,6 +355,62 @@ export default function AtlasSettingsPage() {
               <li>· “Lift” removes the key at once; clearing browser data does too.</li>
               <li>· Use a key with a spend limit while you test which model works best.</li>
             </ul>
+          </Panel>
+
+          <Panel title="Voice pass" hint="Sign in by speaking">
+            <div className="space-y-3">
+              <p className="font-body text-[20px] leading-snug text-wine opacity-85">
+                {getStoredPin()
+                  ? "A voice pass is set. Speak its digits on the opening screen to come in."
+                  : "No voice pass is set. Choose a few digits below — you will speak them on the opening screen to come in."}
+              </p>
+              <div className="flex gap-2">
+                <input
+                  className="field flex-1"
+                  inputMode="numeric"
+                  placeholder="Digits, e.g. 742"
+                  value={voicePin}
+                  onChange={(e) => setVoicePin(e.target.value.replace(/\D/g, "").slice(0, 8))}
+                  aria-label="Voice pass digits"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (voicePin.length < 3) return;
+                    setStoredPin(voicePin);
+                    setVoicePin("");
+                    setVoicePinState("saved");
+                  }}
+                  className="btn-gold btn-sm shrink-0"
+                >
+                  Set pass
+                </button>
+              </div>
+              {voicePinState === "saved" && (
+                <p className="font-ui text-[15px] text-wine opacity-70">
+                  Voice pass saved in this browser.
+                </p>
+              )}
+              {getStoredPin() && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    try {
+                      localStorage.removeItem("atlas.voice-pin.v1");
+                    } catch {}
+                    setVoicePinState("cleared");
+                  }}
+                  className="font-ui text-[16px] text-wine underline underline-offset-4 opacity-70"
+                >
+                  Remove voice pass
+                </button>
+              )}
+              {voicePinState === "cleared" && (
+                <p className="font-ui text-[15px] text-wine opacity-70">
+                  Voice pass removed.
+                </p>
+              )}
+            </div>
           </Panel>
         </div>
       </div>

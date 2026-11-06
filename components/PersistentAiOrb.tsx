@@ -3,6 +3,8 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AiGlobeSphere } from "@/components/AiGlobeSphere";
+import { VoiceAssistant } from "@/components/VoiceAssistant";
+import { VoiceGreeting } from "@/components/VoiceGreeting";
 import { loadAISettings, speak, stopSpeaking } from "@/lib/atlas-ai";
 
 /* ------------------------------------------------------------------ */
@@ -46,6 +48,7 @@ export function PersistentAiOrb() {
   const router = useRouter();
   const [dockInitiated, setDockInitiated] = useState(false);
   const [speaking, setSpeaking] = useState(false);
+  const [voiceGreeting, setVoiceGreeting] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const isWelcome = pathname === "/" && !dockInitiated;
@@ -143,7 +146,12 @@ export function PersistentAiOrb() {
         unlockListenerAttached = true;
         window.addEventListener("pointerdown", onFirstGesture, { passive: true });
         window.addEventListener("keydown", onFirstGesture);
+        // The mic needs a gesture, so wait for the first touch or key.
+        return;
       }
+      // The greeting has been spoken. Open the voice conversation.
+      const timer = setTimeout(() => setVoiceGreeting(true), 1200);
+      return () => clearTimeout(timer);
     });
 
     return () => {
@@ -161,28 +169,72 @@ export function PersistentAiOrb() {
     }
   };
 
+  /* ------------------------- voice login on / ------------------------- */
+
+  const startVoiceLogin = useCallback(() => {
+    stopGreeting();
+    setVoiceGreeting(true);
+  }, [stopGreeting]);
+
+  const showVoiceTab = pathname === "/login" || pathname === "/hub" || pathname === "/";
+  // The voice panel is the spoken demo assistant. It is hidden on /atlas,
+  // which is the full written chat with a real model.
+  const showAssistantTab = !isWelcome && pathname !== "/login" && pathname !== "/atlas";
+
   return (
-    <div
-      style={{
-        transition:
-          "left 820ms cubic-bezier(0.22, 1, 0.36, 1), top 820ms cubic-bezier(0.22, 1, 0.36, 1), transform 820ms cubic-bezier(0.22, 1, 0.36, 1)",
-      }}
-      className={
-        isWelcome
-          ? "fixed left-[calc(50%+0px)] top-[calc(50%-42px)] z-[950] h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 scale-100 sm:h-[380px] sm:w-[380px]"
-          : "fixed left-[calc(0%+38px)] top-[calc(50%+0px)] z-[950] h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 scale-[0.22] sm:left-[calc(0%+54px)] sm:h-[380px] sm:w-[380px] sm:scale-[0.23]"
-      }
-    >
-      <AiGlobeSphere
-        speaking={speaking}
-        onLightSurface={onLightSurface}
-        onClick={handleOrbClick}
-        ariaLabel={
+    <>
+      <div
+        style={{
+          transition:
+            "left 820ms cubic-bezier(0.22, 1, 0.36, 1), top 820ms cubic-bezier(0.22, 1, 0.36, 1), transform 820ms cubic-bezier(0.22, 1, 0.36, 1)",
+        }}
+        className={
           isWelcome
-            ? "Atlas AI spinning globe — tap to hear voice greeting"
-            : "Atlas AI spinning orb — tap to open Atlas AI"
+            ? "fixed left-[calc(50%+0px)] top-[calc(50%-42px)] z-[950] h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 scale-100 sm:h-[380px] sm:w-[380px]"
+            : "fixed left-[calc(0%+38px)] top-[calc(50%+0px)] z-[950] h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 scale-[0.22] sm:left-[calc(0%+54px)] sm:h-[380px] sm:w-[380px] sm:scale-[0.23]"
         }
-      />
-    </div>
+      >
+        <AiGlobeSphere
+          speaking={speaking}
+          onLightSurface={onLightSurface}
+          onClick={handleOrbClick}
+          ariaLabel={
+            isWelcome
+              ? "Atlas AI spinning globe — tap to hear voice greeting"
+              : "Atlas AI spinning orb — tap to open Atlas AI"
+          }
+        />
+      </div>
+
+      {/* The docked name tab is the way back to Atlas on every page. */}
+      {showAssistantTab && (
+        <VoiceAssistant
+          onClose={() => undefined}
+          onDocked={() => undefined}
+        />
+      )}
+
+      {/* On the opening screen, the voice greeting runs the whole way in. */}
+      {isWelcome && voiceGreeting && (
+        <VoiceGreeting
+          onUnlock={() => {
+            setDockInitiated(true);
+            router.push("/hub");
+          }}
+          onCancel={() => setVoiceGreeting(false)}
+        />
+      )}
+
+      {/* On the opening screen, offer voice login as well as the button. */}
+      {isWelcome && !voiceGreeting && (
+        <button
+          type="button"
+          onClick={startVoiceLogin}
+          className="fixed bottom-10 left-1/2 z-[952] -translate-x-1/2 font-ui text-[16px] uppercase tracking-[0.2em] text-marble/70 underline underline-offset-8 transition-colors hover:text-marble"
+        >
+          Sign in by voice
+        </button>
+      )}
+    </>
   );
 }

@@ -56,6 +56,34 @@ The world now has a mind and a body.
   model answers, and the key powers every reply. The key lives only in this
   browser's localStorage; calls go straight from browser to provider.
 
+### The spoken demo assistant
+
+A voice assistant that runs with no API key, so the whole loop can be
+demonstrated immediately.
+
+- **The opening** (`/`) — the orb greets you by the time of day and asks whether
+  to proceed. Answer **yes** by voice and it asks for your **voice pass**;
+  speak the digits and you are in. The first digits you speak become your pass.
+  Set or change it later in **Atlas AI Settings → Voice pass**.
+- **The docked tab** — once inside, a small **Atlas** tab sits on the left edge
+  of every page. Press it to open the assistant panel, which listens, shows the
+  transcript, and speaks every reply.
+- **What it can do** — `lib/commands.ts` turns speech into a structured action
+  and `lib/commands-exec.ts` runs it against the real store, so every change
+  syncs to Supabase like any other edit. It covers tasks, projects, hours,
+  expenses and income, people, habits, journal notes, plans, assignments,
+  course progress, study sessions, health, mood, and subscriptions — adding,
+  editing, completing and deleting.
+- **Every change is confirmed out loud** before it runs. Say **yes** to go
+  ahead or **no** to leave it be. Nothing changes without your word.
+- Typing works everywhere, so the assistant is usable without a microphone.
+- **Deep chat** in the panel header opens `/atlas`, the written chat with a
+  real model when you have set a key.
+
+`lib/voice.ts` holds the speech layer: recognition with a graceful fallback,
+spoken-number to digit conversion ("seven hundred forty two" → `742`), and
+yes/no intent matching.
+
 ## State
 
 Local-first. Everything (session, projects, ledger, people, habits, journal…)
