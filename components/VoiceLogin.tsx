@@ -4,14 +4,21 @@
 /*  The PIN is set in Atlas AI settings. Speech recognition turns     */
 /*  spoken numbers into digits, and the PIN is compared against a     */
 /*  locally stored hash. Nothing is sent anywhere.                    */
+/*                                                                     */
+/*  The microphone stays open so the pass can be spoken straight       */
+/*  away — no button to press first.                                  */
 /* ================================================================== */
 
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { listenOnce, spokenToDigits, voiceSupported } from "@/lib/voice";
+import {
+  createWakeListener,
+  spokenToDigits,
+  voiceSupported,
+  type WakeListenerHandle,
+} from "@/lib/voice";
 import { speak } from "@/lib/atlas-ai";
-import { loadAISettings } from "@/lib/atlas-ai";
 
 const PIN_KEY = "atlas.voice-pin.v1";
 
@@ -48,56 +55,47 @@ export function VoiceLogin({
   onUnlock: () => void;
   onCancel: () => void;
 }) {
-  const [stage, setStage] = useState<"idle" | "listening" | "checking" | "denied">("idle");
   const [heard, setHeard] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const listeningRef = useRef(false);
+  const [listening, setListening] = useState(false);
+
+  const listenerRef = useRef<WakeListenerHandle | null>(null);
   const attempts = useRef(0);
+  const doneRef = useRef(false);
 
   const supported = voiceSupported();
 
-  const listen = useCallback(async () => {
-    if (listeningRef.current) return;
-    listeningRef.current = true;
-    setStage("listening");
-    setHeard(null);
-    setMessage(null);
+  const check = useCallback(
+    (phrase: string) => {
+      if (doneRef.current) return;
+      setHeard(phrase);
 
-    try {
-      const result = await listenOnce({ timeoutMs: 10000 });
-      if (!result.text) {
-        setStage("idle");
-        setMessage("I did not hear anything.");
-        return;
-      }
-      setHeard(result.text);
-
-      const digits = spokenToDigits(result.text);
-      if (!digits) {
-        setStage("idle");
-        setMessage(`I heard "${result.text}" but not any numbers. Try saying the digits.`);
+      const digits = spokenToDigits(phrase);
+      if (!digits || !/\d/.test(digits)) {
+        setMessage(`I heard "${phrase}" but not any numbers. Try saying the digits.`);
         return;
       }
 
-      setStage("checking");
       const stored = getStoredPin();
       if (!stored) {
         // No PIN set yet — this becomes the first one.
         setStoredPin(digits);
-        speak("Your voice pass is set. Opening Atlas now.", loadAISettings());
-        setTimeout(onUnlock, 900);
+        doneRef.current = true;
+        listenerRef.current?.stop();
+        speak("Your voice pass is set. Opening Atlas now.");
+        window.setTimeout(onUnlock, 900);
         return;
       }
 
       if (stored === hashPin(digits)) {
-        speak("Welcome back. Opening Atlas now.", loadAISettings());
-        setStage("idle");
-        setTimeout(onUnlock, 900);
+        doneRef.current = true;
+        listenerRef.current?.stop();
+        speak("Welcome back. Opening Atlas now.");
+        window.setTimeout(onUnlock, 900);
         return;
       }
 
       attempts.current += 1;
-      setStage("denied");
       const left = Math.max(0, 3 - attempts.current);
       setMessage(
         left > 0
@@ -105,18 +103,32 @@ export function VoiceLogin({
           : "That is not your pass. Use the form to sign in."
       );
       speak(
-        left > 0 ? "That is not your pass. Try again." : "That is not your pass.",
-        loadAISettings()
+        left > 0
+          ? `That is not your pass. ${left} ${left === 1 ? "try" : "tries"} left.`
+          : "That is not your pass. Please use the form to sign in."
       );
-    } catch (error) {
-      setStage("idle");
-      setMessage(
-        error instanceof Error ? error.message : "I could not hear that."
-      );
-    } finally {
-      listeningRef.current = false;
+    },
+    [onUnlock]
+  );
+
+  useEffect(() => {
+    if (!supported) {
+      setMessage("This browser has no speech recognition. Use the form instead.");
+      return;
     }
-  }, [onUnlock]);
+
+    const listener = createWakeListener({
+      onPhrase: check,
+      onError: (message) => setMessage(message),
+    });
+    listenerRef.current = listener;
+    setListening(listener.active);
+
+    return () => {
+      listener.stop();
+      listenerRef.current = null;
+    };
+  }, [supported, check]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -147,26 +159,20 @@ export function VoiceLogin({
           </p>
         )}
 
-        <button
-          type="button"
-          onClick={() => void listen()}
-          disabled={stage === "listening" || stage === "checking"}
-          className="btn-gold mt-6 w-full py-3.5 text-[18px] disabled:opacity-50"
+        <div
+          className="mt-6 flex items-center gap-3"
+          aria-live="polite"
+          aria-label={listening ? "Listening" : "Not listening"}
         >
-          {stage === "listening"
-            ? "Listening…"
-            : stage === "checking"
-              ? "Checking…"
-              : "Speak your pass"}
-        </button>
-
-        <button
-          type="button"
-          onClick={onCancel}
-          className="mt-3 w-full py-2 font-ui text-[16px] underline underline-offset-4 opacity-70"
-        >
-          Use the form instead
-        </button>
+          <span
+            className={`inline-block h-3 w-3 rounded-full transition-opacity ${
+              listening ? "animate-pulse bg-marble" : "opacity-25 bg-marble"
+            }`}
+          />
+          <span className="font-ui text-[13px] uppercase tracking-[0.18em] opacity-60">
+            {listening ? "Listening for your pass" : "Quiet"}
+          </span>
+        </div>
 
         {!supported && (
           <p className="mt-3 font-ui text-[14px] leading-relaxed opacity-60">

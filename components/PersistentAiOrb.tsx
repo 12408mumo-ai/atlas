@@ -1,19 +1,21 @@
+/* ------------------------------------------------------------------ */
+/*  PersistentAiOrb — Single continuously-spinning AI orb mounted in  */
+/*  RootLayout across the entire site:                                */
+/*  • On `/` it is a cloud of golden particles that ripples like a    */
+/*    voice wave. No buttons, no controls — you speak to it.          */
+/*  • Smoothly glides to the left side when you enter, and stays     */
+/*    there continuously spinning on every page.                       */
+/* ------------------------------------------------------------------ */
+
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AiGlobeSphere } from "@/components/AiGlobeSphere";
+import { GoldenParticleSphere } from "@/components/GoldenParticleSphere";
 import { VoiceAssistant } from "@/components/VoiceAssistant";
 import { VoiceGreeting } from "@/components/VoiceGreeting";
 import { loadAISettings, speak, stopSpeaking } from "@/lib/atlas-ai";
-
-/* ------------------------------------------------------------------ */
-/*  PersistentAiOrb — Single continuously-spinning AI orb mounted in  */
-/*  RootLayout across the entire site:                                */
-/*  • Centered on `/` while speaking the clock-matched greeting.      */
-/*  • Smoothly glides to the left side when Login is pressed and      */
-/*    stays there continuously spinning on every page.                */
-/* ------------------------------------------------------------------ */
 
 const DARK_BG_ROUTES = new Set(["/", "/login", "/hub", "/flow-wave"]);
 
@@ -49,10 +51,24 @@ export function PersistentAiOrb() {
   const [dockInitiated, setDockInitiated] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [voiceGreeting, setVoiceGreeting] = useState(false);
+  const [listening, setListening] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  // True once the orb has actually spoken its greeting.
+  const greetedRef = useRef(false);
 
   const isWelcome = pathname === "/" && !dockInitiated;
   const onLightSurface = !isWelcome && !DARK_BG_ROUTES.has(pathname);
+
+  // Always-current values for the audio callback, so it never acts on a
+  // stale pathname.
+  const onWelcomeRef = useRef(false);
+  onWelcomeRef.current = isWelcome;
+
+  // The voice components report when they are talking so the particles
+  // ripple in time with the voice.
+  const handleSpeakingChange = useCallback((talking: boolean) => {
+    setSpeaking(talking);
+  }, []);
 
   const stopGreeting = useCallback(() => {
     if (audioRef.current) {
@@ -79,6 +95,11 @@ export function PersistentAiOrb() {
           audioRef.current = null;
           setSpeaking(false);
         }
+        // The greeting has been spoken — hand over to the voice conversation.
+        if (onWelcomeRef.current) {
+          greetedRef.current = true;
+          window.setTimeout(() => setVoiceGreeting(true), 900);
+        }
       };
 
       try {
@@ -94,7 +115,13 @@ export function PersistentAiOrb() {
           return false;
         }
         setSpeaking(true);
-        speak(text, loadAISettings(), () => setSpeaking(false));
+        speak(text, loadAISettings(), () => {
+          setSpeaking(false);
+          if (onWelcomeRef.current) {
+            greetedRef.current = true;
+            window.setTimeout(() => setVoiceGreeting(true), 900);
+          }
+        });
         return true;
       }
     },
@@ -105,6 +132,8 @@ export function PersistentAiOrb() {
   useEffect(() => {
     if (pathname === "/") {
       setDockInitiated(false);
+      greetedRef.current = false;
+      setVoiceGreeting(false);
     } else {
       stopGreeting();
     }
@@ -119,17 +148,13 @@ export function PersistentAiOrb() {
     return () => window.removeEventListener("atlas:dock-orb", onDock);
   }, [stopGreeting]);
 
-  // Speak greeting automatically whenever on the opening `/` screen
+  // The greeting is spoken once on the opening screen. The spoken
+  // conversation that follows takes over from there.
   useEffect(() => {
     if (pathname !== "/") return;
 
     let unlockListenerAttached = false;
-    const onFirstGesture = (e: Event) => {
-      const target = e.target as Element | null;
-      if (target?.closest?.("[data-login-trigger='true']")) {
-        cleanupUnlock();
-        return;
-      }
+    const onFirstGesture = () => {
       cleanupUnlock();
       void playGreetingForClock(new Date());
     };
@@ -143,21 +168,28 @@ export function PersistentAiOrb() {
 
     void playGreetingForClock(new Date()).then((played) => {
       if (!played) {
+        // The browser blocked autoplay. Wait for the first touch or key.
         unlockListenerAttached = true;
         window.addEventListener("pointerdown", onFirstGesture, { passive: true });
         window.addEventListener("keydown", onFirstGesture);
-        // The mic needs a gesture, so wait for the first touch or key.
-        return;
       }
-      // The greeting has been spoken. Open the voice conversation.
-      const timer = setTimeout(() => setVoiceGreeting(true), 1200);
-      return () => clearTimeout(timer);
     });
 
     return () => {
       cleanupUnlock();
     };
   }, [pathname, playGreetingForClock]);
+
+  // Once the greeting has settled, the voice conversation opens.
+  useEffect(() => {
+    if (pathname !== "/" || dockInitiated) return;
+    // The greeting audio opens the conversation when it ends. This is the
+    // fallback for when the audio is blocked or fails to play.
+    const timer = window.setTimeout(() => {
+      if (!audioRef.current) setVoiceGreeting(true);
+    }, 6000);
+    return () => window.clearTimeout(timer);
+  }, [pathname, dockInitiated]);
 
   const handleOrbClick = () => {
     if (isWelcome) {
@@ -176,7 +208,6 @@ export function PersistentAiOrb() {
     setVoiceGreeting(true);
   }, [stopGreeting]);
 
-  const showVoiceTab = pathname === "/login" || pathname === "/hub" || pathname === "/";
   // The voice panel is the spoken demo assistant. It is hidden on /atlas,
   // which is the full written chat with a real model.
   const showAssistantTab = !isWelcome && pathname !== "/login" && pathname !== "/atlas";
@@ -190,20 +221,23 @@ export function PersistentAiOrb() {
         }}
         className={
           isWelcome
-            ? "fixed left-[calc(50%+0px)] top-[calc(50%-42px)] z-[950] h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 scale-100 sm:h-[380px] sm:w-[380px]"
+            ? "fixed left-[calc(50%+0px)] top-[calc(50%-42px)] z-[950] h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 scale-100 sm:h-[420px] sm:w-[420px]"
             : "fixed left-[calc(0%+38px)] top-[calc(50%+0px)] z-[950] h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 scale-[0.22] sm:left-[calc(0%+54px)] sm:h-[380px] sm:w-[380px] sm:scale-[0.23]"
         }
       >
-        <AiGlobeSphere
-          speaking={speaking}
-          onLightSurface={onLightSurface}
-          onClick={handleOrbClick}
-          ariaLabel={
-            isWelcome
-              ? "Atlas AI spinning globe — tap to hear voice greeting"
-              : "Atlas AI spinning orb — tap to open Atlas AI"
-          }
-        />
+        {isWelcome ? (
+          <GoldenParticleSphere
+            energy={speaking ? 1 : listening ? 0.45 : 0.16}
+            listening={listening}
+          />
+        ) : (
+          <AiGlobeSphere
+            speaking={speaking}
+            onLightSurface={onLightSurface}
+            onClick={handleOrbClick}
+            ariaLabel="Atlas AI spinning orb — tap to open Atlas AI"
+          />
+        )}
       </div>
 
       {/* The docked name tab is the way back to Atlas on every page. */}
@@ -211,28 +245,34 @@ export function PersistentAiOrb() {
         <VoiceAssistant
           onClose={() => undefined}
           onDocked={() => undefined}
+          onListeningChange={setListening}
+          onSpeakingChange={handleSpeakingChange}
         />
       )}
 
       {/* On the opening screen, the voice greeting runs the whole way in. */}
       {isWelcome && voiceGreeting && (
         <VoiceGreeting
+          alreadyGreeted={greetedRef.current}
           onUnlock={() => {
             setDockInitiated(true);
             router.push("/hub");
           }}
           onCancel={() => setVoiceGreeting(false)}
+          onListeningChange={setListening}
+          onSpeakingChange={handleSpeakingChange}
         />
       )}
 
-      {/* On the opening screen, offer voice login as well as the button. */}
-      {isWelcome && !voiceGreeting && (
+      {/* A hidden trigger for anything that wants to start the voice flow. */}
+      {isWelcome && (
         <button
           type="button"
           onClick={startVoiceLogin}
-          className="fixed bottom-10 left-1/2 z-[952] -translate-x-1/2 font-ui text-[16px] uppercase tracking-[0.2em] text-marble/70 underline underline-offset-8 transition-colors hover:text-marble"
+          className="sr-only"
+          aria-label="Start voice login"
         >
-          Sign in by voice
+          Start voice login
         </button>
       )}
     </>

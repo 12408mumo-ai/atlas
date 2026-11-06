@@ -362,7 +362,7 @@ export default function AtlasSettingsPage() {
               <p className="font-body text-[20px] leading-snug text-wine opacity-85">
                 {getStoredPin()
                   ? "A voice pass is set. Speak its digits on the opening screen to come in."
-                  : "No voice pass is set. Choose a few digits below — you will speak them on the opening screen to come in."}
+                  : "No voice pass is set yet. Choose a few digits below — the first digits you speak on the opening screen become your pass."}
               </p>
               <div className="flex gap-2">
                 <input

@@ -27,8 +27,21 @@ function fuzzy<T>(list: T[], query: string, get: (t: T) => string): T | undefine
   if (exact) return exact;
   const contains = list.find((t) => norm(get(t)).includes(q) || q.includes(norm(get(t))));
   if (contains) return contains;
-  // Loose word overlap.
-  const words = q.split(/\s+/).filter(Boolean);
+
+  // Loose word overlap. "Marble and Mortar" should find
+  // "Marble & Mortar identity", so filler words are ignored and the
+  // remaining words only have to overlap, not all match.
+  const filler = new Set(["and", "the", "a", "an", "my", "of", "on", "for"]);
+  const words = q.split(/\s+/).filter((w) => w && !filler.has(w));
+  if (!words.length) return undefined;
+
+  const overlap = list.find((t) => {
+    const target = norm(get(t));
+    return words.some((w) => target.includes(w));
+  });
+  if (overlap) return overlap;
+
+  // Every meaningful word must appear.
   return list.find((t) => {
     const target = norm(get(t));
     return words.every((w) => target.includes(w));
@@ -300,19 +313,8 @@ export function executeCommand(action: CommandAction): ExecResult {
       const title = str(action, "title") || "Noted by Atlas";
       const text = str(action, "text") || title;
       const mood = Math.min(5, Math.max(1, num(action, "mood", 4) || 4));
-      setState((st) => ({
-        journal: [
-          {
-            id: uid("j"),
-            date: todayISO(),
-            title,
-            text,
-            mood,
-            kind: "journal",
-          },
-          ...st.journal,
-        ],
-      }));
+      // addMemoryEntry writes the journal entry itself, so it must not be
+      // written twice here.
       addMemoryEntry({
         kind: "journal",
         title,
@@ -450,7 +452,11 @@ export function executeCommand(action: CommandAction): ExecResult {
       const score = Math.min(5, Math.max(1, num(action, "score", 3)));
       setState((st) => {
         const day = new Date().toLocaleDateString("en-GB", { weekday: "short" });
-        return { mood: st.mood.map((m) => (m.day === day ? { ...m, score } : m)) };
+        const exists = st.mood.some((m) => m.day === day);
+        const mood = exists
+          ? st.mood.map((m) => (m.day === day ? { ...m, score } : m))
+          : [...st.mood, { day, score }];
+        return { mood };
       });
       return { ok: true, message: `Today's mood is set to ${score} out of 5.` };
     }

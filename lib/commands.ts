@@ -196,7 +196,14 @@ export function parseCommand(raw: string): ParsedCommand {
     };
   }
 
-  if (/\b(what.s my|show me|list|what are my|what is my|summar|how am i doing|status)\b/.test(text)) {
+  // "show me …", "list my …", "what are my …" — a request for a summary.
+  // The word "list" must stand alone so "reading list" is not mistaken
+  // for a request to list things.
+  if (
+    /^(what.s my|show me|list my|list the|list all|list everything|what are my|what is my|what do i have|summar\w*|how am i doing|give me a (summary|report|overview)|status)\b/.test(
+      text
+    )
+  ) {
     return {
       understood: true,
       action: { type: "report" },
@@ -297,8 +304,27 @@ export function parseCommand(raw: string): ParsedCommand {
 
   /* ---------------- ledger / money ---------------- */
 
+  // "add a subscription called netflix for 12 dollars" — the subscription
+  // is checked before the bare-amount branch so it is not read as an expense.
+  if (/^(add|new|create|start|sign up for)\b/.test(text) && /\bsubscription\b/.test(text)) {
+    const body = stripNoun(afterVerb(text), "subscription");
+    const cost = parseAmount(body);
+    const name = titleCase(
+      body
+        .replace(/\b\d+(?:\.\d+)?\b/g, " ")
+        .replace(/\b(dollars?|bucks?|usd|per month|monthly|a month|for)\b/gi, " ")
+    );
+    return {
+      understood: true,
+      action: { type: "add_subscription", name, cost: cost ?? 0 },
+      reply: "",
+      confirmation: `Add the subscription "${name}"`,
+      destructive: false,
+    };
+  }
+
   // "log 45 dollars lunch" — a bare amount with no "expense" word.
-  if (/^(log|record|add)\b/.test(text) && /\b\d+(?:\.\d+)?\s*(?:dollars?|bucks?|usd|shillings?|kes)\b/.test(text) && !/\b(income|earned|received|salary|invoice)\b/.test(text)) {
+  if (/^(log|record|add)\b/.test(text) && /\b\d+(?:\.\d+)?\s*(?:dollars?|bucks?|usd|shillings?|kes)\b/.test(text) && !/\b(income|earned|received|salary|invoice|subscription)\b/.test(text)) {
     const body = afterVerb(text);
     const amount = parseAmount(body);
     const label = titleCase(
@@ -530,18 +556,29 @@ export function parseCommand(raw: string): ParsedCommand {
     };
   }
 
-  if (/\b(progress|percent|percentage)\b/.test(text) && /\b(course|subject|study)\b/.test(text)) {
-    const pct = text.match(/(\d+)\s*(?:%|percent)/i);
-    const courseMatch = text.match(/\b(?:for|in|of)\s+(.+?)(?:\s+to\s+\d+\s*(?:%|percent))?$/i);
+  if (/\b(progress|percent|percentage)\b/.test(text) && /^\s*(set|update|change|put|record|mark)\b/.test(text)) {
+    const pct = text.match(/(\d+)\s*(?:%|percent|percentage)?\b/i);
+    // "set progress for statistics to 90 percent" / "set statistics progress to 90%"
+    const courseMatch = text.match(
+      /\b(?:for|in|of|on)\s+(.+?)(?:\s+progress)?\s*(?:to\s+\d+\s*(?:%|percent|percentage)?)?$/i
+    );
+    const direct = text.match(
+      /^(?:set|update|change|put|record|mark)\s+(.+?)\s+progress\s+to\s+\d+/i
+    );
+    const course = direct
+      ? titleCase(direct[1])
+      : courseMatch
+        ? titleCase(courseMatch[1])
+        : "";
     return {
       understood: true,
       action: {
         type: "set_course_progress",
-        course: courseMatch ? titleCase(courseMatch[1]) : "",
+        course,
         progress: pct ? Number(pct[1]) : 0,
       },
       reply: "",
-      confirmation: `Set progress${courseMatch ? ` for "${titleCase(courseMatch[1])}"` : ""} to ${pct ? pct[1] : 0}%`,
+      confirmation: `Set progress${course ? ` for "${course}"` : ""} to ${pct ? pct[1] : 0}%`,
       destructive: false,
     };
   }
@@ -570,12 +607,15 @@ export function parseCommand(raw: string): ParsedCommand {
 
   /* ---------------- health and mood ---------------- */
 
-  if (/\b(sleep|slept|water|meals?|ate|workout|exercise)\b/.test(text)) {
+  if (/\b(sleep|slept|water|meals?|ate|workouts?|exercises?|exercised|gym)\b/.test(text)) {
     const health: Record<string, number> = {};
     const sleep = text.match(/slept?\s+(?:for\s+)?(\d+(?:\.\d+)?)\s*hours?/i);
     const water = text.match(/(\d+)\s*(?:cups?|glasses?|of water)/i);
     const meals = text.match(/(\d+)\s*meals?/i) ?? text.match(/\bate\s+(\d+)/i);
-    const workouts = text.match(/(\d+)\s*workouts?/i) ?? text.match(/\b(?:did|do)\s+(\d+)\s*workouts?/i);
+    const workouts =
+      text.match(/(\d+)\s*workouts?/i) ??
+      text.match(/\b(?:did|do|doing|finished|completed)\s+(\d+)\s*(?:workouts?|exercise|training)/i) ??
+      text.match(/\b(?:workouts?|exercises?)\s*:?\s*(\d+)/i);
     if (sleep) health.sleep = Number(sleep[1]);
     if (water) health.water = Number(water[1]);
     if (meals) health.meals = Number(meals[1]);
@@ -610,23 +650,6 @@ export function parseCommand(raw: string): ParsedCommand {
   }
 
   /* ---------------- subscriptions / money ---------------- */
-
-  if (/^(add|new)\b/.test(text) && /\bsubscription\b/.test(text)) {
-    const body = stripNoun(afterVerb(text), "subscription");
-    const cost = parseAmount(body);
-    const name = titleCase(
-      body
-        .replace(/\b\d+(?:\.\d+)?\b/g, " ")
-        .replace(/\b(dollars?|bucks?|usd|per month|monthly|a month)\b/gi, " ")
-    );
-    return {
-      understood: true,
-      action: { type: "add_subscription", name, cost: cost ?? 0 },
-      reply: "",
-      confirmation: `Add the subscription "${name}"`,
-      destructive: false,
-    };
-  }
 
   if (/^(delete|remove|erase)\b/.test(text) && /\bsubscription\b/.test(text)) {
     const body = stripNoun(afterVerb(text), "subscription");

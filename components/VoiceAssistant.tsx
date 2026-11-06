@@ -3,6 +3,10 @@
 /*                                                                     */
 /*  Opens from the docked orb. Listens, parses the command, asks    */
 /*  for confirmation, then runs it against the real data.             */
+/*                                                                     */
+/*  The microphone stays open so the whole exchange runs by voice:   */
+/*  ask for something, Atlas confirms, say yes, and it is done.      */
+/*  "Atlas" wakes it from idle when the panel is closed.              */
 /* ================================================================== */
 
 "use client";
@@ -11,7 +15,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { parseCommand, type ParsedCommand } from "@/lib/commands";
 import { executeCommand } from "@/lib/commands-exec";
-import { listenOnce, voiceSupported, isAffirmative, isNegative } from "@/lib/voice";
+import {
+  createWakeListener,
+  voiceSupported,
+  isAffirmative,
+  isNegative,
+  stripWakeWord,
+  hasWakeWord,
+  type WakeListenerHandle,
+} from "@/lib/voice";
 import { loadAISettings, speak, stopSpeaking } from "@/lib/atlas-ai";
 
 type Entry = {
@@ -28,9 +40,13 @@ type Pending = {
 export function VoiceAssistant({
   onClose,
   onDocked,
+  onListeningChange,
+  onSpeakingChange,
 }: {
   onClose: () => void;
   onDocked?: () => void;
+  onListeningChange?: (listening: boolean) => void;
+  onSpeakingChange?: (speaking: boolean) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [listening, setListening] = useState(false);
@@ -43,17 +59,51 @@ export function VoiceAssistant({
   const listRef = useRef<HTMLDivElement | null>(null);
   const idRef = useRef(0);
   const pendingRef = useRef<Pending | null>(null);
-  const listeningRef = useRef(false);
+  const listenerRef = useRef<WakeListenerHandle | null>(null);
+  const openRef = useRef(false);
+  const lastSpokeAt = useRef(0);
+
+  openRef.current = open;
 
   const supported = voiceSupported();
 
-  const say = useCallback((text: string) => {
-    setEntries((prev) => [
-      ...prev,
-      { id: idRef.current++, who: "atlas", text },
-    ]);
-    speak(text, loadAISettings());
-  }, []);
+  /* ------------------------------------------------------------------ */
+  /*  Speaking — pause the mic while Atlas talks, then reopen it.      */
+  /* ------------------------------------------------------------------ */
+
+  const say = useCallback(
+    (text: string) => {
+      setEntries((prev) => [
+        ...prev,
+        { id: idRef.current++, who: "atlas", text },
+      ]);
+
+      // Never let the microphone hear the assistant's own voice.
+      listenerRef.current?.pause();
+      setListening(false);
+      onListeningChange?.(false);
+      onSpeakingChange?.(true);
+
+      try {
+        speak(text, loadAISettings());
+      } catch {
+        /* no speech synthesis — the transcript still shows the reply */
+      }
+
+      const words = text.split(/\s+/).length;
+      const ms = Math.min(900 + words * 300, 8000);
+      window.setTimeout(() => {
+        onSpeakingChange?.(false);
+        const listener = listenerRef.current;
+        if (!listener) return;
+        listener.resume();
+        setListening(listener.active);
+        onListeningChange?.(listener.active);
+        lastSpokeAt.current = Date.now();
+      }, ms);
+    },
+    [onListeningChange, onSpeakingChange]
+  );
 
   useEffect(() => {
     if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
@@ -63,7 +113,9 @@ export function VoiceAssistant({
     pendingRef.current = pending;
   }, [pending]);
 
-  /* ------------------------------ listening ----------------------------- */
+  /* ------------------------------------------------------------------ */
+  /*  Running a command                                                  */
+  /* ------------------------------------------------------------------ */
 
   const runCommand = useCallback(
     async (phrase: string) => {
@@ -82,14 +134,16 @@ export function VoiceAssistant({
           const result = executeCommand(waiting.action);
           setPending(null);
           pendingRef.current = null;
-          say(result.ok ? result.message : result.message);
-        } else if (isNegative(cleaned)) {
+          say(result.message);
+          return;
+        }
+        if (isNegative(cleaned)) {
           setPending(null);
           pendingRef.current = null;
           say("Very well. Nothing was changed.");
-        } else {
-          say("Say yes to go ahead, or no to leave it be.");
+          return;
         }
+        say("Say yes to go ahead, or no to leave it be.");
         return;
       }
 
@@ -115,31 +169,72 @@ export function VoiceAssistant({
     [say]
   );
 
-  const startListening = useCallback(async () => {
-    if (listeningRef.current) return;
-    listeningRef.current = true;
-    setListening(true);
-    setHeard(null);
+  /* ------------------------------------------------------------------ */
+  /*  The microphone session                                             */
+  /* ------------------------------------------------------------------ */
 
-    try {
-      const result = await listenOnce({ timeoutMs: 12000 });
-      setHeard(result.text || null);
-      if (result.text) {
-        await runCommand(result.text);
-      } else {
-        say("I heard nothing. Say it again, or type it below.");
+  const handlePhrase = useCallback(
+    (raw: string) => {
+      const phrase = raw.trim();
+      if (!phrase) return;
+      setHeard(phrase);
+
+      // While a reply is still being spoken, ignore anything picked up
+      // from the tail of that audio.
+      if (Date.now() - lastSpokeAt.current < 400) return;
+
+      // The wake word opens the panel and hands the rest to the parser.
+      if (hasWakeWord(phrase)) {
+        const command = stripWakeWord(phrase);
+        if (!command) {
+          // Just the name — wake up and greet.
+          if (!openRef.current) {
+            setOpen(true);
+            onDocked?.();
+          }
+          say("I am here. Give me a command.");
+          return;
+        }
+        if (!openRef.current) {
+          setOpen(true);
+          onDocked?.();
+        }
+        void runCommand(command);
+        return;
       }
-    } catch (error) {
-      say(
-        error instanceof Error
-          ? error.message
-          : "I could not hear that. Type it below instead."
-      );
-    } finally {
-      listeningRef.current = false;
-      setListening(false);
-    }
-  }, [runCommand, say]);
+
+      // Without the wake word, only act while the panel is open.
+      if (!openRef.current) return;
+      void runCommand(phrase);
+    },
+    [runCommand, say, onDocked]
+  );
+
+  useEffect(() => {
+    if (!supported) return;
+
+    const listener = createWakeListener({
+      onPhrase: handlePhrase,
+      onError: (message) => {
+        setEntries((prev) => [
+          ...prev,
+          { id: idRef.current++, who: "atlas", text: message },
+        ]);
+      },
+    });
+    listenerRef.current = listener;
+    setListening(listener.active);
+    onListeningChange?.(listener.active);
+
+    return () => {
+      listener.stop();
+      listenerRef.current = null;
+    };
+  }, [supported, handlePhrase, onListeningChange]);
+
+  /* ------------------------------------------------------------------ */
+  /*  Typed input                                                        */
+  /* ------------------------------------------------------------------ */
 
   const submitTyped = useCallback(
     async (e: React.FormEvent) => {
@@ -152,7 +247,9 @@ export function VoiceAssistant({
     [typed, runCommand]
   );
 
-  /* ------------------------------ shortcuts ----------------------------- */
+  /* ------------------------------------------------------------------ */
+  /*  Shortcuts                                                          */
+  /* ------------------------------------------------------------------ */
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -160,14 +257,10 @@ export function VoiceAssistant({
         setOpen(false);
         onClose();
       }
-      if (e.key === " " && e.ctrlKey && !listeningRef.current) {
-        e.preventDefault();
-        void startListening();
-      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, startListening]);
+  }, [onClose]);
 
   const handleClose = () => {
     stopSpeaking();
@@ -175,15 +268,20 @@ export function VoiceAssistant({
     onClose();
   };
 
+  const toggleOpen = () => {
+    setOpen((v) => {
+      const next = !v;
+      if (next) onDocked?.();
+      return next;
+    });
+  };
+
   return (
     <>
       {/* The docked name tab — click to open the assistant */}
       <button
         type="button"
-        onClick={() => {
-          setOpen((v) => !v);
-          onDocked?.();
-        }}
+        onClick={toggleOpen}
         className="fixed left-[2px] top-[calc(50%+118px)] z-[952] rounded-r-pill border-2 border-l-0 border-marble/60 bg-wine px-3 py-2 font-display text-[13px] uppercase tracking-[0.2em] text-marble transition-colors hover:bg-marble hover:text-wine"
         aria-label="Open Atlas AI"
       >
@@ -201,7 +299,11 @@ export function VoiceAssistant({
             <div>
               <h2 className="font-display text-[26px] tracking-[0.1em]">Atlas AI</h2>
               <p className="font-ui text-[13px] uppercase tracking-[0.18em] opacity-60">
-                {listening ? "Listening…" : pending ? "Waiting for yes or no" : "Speak or type"}
+                {pending
+                  ? "Waiting for yes or no"
+                  : listening
+                    ? "Listening…"
+                    : "Say “Atlas” to wake me"}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -230,7 +332,7 @@ export function VoiceAssistant({
                   I hold your world. Give me a command and I will carry it out.
                 </p>
                 <p className="mt-4 font-ui text-[15px] leading-relaxed opacity-60">
-                  Try: &ldquo;add a task called finish the report&rdquo;
+                  Say &ldquo;Atlas, add a task called finish the report&rdquo;
                   <br />
                   &ldquo;log an expense of 20 for lunch&rdquo;
                   <br />
@@ -259,15 +361,6 @@ export function VoiceAssistant({
 
           {/* Controls */}
           <div className="border-t-2 border-marble/25 px-5 py-4">
-            <button
-              type="button"
-              onClick={() => void startListening()}
-              disabled={listening || busy}
-              className="btn-gold mb-3 w-full py-3.5 text-[18px] disabled:opacity-50"
-            >
-              {listening ? "Listening…" : busy ? "Working…" : "Speak a command"}
-            </button>
-
             <form onSubmit={submitTyped} className="flex gap-2">
               <input
                 className="field flex-1 py-2.5"
