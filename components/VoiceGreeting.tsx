@@ -21,8 +21,8 @@ import {
   isNegative,
   type WakeListenerHandle,
 } from "@/lib/voice";
+import { checkPass } from "@/lib/voice-pass";
 import { speak } from "@/lib/atlas-ai";
-import { getStoredPin, setStoredPin } from "@/components/VoiceLogin";
 
 type Stage = "greeting" | "asking" | "pass" | "checking" | "unlocked" | "denied";
 
@@ -56,15 +56,6 @@ export function VoiceGreeting({
 
   const supported = voiceSupported();
 
-  const hashPin = useCallback((pin: string) => {
-    let h = 2166136261;
-    for (let i = 0; i < pin.length; i++) {
-      h ^= pin.charCodeAt(i);
-      h = Math.imul(h, 16777619);
-    }
-    return (h >>> 0).toString(36);
-  }, []);
-
   /* ------------------------------------------------------------------ */
   /*  Speaking — the listener pauses while Atlas talks so it never      */
   /*  hears itself, then resumes the moment the voice falls silent.     */
@@ -89,66 +80,43 @@ export function VoiceGreeting({
       const ms = Math.min(1200 + words * 330, 9000);
       window.setTimeout(() => {
         onSpeakingChange?.(false);
+
+        // The follow-up action must run whether or not the mic comes
+        // back — otherwise the app never opens.
+        if (then) {
+          then();
+          return;
+        }
+
         if (unlockedRef.current) return;
         if (!listenerRef.current) return;
         listenerRef.current.resume();
         setListening(true);
         onListeningChange?.(true);
-        then?.();
       }, ms);
     },
     [onListeningChange, onSpeakingChange]
   );
 
   /* ------------------------------------------------------------------ */
-  /*  Handling what was heard                                            */
+  /*  Opening the app — the one thing that must never be missed.       */
   /* ------------------------------------------------------------------ */
 
-  const checkPass = useCallback(
-    (phrase: string) => {
-      const digits = spokenToDigits(phrase);
-      if (!digits || !/\d/.test(digits)) {
-        setMessage(`I heard "${phrase}" but not any numbers. Speak the digits.`);
-        say("I heard that but not any numbers. Please speak the digits.");
-        return;
-      }
-
-      setStage("checking");
-      const stored = getStoredPin();
-      if (!stored) {
-        setStoredPin(digits);
-        unlockedRef.current = true;
-        say("Your voice pass is set. Opening Atlas now.", onUnlock);
-        return;
-      }
-
-      if (stored === hashPin(digits)) {
-        unlockedRef.current = true;
-        say("Welcome back. Opening Atlas now.", onUnlock);
-        return;
-      }
-
-      attempts.current += 1;
-      const left = Math.max(0, MAX_TRIES - attempts.current);
-      setStage("denied");
-      if (left > 0) {
-        setMessage(
-          `That is not your pass. ${left} ${left === 1 ? "try" : "tries"} left.`
-        );
-        say(
-          `That is not your pass. ${left} ${left === 1 ? "try" : "tries"} left.`
-        );
-        // Go straight back to listening for the pass.
-        window.setTimeout(() => {
-          if (!unlockedRef.current) setStage("pass");
-        }, 400);
-      } else {
-        setMessage("That is not your pass. Use the form to sign in.");
-        say("That is not your pass. Please use the form to sign in.");
-      }
+  const openTheApp = useCallback(
+    (words: string) => {
+      unlockedRef.current = true;
+      setStage("unlocked");
+      // The words are spoken as Atlas moves, and the app opens straight
+      // away — the opening never waits on the voice.
+      say(words);
+      onUnlock();
     },
-    [hashPin, onUnlock, say]
+    [onUnlock, say]
   );
+
+  /* ------------------------------------------------------------------ */
+  /*  Handling what was heard                                            */
+  /* ------------------------------------------------------------------ */
 
   const handlePhrase = useCallback(
     (raw: string) => {
@@ -175,10 +143,46 @@ export function VoiceGreeting({
       }
 
       if (current === "pass" || current === "denied" || current === "checking") {
-        checkPass(phrase);
+        const digits = spokenToDigits(phrase);
+        const verdict = checkPass(digits, attempts.current, MAX_TRIES);
+
+        if (verdict.result === "no-digits") {
+          setMessage(`I heard "${phrase}" but not any numbers. Speak the digits.`);
+          say("I heard that but not any numbers. Please speak the digits.");
+          return;
+        }
+
+        if (verdict.result === "set") {
+          openTheApp("Your voice pass is set. Opening Atlas now.");
+          return;
+        }
+
+        if (verdict.result === "match") {
+          openTheApp("Welcome back. Opening Atlas now.");
+          return;
+        }
+
+        attempts.current += 1;
+        const left = verdict.triesLeft;
+        setStage("denied");
+        if (left > 0) {
+          setMessage(
+            `That is not your pass. ${left} ${left === 1 ? "try" : "tries"} left.`
+          );
+          say(
+            `That is not your pass. ${left} ${left === 1 ? "try" : "tries"} left.`
+          );
+          // Go straight back to listening for the pass.
+          window.setTimeout(() => {
+            if (!unlockedRef.current) setStage("pass");
+          }, 400);
+        } else {
+          setMessage("That is not your pass. Use the form to sign in.");
+          say("That is not your pass. Please use the form to sign in.");
+        }
       }
     },
-    [checkPass, say]
+    [openTheApp, say]
   );
 
   /* ------------------------------------------------------------------ */
@@ -225,9 +229,7 @@ export function VoiceGreeting({
         ? "Good morning"
         : hour >= 12 && hour < 17
           ? "Good afternoon"
-          : hour >= 17 && hour < 22
-            ? "Good evening"
-            : "Good evening";
+          : "Good evening";
     const line = `${part}. Would you like to proceed?`;
 
     // A short beat so the orb is seen before it speaks.

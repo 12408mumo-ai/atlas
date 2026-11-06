@@ -2,8 +2,9 @@
    land where they should: inside the sphere, spread all the way round,
    and the voice ripple pushes them outward. */
 
-const LOGICAL = 380;
-const COUNT = 260;
+const LOGICAL = 420;
+const COUNT = 420;
+const R = LOGICAL * 0.31;
 
 /* --- the same seeding the component uses --- */
 const golden = Math.PI * (3 - Math.sqrt(5));
@@ -12,46 +13,42 @@ for (let i = 0; i < COUNT; i++) {
   const y = 1 - (i / (COUNT - 1)) * 2;
   const rad = Math.sqrt(Math.max(0, 1 - y * y));
   const theta = golden * i;
+  const isSpark = Math.random() < 0.12;
   particles.push({
     x: Math.cos(theta) * rad,
     y,
     z: Math.sin(theta) * rad,
-    drift: 0.1 + Math.random() * 0.26,
-    bob: 0.06 + Math.random() * 0.2,
-    size: 0.7 + Math.random() * 1.9,
-    depth: 0.35 + Math.random() * 0.65,
+    drift: 0.12 + Math.random() * 0.3,
+    bob: 0.05 + Math.random() * 0.22,
+    size: isSpark ? 1.8 + Math.random() * 2.2 : 0.6 + Math.random() * 1.5,
+    depth: isSpark ? 0.9 + Math.random() * 0.1 : 0.35 + Math.random() * 0.6,
     phase: Math.random() * Math.PI * 2,
+    spark: isSpark,
   });
 }
 
 /* --- replicate the projection used by the canvas --- */
-const tiltX = 0.2;
-const tiltZ = -0.26;
+const tiltX = 0.16;
+const tiltZ = -0.22;
 const cx = LOGICAL / 2;
 const cy = LOGICAL / 2;
-const R = LOGICAL * 0.34;
 
 function project(p: any, t: number, energy: number) {
-  const ang = p.drift * t * 3.4;
+  const ang = p.drift * t * 3.2;
   const cs = Math.cos(ang);
   const sn = Math.sin(ang);
   let x = p.x * cs - p.z * sn;
   let z = p.x * sn + p.z * cs;
-  const wave = Math.sin(t * 0.7 + p.phase);
-  let y = p.y + wave * 0.035;
+  let y = p.y + Math.sin(t * 0.6 + p.phase) * 0.03;
 
   if (energy > 0.01) {
-    const ring = (t * 0.55) % 1;
-    const radial = Math.sqrt(x * x + y * y + z * z) || 1;
-    const dist = radial;
-    const band = Math.abs(dist - (0.35 + ring * 0.85));
-    const push = Math.exp(-((band / 0.16) ** 2)) * energy * 0.22;
-    const nx = x / radial;
-    const ny = y / radial;
-    const nz = z / radial;
-    x += nx * push;
-    y += ny * push;
-    z += nz * push;
+    const ringPhase = (t * 0.5) % 1;
+    const dist = Math.sqrt(x * x + y * y + z * z) || 1;
+    const band = Math.abs(dist - (0.4 + ringPhase * 0.8));
+    const push = Math.exp(-((band / 0.15) ** 2)) * energy * 0.2;
+    x += (x / dist) * push;
+    y += (y / dist) * push;
+    z += (z / dist) * push;
   }
 
   const cxr = Math.cos(tiltX);
@@ -87,15 +84,24 @@ const xs = pts.map((q) => q.px);
 const ys = pts.map((q) => q.py);
 const spanX = Math.max(...xs) - Math.min(...xs);
 const spanY = Math.max(...ys) - Math.min(...ys);
-ok("particles spread horizontally", spanX > R * 1.2, `spanX ${spanX.toFixed(1)}`);
-ok("particles spread vertically", spanY > R * 1.2, `spanY ${spanY.toFixed(1)}`);
+ok("particles spread horizontally", spanX > R * 1.4, `spanX ${spanX.toFixed(1)}`);
+ok("particles spread vertically", spanY > R * 1.4, `spanY ${spanY.toFixed(1)}`);
 
-/* 3. Some particles are in front and some behind. */
+/* 3. The cloud is round — it fills a disc, not a square. */
+let inCircle = 0;
+for (const p of particles) {
+  const q = project(p, 0, 0);
+  if (Math.hypot(q.px - cx, q.py - cy) <= R * 1.05) inCircle++;
+}
+ok("the cloud is round and fills the sphere", inCircle > COUNT * 0.9,
+  `${inCircle}/${COUNT} inside`);
+
+/* 4. Some particles are in front and some behind. */
 const front = pts.filter((q) => q.z >= 0).length;
 ok("particles split front and back", front > COUNT * 0.3 && front < COUNT * 0.7,
   `${front}/${COUNT} front`);
 
-/* 4. The voice ripple pushes particles outward. */
+/* 5. The voice ripple pushes particles outward. */
 function meanRadius(t: number, energy: number) {
   let sum = 0;
   for (const p of particles) {
@@ -109,7 +115,7 @@ const loud = meanRadius(0.5, 1);
 ok("the ripple pushes particles outward", loud > calm,
   `calm ${calm.toFixed(2)} loud ${loud.toFixed(2)}`);
 
-/* 5. Nothing escapes the canvas even at full energy. */
+/* 6. Nothing escapes the canvas even at full energy. */
 let escaped = 0;
 for (const p of particles) {
   const q = project(p, 0.5, 1);
@@ -117,11 +123,17 @@ for (const p of particles) {
 }
 ok("nothing escapes at full energy", escaped === 0, `${escaped} escaped`);
 
-/* 6. The particles keep moving over time. */
+/* 7. The particles keep moving over time. */
 const early = particles.map((p) => project(p, 0.1, 0).px);
 const later = particles.map((p) => project(p, 3.0, 0).px);
 const moved = early.filter((x, i) => Math.abs(x - later[i]) > 1).length;
 ok("the swarm keeps moving", moved > COUNT * 0.5, `${moved}/${COUNT} moved`);
+
+/* 8. Enough particles to look dense, with a few bright sparks. */
+ok("the cloud is dense enough to read as a sphere", COUNT >= 350, `${COUNT} particles`);
+const sparks = particles.filter((p) => p.spark).length;
+ok("a few particles are bright sparks", sparks >= COUNT * 0.05 && sparks <= COUNT * 0.25,
+  `${sparks}/${COUNT} sparks`);
 
 console.log(`${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

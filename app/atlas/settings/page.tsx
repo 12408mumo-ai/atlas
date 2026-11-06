@@ -15,7 +15,7 @@ import {
   type AISettings,
 } from "@/lib/atlas-ai";
 import { loadAtlasCloudRow } from "@/lib/supabase";
-import { getStoredPin, setStoredPin } from "@/components/VoiceLogin";
+import { clearStoredPin, getStoredPin, setStoredPin } from "@/lib/voice-pass";
 
 /* ------------------------------------------------------------------ */
 /*  Atlas Assistant Settings — the altar where a key is laid.         */
@@ -395,9 +395,7 @@ export default function AtlasSettingsPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    try {
-                      localStorage.removeItem("atlas.voice-pin.v1");
-                    } catch {}
+                    clearStoredPin();
                     setVoicePinState("cleared");
                   }}
                   className="font-ui text-[16px] text-wine underline underline-offset-4 opacity-70"

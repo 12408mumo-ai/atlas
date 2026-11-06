@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 3000",
     "lint": "next lint",
-    "test:voice": "npx --yes tsx@4.19.2 voicetest.mts && npx --yes tsx@4.19.2 cmdtest.mts && npx --yes tsx@4.19.2 flowtest.mts && npx --yes tsx@4.19.2 particlesim.mts"
+    "test:voice": "npx --yes tsx@4.19.2 voicetest.mts && npx --yes tsx@4.19.2 passtest.mts && npx --yes tsx@4.19.2 unlocktest.mts && npx --yes tsx@4.19.2 cmdtest.mts && npx --yes tsx@4.19.2 flowtest.mts && npx --yes tsx@4.19.2 particlesim.mts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.119.0",

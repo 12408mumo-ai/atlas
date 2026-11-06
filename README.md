@@ -61,12 +61,15 @@ The world now has a mind and a body.
 A voice assistant that runs with no API key, so the whole loop can be
 demonstrated immediately.
 
-- **The opening** (`/`) — a cloud of golden particles hangs in the dark. It
-  ripples like a voice wave. The orb greets you by the time of day and asks
-  whether to proceed. There is no button anywhere: answer **yes** by voice and
-  it asks for your **voice pass**; speak the digits and you are in. The first
-  digits you speak become your pass. Set or change it later in
-  **Atlas AI Settings → Voice pass**.
+- **The opening** (`/`) — a sphere of golden particles hangs in the dark.
+  They drift on slow currents and carry a warm glow. The orb greets you by
+  the time of day and asks whether to proceed. There is no button anywhere:
+  answer **yes** by voice and it asks for your **voice pass**; speak the
+  digits and the app opens. The first digits you speak become your pass. Set
+  or change it later in **Atlas AI Settings → Voice pass**.
+- **The voice waves** — while Atlas speaks, rings travel outward from the
+  centre of the sphere and the particles brighten. While the microphone is
+  open the particles draw gently inward.
 - **The docked tab** — once inside, a small **Atlas** tab sits on the left edge
   of every page. Press it to open the assistant panel. Say **"Atlas"** and the
   panel wakes up and listens.
@@ -89,6 +92,10 @@ demonstrated immediately.
 survives the browser dropping the mic, spoken-number to digit conversion
 ("seven hundred forty two" → `742`), wake-word detection, and yes/no intent
 matching that reads the first meaningful word of a reply.
+
+`lib/voice-pass.ts` holds the spoken pass — the rule that decides whether the
+app opens. It is one place, tested on its own, so the entry and the settings
+page can never disagree about it.
 
 ## State
 

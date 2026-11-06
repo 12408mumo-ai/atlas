@@ -1,8 +1,8 @@
 /* ================================================================== */
-/*  VoiceLogin — speak a PIN to unlock the app                        */
+/*  VoiceLogin — speak a pass to unlock the app                       */
 /*                                                                     */
-/*  The PIN is set in Atlas AI settings. Speech recognition turns     */
-/*  spoken numbers into digits, and the PIN is compared against a     */
+/*  The pass is set in Atlas AI settings. Speech recognition turns     */
+/*  spoken numbers into digits, and the pass is compared against a     */
 /*  locally stored hash. Nothing is sent anywhere.                    */
 /*                                                                     */
 /*  The microphone stays open so the pass can be spoken straight       */
@@ -18,35 +18,16 @@ import {
   voiceSupported,
   type WakeListenerHandle,
 } from "@/lib/voice";
+import {
+  checkPass,
+  clearStoredPin,
+  getStoredPin,
+} from "@/lib/voice-pass";
 import { speak } from "@/lib/atlas-ai";
 
-const PIN_KEY = "atlas.voice-pin.v1";
+export { getStoredPin, setStoredPin, clearStoredPin } from "@/lib/voice-pass";
 
-/** Store a short numeric PIN as a simple hash. */
-function hashPin(pin: string): string {
-  let h = 2166136261;
-  for (let i = 0; i < pin.length; i++) {
-    h ^= pin.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return (h >>> 0).toString(36);
-}
-
-export function getStoredPin(): string | null {
-  if (typeof window === "undefined") return null;
-  try {
-    return localStorage.getItem(PIN_KEY);
-  } catch {
-    return null;
-  }
-}
-
-export function setStoredPin(pin: string) {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(PIN_KEY, hashPin(pin));
-  } catch {}
-}
+const MAX_TRIES = 3;
 
 export function VoiceLogin({
   onUnlock,
@@ -71,32 +52,28 @@ export function VoiceLogin({
       setHeard(phrase);
 
       const digits = spokenToDigits(phrase);
-      if (!digits || !/\d/.test(digits)) {
+      const verdict = checkPass(digits, attempts.current, MAX_TRIES);
+
+      if (verdict.result === "no-digits") {
         setMessage(`I heard "${phrase}" but not any numbers. Try saying the digits.`);
         return;
       }
 
-      const stored = getStoredPin();
-      if (!stored) {
-        // No PIN set yet — this becomes the first one.
-        setStoredPin(digits);
+      if (verdict.result === "set" || verdict.result === "match") {
         doneRef.current = true;
         listenerRef.current?.stop();
-        speak("Your voice pass is set. Opening Atlas now.");
-        window.setTimeout(onUnlock, 900);
-        return;
-      }
-
-      if (stored === hashPin(digits)) {
-        doneRef.current = true;
-        listenerRef.current?.stop();
-        speak("Welcome back. Opening Atlas now.");
-        window.setTimeout(onUnlock, 900);
+        // The app opens straight away — it never waits on the voice.
+        onUnlock();
+        speak(
+          verdict.result === "set"
+            ? "Your voice pass is set. Opening Atlas now."
+            : "Welcome back. Opening Atlas now."
+        );
         return;
       }
 
       attempts.current += 1;
-      const left = Math.max(0, 3 - attempts.current);
+      const left = verdict.triesLeft;
       setMessage(
         left > 0
           ? `That is not your pass. ${left} ${left === 1 ? "try" : "tries"} left.`
