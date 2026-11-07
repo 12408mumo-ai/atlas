@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { MemorySphere, type SphereGlyph } from "@/components/MemorySphere";
+import { Timetable } from "@/components/Timetable";
 import {
   addDeadline,
   addHoursLog,
@@ -59,8 +60,6 @@ const SECTIONS: {
   { key: "subjects", name: "Subjects", sub: "School & self-learning", glyph: "subjects", group: "study", phase: 4.3 },
   { key: "sessions", name: "Study sessions", sub: "Time spent learning", glyph: "sessions", group: "study", phase: 5.1 },
 ];
-
-const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 function fmtDuration(min: number) {
   const h = Math.floor(min / 60);
@@ -309,7 +308,7 @@ export default function WorkPage() {
             {section === "projects" && <ProjectsSection projects={atlas.projects} />}
             {section === "hours" && <HoursSection projects={atlas.projects} logs={atlas.hoursLogs} />}
             {section === "money" && <MoneySection ledger={atlas.ledger} />}
-            {section === "timetable" && <TimetableSection slots={atlas.timetable} />}
+            {section === "timetable" && <Timetable slots={atlas.timetable} />}
             {section === "deadlines" && <DeadlinesSection assignments={atlas.assignments} />}
             {section === "subjects" && <SubjectsSection courses={atlas.courses} />}
             {section === "sessions" && (
@@ -818,49 +817,6 @@ function MoneySection({
           )}
         </ul>
       </div>
-    </div>
-  );
-}
-
-/* ================================================================== */
-/*  4. TIMETABLE                                                        */
-/* ================================================================== */
-
-function TimetableSection({
-  slots,
-}: {
-  slots: { id: string; day: string; time: string; title: string; place: string; lecturer: string }[];
-}) {
-  return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      {DAYS.map((d) => {
-        const daySlots = slots.filter((x) => x.day === d);
-        return (
-          <div key={d} className="rounded-xl border-2 border-wine bg-marble">
-            <p className="border-b-2 border-wine px-3.5 py-2.5 font-ui text-[15px] uppercase tracking-[0.15em] text-wine">
-              {d}
-            </p>
-            <div className="space-y-2.5 p-2.5">
-              {daySlots.length === 0 ? (
-                <p className="px-1 py-4 text-center font-body text-[18px] italic text-wine opacity-45">
-                  free
-                </p>
-              ) : (
-                daySlots.map((sl) => (
-                  <div key={sl.id} className="rounded-lg border border-wine/35 bg-marbleDim/55 px-3 py-2.5">
-                    <p className="font-ui text-[14px] tracking-[0.08em] text-wine">{sl.time}</p>
-                    <p className="mt-0.5 font-body text-[18.5px] leading-snug text-wine">{sl.title}</p>
-                    <p className="mt-0.5 font-body text-[16.5px] italic text-wine opacity-70">{sl.place}</p>
-                    {sl.lecturer && (
-                      <p className="mt-0.5 font-ui text-[13.5px] text-wine opacity-55">{sl.lecturer}</p>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        );
-      })}
     </div>
   );
 }

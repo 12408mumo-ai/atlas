@@ -2,11 +2,10 @@
 
 import { useState } from "react";
 import { PageShell } from "@/components/Chrome";
+import { Timetable } from "@/components/Timetable";
 import { Panel, Stat, Bar, Badge, Tabs, Ring } from "@/components/ui";
 import { MeanderWine } from "@/components/Ornaments";
 import { useAtlas, relativeDue, prettyDate } from "@/lib/store";
-
-const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 
 export default function StudyPage() {
   const s = useAtlas();
@@ -45,26 +44,7 @@ export default function StudyPage() {
       <div className="mt-5">
         {tab === "timetable" && (
           <Panel title="The week" hint="Where you are expected to be">
-            <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
-              {DAYS.map((d) => {
-                const slots = s.timetable.filter((x) => x.day === d);
-                return (
-                  <div key={d} className="rounded-xl border-2 border-wine bg-marble">
-                    <p className="border-b-2 border-wine px-3.5 py-2.5 font-ui text-[17.5px] uppercase tracking-[0.2em] text-wine">{d}</p>
-                    <div className="space-y-2.5 p-2.5">
-                      {slots.length === 0 && <p className="px-1 py-4 text-center font-body text-[19px] italic text-wine opacity-45">free</p>}
-                      {slots.map((sl) => (
-                        <div key={sl.id} className="rounded-lg border-2 border-wine bg-marbleDim px-3 py-2.5">
-                          <p className="font-ui text-[17px] tracking-[0.1em] text-wine">{sl.time}</p>
-                          <p className="mt-0.5 font-body text-[20px] leading-snug text-wine">{sl.title}</p>
-                          <p className="mt-1 font-body text-[18.5px] italic text-wine opacity-70">{sl.place}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <Timetable slots={s.timetable} />
           </Panel>
         )}
 

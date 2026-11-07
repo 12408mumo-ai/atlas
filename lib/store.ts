@@ -409,6 +409,23 @@ export function setState(patch: Partial<AtlasState> | ((s: AtlasState) => Partia
   listeners.forEach((l) => l());
 }
 
+/** Add, update, and remove entries from the shared weekly timetable. */
+export function addTimetableSlot(details: Omit<Slot, "id">): Slot {
+  const slot = { ...details, id: `slot-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}` };
+  setState((current) => ({ timetable: [...current.timetable, slot] }));
+  return slot;
+}
+
+export function updateTimetableSlot(id: string, details: Omit<Slot, "id">) {
+  setState((current) => ({
+    timetable: current.timetable.map((slot) => slot.id === id ? { ...slot, ...details } : slot),
+  }));
+}
+
+export function removeTimetableSlot(id: string) {
+  setState((current) => ({ timetable: current.timetable.filter((slot) => slot.id !== id) }));
+}
+
 export function useAtlas() {
   const [, force] = useState(0);
   useEffect(() => {
