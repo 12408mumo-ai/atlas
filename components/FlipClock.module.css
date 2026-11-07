@@ -1,0 +1,138 @@
+.clock {
+  width: min(100%, 1080px);
+  color: #e0e0e0;
+  font-family: Arial, Helvetica, sans-serif;
+  text-align: center;
+}
+
+.date {
+  margin: 0 0 clamp(28px, 4vw, 48px);
+  color: #aaa;
+  font-size: clamp(12px, 1.45vw, 17px);
+  font-weight: 600;
+  letter-spacing: 0.19em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.cards {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.cardGroup {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.card {
+  position: relative;
+  width: clamp(82px, 24vw, 260px);
+  height: clamp(114px, 31vw, 330px);
+  overflow: hidden;
+  border: 1px solid #282828;
+  border-radius: clamp(14px, 1.8vw, 20px);
+  background: #1e1e1e;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 35%);
+  perspective: 700px;
+}
+
+.number,
+.halfNumber {
+  display: grid;
+  position: absolute;
+  inset: 0;
+  place-items: center;
+  font-size: clamp(56px, 17.5vw, 190px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.065em;
+  line-height: 1;
+  padding-right: 0.065em;
+}
+
+.separator {
+  width: clamp(16px, 3.5vw, 42px);
+  color: #777;
+  font-size: clamp(24px, 4vw, 45px);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.seam {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: rgb(0 0 0 / 80%);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 5%);
+}
+
+.animation {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.half {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  overflow: hidden;
+  background: #1e1e1e;
+  backface-visibility: hidden;
+}
+
+.halfNumber {
+  height: 200%;
+}
+
+.flipTop {
+  top: 0;
+  transform-origin: bottom;
+  animation: flip-top 220ms ease-in both;
+}
+
+.flipBottom {
+  bottom: 0;
+  transform-origin: top;
+  animation: flip-bottom 220ms ease-out 220ms both;
+}
+
+.flipBottom .halfNumber {
+  top: -100%;
+}
+
+.caption {
+  margin: clamp(36px, 5vw, 58px) 0 0;
+  color: #888;
+  font-size: clamp(10px, 1.15vw, 13px);
+  font-weight: 600;
+  letter-spacing: 0.48em;
+  line-height: 1.5;
+  padding-left: 0.48em;
+}
+
+@keyframes flip-top {
+  from { transform: rotateX(0); }
+  to { transform: rotateX(-90deg); }
+}
+
+@keyframes flip-bottom {
+  from { transform: rotateX(90deg); }
+  to { transform: rotateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animation { display: none; }
+}
+
+@media (max-width: 340px) {
+  .card { width: 24vw; min-width: 0; }
+}

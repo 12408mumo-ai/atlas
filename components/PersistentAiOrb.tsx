@@ -28,6 +28,9 @@ export function PersistentAiOrb() {
     }
   };
 
+  // The standalone clock is intentionally distraction-free.
+  if (pathname === "/clock") return null;
+
   return (
     <div
       style={{
