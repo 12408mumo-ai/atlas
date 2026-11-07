@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function ClockPage() {
   return (
-    <main className="grid min-h-[100svh] place-items-center bg-black px-4 py-12">
+    <main className="glass-page-dark grid min-h-[100svh] place-items-center px-4 py-12">
       <FlipClock />
     </main>
   );

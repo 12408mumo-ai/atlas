@@ -45,6 +45,7 @@ export function AiGlobeSphere({
 
     let raf = 0;
     const t0 = performance.now();
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const project = (
       x: number,
@@ -226,7 +227,7 @@ export function AiGlobeSphere({
         }
       }
 
-      raf = requestAnimationFrame(tick);
+      if (!reducedMotion) raf = requestAnimationFrame(tick);
     };
 
     raf = requestAnimationFrame(tick);

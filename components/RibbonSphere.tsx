@@ -144,6 +144,7 @@ export function RibbonSphere({ className = "" }: { className?: string }) {
 
     let raf = 0;
     const t0 = performance.now();
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const tick = (now: number) => {
       const t = now / 1000;
@@ -243,7 +244,7 @@ export function RibbonSphere({ className = "" }: { className?: string }) {
         ctx.fill();
       }
 
-      raf = requestAnimationFrame(tick);
+      if (!reducedMotion) raf = requestAnimationFrame(tick);
     };
 
     raf = requestAnimationFrame(tick);

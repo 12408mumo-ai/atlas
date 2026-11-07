@@ -282,6 +282,7 @@ export function MemorySphere({
 
     let raf = 0;
     const t0 = performance.now();
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const tick = (now: number) => {
       const dt = (now - t0) / 1000;
@@ -438,7 +439,7 @@ export function MemorySphere({
         ctx.setLineDash([]);
       }
 
-      raf = requestAnimationFrame(tick);
+      if (!reducedMotion) raf = requestAnimationFrame(tick);
     };
 
     raf = requestAnimationFrame(tick);

@@ -33,10 +33,10 @@
   width: clamp(82px, 24vw, 260px);
   height: clamp(114px, 31vw, 330px);
   overflow: hidden;
-  border: 1px solid #282828;
+  border: var(--glass-border);
   border-radius: clamp(14px, 1.8vw, 20px);
-  background: #1e1e1e;
-  box-shadow: 0 12px 32px rgb(0 0 0 / 35%);
+  background: rgba(30, 35, 45, 0.72);
+  box-shadow: var(--glass-shadow), var(--glass-highlight);
   perspective: 700px;
 }
 
@@ -142,7 +142,9 @@
   container-type: inline-size;
   width: 100%;
   border-radius: 18px;
-  background: #000;
+  background: rgba(15, 24, 38, 0.48);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow), var(--glass-highlight);
   padding: 22px 16px 20px;
 }
 

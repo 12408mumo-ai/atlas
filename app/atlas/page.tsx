@@ -322,7 +322,7 @@ export default function AtlasAssistantPage() {
 
       {/* ---------------- plans + powers ---------------- */}
       <div className="mt-3.5 grid gap-3.5 lg:grid-cols-[1.4fr_1fr]">
-        <Panel title="The plans Atlas has laid" hint="Every 'plan' edict lands here — a staircase of steps you can climb">
+        <Panel glass={false} title="The plans Atlas has laid" hint="Every 'plan' edict lands here — a staircase of steps you can climb">
           {activePlans.length === 0 ? (
             <Empty>No plans yet. Ask the Titan to lay one.</Empty>
           ) : (

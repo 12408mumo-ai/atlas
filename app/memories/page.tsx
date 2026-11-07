@@ -139,7 +139,7 @@ export default function MemoriesPage() {
   const currentBranchMeta = BRANCHES.find((b) => b.key === activeBranch);
 
   return (
-    <div className="relative min-h-[100svh] w-screen overflow-x-hidden bg-marble text-wine">
+    <div className="glass-page relative min-h-[100svh] w-screen overflow-x-hidden text-wine">
       {/* ================================================================ */}
       {/* 1. LEFT MEMORIES GLOBE (Moves left on open; tap to go back)      */}
       {/* ================================================================ */}
@@ -182,7 +182,7 @@ export default function MemoriesPage() {
         }}
         className={
           activeBranch !== null
-            ? "fixed right-2 top-1/2 z-40 max-h-[80svh] w-[78px] -translate-y-1/2 translate-x-0 overflow-y-auto py-3 opacity-100 sm:right-5 sm:w-[104px]"
+            ? "glass-rail fixed right-2 top-1/2 z-40 max-h-[80svh] w-[78px] -translate-y-1/2 translate-x-0 overflow-y-auto py-3 opacity-100 sm:right-5 sm:w-[104px]"
             : "pointer-events-none fixed right-5 top-1/2 z-40 max-h-[80svh] w-[104px] -translate-y-1/2 translate-x-36 opacity-0"
         }
       >
@@ -221,7 +221,7 @@ export default function MemoriesPage() {
         }`}
       >
         {/* ---- Simple Header ---- */}
-        <header className="flex flex-wrap items-center justify-between gap-3">
+        <header className="glass-card flex flex-wrap items-center justify-between gap-3 p-4">
           <h1 className="font-display text-[clamp(30px,4.2vw,44px)] tracking-[0.03em] text-wine">
             {currentBranchMeta ? currentBranchMeta.name : "Memories"}
           </h1>
@@ -236,7 +236,7 @@ export default function MemoriesPage() {
                   setShowLockModal(true);
                 }
               }}
-              className="rounded-pill border border-wine/50 px-3.5 py-1.5 font-ui text-[15px] text-wine transition-colors hover:border-wine hover:bg-wine hover:text-marble"
+              className="glass-button px-3.5 py-1.5 font-ui text-[15px]"
             >
               Lock
             </button>
@@ -255,12 +255,12 @@ export default function MemoriesPage() {
               <button
                 type="button"
                 onClick={() => setShowExportMenu((v) => !v)}
-                className="rounded-pill border border-wine/50 px-3.5 py-1.5 font-ui text-[15px] text-wine transition-colors hover:border-wine hover:bg-wine hover:text-marble"
+                className="glass-button px-3.5 py-1.5 font-ui text-[15px]"
               >
                 Export
               </button>
               {showExportMenu && (
-                <div className="absolute right-0 top-11 z-50 w-48 rounded-xl border-2 border-wine bg-marble p-1.5 shadow-lg">
+                <div className="glass-card absolute right-0 top-11 z-50 w-48 p-1.5">
                   <button
                     type="button"
                     onClick={() => {
@@ -291,7 +291,7 @@ export default function MemoriesPage() {
         <div className="mt-5">
           {barMode === "search" ? (
             <div className="flex items-center gap-2">
-              <div className="flex flex-1 items-center rounded-pill border border-wine/60 bg-marble px-4 py-1.5 focus-within:border-wine">
+              <div className="glass-input flex flex-1 items-center px-4 py-1.5">
                 <input
                   type="text"
                   value={searchQuery}
@@ -315,14 +315,14 @@ export default function MemoriesPage() {
                   setSearchQuery("");
                   setBarMode("log");
                 }}
-                className="shrink-0 rounded-pill border border-wine bg-wine px-4 py-2 font-ui text-[15px] text-marble transition-opacity hover:opacity-90"
+                className="glass-button shrink-0 px-4 py-2 font-ui text-[15px]"
               >
                 + Quick log
               </button>
             </div>
           ) : (
             <form onSubmit={handleQuickLogSubmit} className="flex items-center gap-2">
-              <div className="flex flex-1 items-center rounded-pill border-2 border-wine bg-marble px-4 py-1.5">
+              <div className="glass-input flex flex-1 items-center px-4 py-1.5">
                 <input
                   type="text"
                   autoFocus
@@ -1857,11 +1857,11 @@ function LightboxModal({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-[980] grid place-items-center bg-wine/85 p-4 backdrop-blur-sm anim-fade"
+      className="fixed inset-0 z-[980] grid place-items-center bg-wine/85 p-4"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[90svh] w-full max-w-2xl overflow-y-auto rounded-2xl border-2 border-marble bg-marble p-5 text-wine sm:p-6"
+        className="glass-tile max-h-[90svh] w-full max-w-2xl overflow-y-auto p-5 text-wine sm:p-6"
       >
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -1965,11 +1965,11 @@ function LockSetupModal({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-[980] grid place-items-center bg-wine/80 p-4 backdrop-blur-sm anim-fade"
+      className="fixed inset-0 z-[980] grid place-items-center bg-wine/80 p-4"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-sm rounded-2xl border-2 border-marble bg-marble p-6 text-wine"
+        className="glass-card w-full max-w-sm p-6 text-wine"
       >
         <div className="flex items-center justify-between">
           <h3 className="font-display text-[23px] text-wine">Lock Memories</h3>
@@ -2059,8 +2059,8 @@ function LockScreen({
   };
 
   return (
-    <main className="grid min-h-[100svh] w-screen place-items-center bg-wine px-6 text-marble">
-      <div className="w-full max-w-sm rounded-2xl border border-marble/40 bg-wineDeep p-7 text-center">
+    <main className="glass-page-dark grid min-h-[100svh] w-screen place-items-center px-6 text-marble">
+      <div className="glass-clear w-full max-w-sm p-7 text-center">
         <div className="mx-auto flex justify-center">
           <MemorySphere glyph="memories" size={84} tone="wine" />
         </div>

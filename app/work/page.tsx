@@ -114,7 +114,7 @@ export default function WorkPage() {
   );
 
   return (
-    <div className="relative min-h-[100svh] w-screen overflow-x-hidden bg-marble text-wine">
+    <div className="glass-page relative min-h-[100svh] w-screen overflow-x-hidden text-wine">
       {/* ================================================================ */}
       {/* 1. LEFT WORK SPHERE (glides left on open; press to go back)     */}
       {/* ================================================================ */}
@@ -159,7 +159,7 @@ export default function WorkPage() {
         }}
         className={
           section !== null || group !== null
-            ? "fixed right-2 top-1/2 z-40 max-h-[80svh] w-[78px] -translate-y-1/2 translate-x-0 overflow-y-auto py-3 opacity-100 sm:right-5 sm:w-[104px]"
+            ? "glass-rail fixed right-2 top-1/2 z-40 max-h-[80svh] w-[78px] -translate-y-1/2 translate-x-0 overflow-y-auto py-3 opacity-100 sm:right-5 sm:w-[104px]"
             : "pointer-events-none fixed right-5 top-1/2 z-40 max-h-[80svh] w-[104px] -translate-y-1/2 translate-x-36 opacity-0"
         }
       >
@@ -222,7 +222,7 @@ export default function WorkPage() {
         }`}
       >
         {/* ---- Simple header ---- */}
-        <header>
+        <header className="glass-card p-4">
           <h1 className="font-display text-[clamp(30px,4.2vw,44px)] tracking-[0.03em] text-wine">
             Work
           </h1>
@@ -390,7 +390,7 @@ function ProjectsSection({ projects }: { projects: Project[] }) {
       {showAdd && (
         <form
           onSubmit={submit}
-          className="space-y-3 rounded-xl border border-wine/45 bg-marbleDim/45 p-4 anim-fade"
+          className="glass-card space-y-3 p-4"
         >
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Name">
@@ -567,7 +567,7 @@ function HoursSection({
       {showAdd && (
         <form
           onSubmit={submit}
-          className="space-y-3 rounded-xl border border-wine/45 bg-marbleDim/45 p-4 anim-fade"
+          className="glass-card space-y-3 p-4"
         >
           <div className="grid gap-3 sm:grid-cols-3">
             <Field label="Project">
@@ -723,7 +723,7 @@ function MoneySection({
       {showInvoice && (
         <form
           onSubmit={submit}
-          className="space-y-3 rounded-xl border border-wine/45 bg-marbleDim/45 p-4 anim-fade"
+          className="glass-card space-y-3 p-4"
         >
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Client">
@@ -909,7 +909,7 @@ function DeadlinesSection({ assignments }: { assignments: Assignment[] }) {
       {showAdd && (
         <form
           onSubmit={submit}
-          className="space-y-3 rounded-xl border border-wine/45 bg-marbleDim/45 p-4 anim-fade"
+          className="glass-card space-y-3 p-4"
         >
           <Field label="Title">
             <input
@@ -1062,7 +1062,7 @@ function SubjectsSection({ courses }: { courses: Course[] }) {
       {showAdd && (
         <form
           onSubmit={submit}
-          className="space-y-3 rounded-xl border border-wine/45 bg-marbleDim/45 p-4 anim-fade"
+          className="glass-card space-y-3 p-4"
         >
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Name">
@@ -1228,7 +1228,7 @@ function SessionsSection({
       {showAdd && (
         <form
           onSubmit={submit}
-          className="space-y-3 rounded-xl border border-wine/45 bg-marbleDim/45 p-4 anim-fade"
+          className="glass-card space-y-3 p-4"
         >
           <div className="grid gap-3 sm:grid-cols-3">
             <Field label="Subject">

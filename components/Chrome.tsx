@@ -20,14 +20,14 @@ export function PageShell({
   const resolvedBack = backHref ?? (pathname === "/atlas/settings" ? "/atlas" : "/hub");
 
   return (
-    <div className="relative min-h-screen bg-marble">
+    <div className="glass-page relative min-h-screen">
       <main className="mx-auto max-w-[1280px] pb-24 pl-20 pr-5 pt-7 sm:pl-32 sm:pr-8 sm:pt-9">
         {/* Only the back pointer and the page title */}
         <header className="mb-7 flex items-center gap-4 anim-fade-up">
           <Link
             href={resolvedBack}
             aria-label="Back"
-            className="grid h-12 w-12 shrink-0 place-items-center rounded-full border-2 border-wine bg-marble font-ui text-[24px] leading-none text-wine transition-colors hover:bg-wine hover:text-marble"
+            className="glass-button grid h-12 w-12 shrink-0 place-items-center font-ui text-[24px] leading-none"
           >
             ←
           </Link>

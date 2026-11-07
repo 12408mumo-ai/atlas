@@ -34,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
+        <link rel="stylesheet" href="/glass-tokens.css" />
         {/* Typekit — the studio kit requested for Atlas */}
         <link rel="stylesheet" href="https://use.typekit.net/iyo4kyx.css" />
         {/* Graceful companions, used only if the kit faces are unavailable */}

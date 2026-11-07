@@ -17,7 +17,7 @@ export function ScrollFrame({
       <Rod side="left" />
       <Rod side="right" />
 
-      <div className="relative mx-[22px] overflow-hidden rounded-[6px] border-2 border-wine bg-marble sm:mx-[30px]">
+      <div className="glass-card relative mx-[22px] overflow-hidden sm:mx-[30px]">
         <div className="relative px-7 py-9 sm:px-10 sm:py-11">{children}</div>
       </div>
     </div>
@@ -27,7 +27,7 @@ export function ScrollFrame({
 function Rod({ side }: { side: "left" | "right" }) {
   return (
     <div
-      className={`absolute top-[-14px] bottom-[-14px] w-[44px] rounded-pill border-2 border-wine bg-marbleDim sm:w-[58px] ${
+      className={`absolute top-[-14px] bottom-[-14px] w-[44px] rounded-pill border border-white/40 bg-white/30 sm:w-[58px] ${
         side === "left" ? "left-0" : "right-0"
       }`}
       aria-hidden

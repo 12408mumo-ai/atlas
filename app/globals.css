@@ -18,6 +18,8 @@
   --gold: #F5E8D3;
   --gold-soft: #DFCEB4;
   --ink: #1D1D1F;
+
+
 }
 
 * { -webkit-tap-highlight-color: transparent; }
@@ -122,9 +124,7 @@ body {
   .field::placeholder { color: var(--wine); opacity: 0.45; }
   .field:focus { border-color: var(--wine); box-shadow: 0 0 0 3px rgba(40, 40, 42, 0.22); }
 
-  /* legacy aliases used across the pillar pages */
-  .glass { background: var(--marble); border: 2px solid var(--wine); border-radius: 16px; }
-  .glass-soft { background: var(--marble); border: 2px solid var(--wine); border-radius: 14px; }
+
 }
 
 /* ------------------------------------------------------------------ */
@@ -157,4 +157,109 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+/* Glass surfaces are limited to major panels and popovers, not list rows. */
+.glass-page {
+  background: radial-gradient(ellipse at 5% 5%, #d5e7fa 0%, transparent 48%),
+    radial-gradient(ellipse at 92% 22%, #eadbef 0%, transparent 46%),
+    radial-gradient(ellipse at 45% 95%, #cee9e4 0%, transparent 48%), #e8edf4;
+}
+.glass-page-dark {
+  background: radial-gradient(ellipse at 12% 12%, #273b60 0%, transparent 48%),
+    radial-gradient(ellipse at 86% 25%, #53364f 0%, transparent 46%),
+    radial-gradient(ellipse at 50% 100%, #214c4c 0%, transparent 48%), #141d2d;
+}
+.glass-card, .glass, .glass-soft {
+  background: #e9eff4;
+  border: var(--glass-border);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow), var(--glass-highlight);
+}
+.glass-clear {
+  background: #303a4b;
+  border: var(--glass-border);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow), var(--glass-highlight);
+}
+.glass-button, .btn-gold, .btn-wine, .btn-marble, .btn-ghost {
+  border: var(--glass-border);
+  border-radius: var(--glass-control-radius);
+  box-shadow: var(--glass-highlight), 0 3px 12px rgba(20, 30, 45, 0.12);
+  transition: background-color 200ms ease, border-color 200ms ease, transform 200ms ease, box-shadow 200ms ease;
+}
+.glass-button:hover:not(:disabled), .btn-gold:hover:not(:disabled),
+.btn-wine:hover:not(:disabled), .btn-marble:hover:not(:disabled), .btn-ghost:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--glass-highlight), 0 7px 16px rgba(20, 30, 45, 0.18);
+}
+.glass-button { background: rgba(255, 255, 255, 0.6); color: #172235; }
+.glass-button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.8); }
+.glass-input, .field {
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(75, 91, 110, 0.38);
+  border-radius: var(--glass-control-radius);
+  color: #172235;
+}
+.glass-input:focus, .glass-input:focus-within, .field:focus {
+  border-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 0 3px rgba(57, 88, 126, 0.3);
+  outline: none;
+}
+@supports ((-webkit-backdrop-filter: blur(12px)) or (backdrop-filter: blur(12px))) {
+  .glass-card, .glass, .glass-soft {
+    background: var(--glass-text-bg);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+  }
+  .glass-clear {
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass-card, .glass, .glass-soft {
+    background: #edf2f6;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .glass-clear {
+    background: #303a4b;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .glass-input, .field { background: #f4f6f8; }
+}
+
+/* Opaque-enough surfaces for repeated items and light text, without blur. */
+.glass-tile, .glass-tile-dark, .glass-panel-dark {
+  border: var(--glass-border);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow), var(--glass-highlight);
+}
+.glass-tile { background: rgba(255, 255, 255, 0.68); }
+.glass-tile-dark, .glass-panel-dark { background: #29384c; }
+@media (prefers-reduced-transparency: reduce) {
+  .glass-tile { background: #edf2f6; }
+  .glass-tile-dark, .glass-panel-dark { background: #29384c; }
+}
+
+/* Rail controls move with the page, so they use tint without a live blur. */
+.glass-rail {
+  background: rgba(255, 255, 255, 0.42);
+  border: var(--glass-border);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-highlight), 0 4px 18px rgba(0, 0, 0, 0.08);
+}
+.btn-wine {
+  background: rgba(34, 49, 67, 0.9);
+  color: #fff;
+}
+.btn-wine:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.82);
+  color: #172235;
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass-rail { background: #edf2f6; }
 }

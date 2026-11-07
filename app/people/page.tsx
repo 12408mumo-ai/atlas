@@ -112,7 +112,7 @@ export default function PeoplePage() {
   };
 
   return (
-    <div className="relative min-h-[100svh] w-screen overflow-x-hidden bg-marble text-wine">
+    <div className="glass-page relative min-h-[100svh] w-screen overflow-x-hidden text-wine">
       {/* ================================================================ */}
       {/* 1. LEFT PEOPLE SPHERE (glides left on open; press to go back)  */}
       {/* ================================================================ */}
@@ -155,7 +155,7 @@ export default function PeoplePage() {
         }}
         className={
           openId !== null
-            ? "fixed right-2 top-1/2 z-40 max-h-[80svh] w-[78px] -translate-y-1/2 translate-x-0 overflow-y-auto py-3 opacity-100 sm:right-5 sm:w-[104px]"
+            ? "glass-rail fixed right-2 top-1/2 z-40 max-h-[80svh] w-[78px] -translate-y-1/2 translate-x-0 overflow-y-auto py-3 opacity-100 sm:right-5 sm:w-[104px]"
             : "pointer-events-none fixed right-5 top-1/2 z-40 max-h-[80svh] w-[104px] -translate-y-1/2 translate-x-36 opacity-0"
         }
       >
@@ -207,14 +207,14 @@ export default function PeoplePage() {
         }`}
       >
         {/* ---- Simple header ---- */}
-        <header className="flex flex-wrap items-center justify-between gap-3">
+        <header className="glass-card flex flex-wrap items-center justify-between gap-3 p-4">
           <h1 className="font-display text-[clamp(30px,4.2vw,44px)] tracking-[0.03em] text-wine">
             People
           </h1>
           <button
             type="button"
             onClick={() => setShowAdd((v) => !v)}
-            className="rounded-pill border border-wine bg-wine px-4 py-2 font-ui text-[15px] text-marble transition-opacity hover:opacity-90"
+            className="glass-button px-4 py-2 font-ui text-[15px]"
           >
             {showAdd ? "Close" : "+ Add someone"}
           </button>
@@ -222,7 +222,7 @@ export default function PeoplePage() {
 
         {/* ---- Search ---- */}
         <div className="mt-5">
-          <div className="flex items-center rounded-pill border border-wine/60 bg-marble px-4 py-1.5 focus-within:border-wine">
+          <div className="glass-input flex items-center px-4 py-1.5">
             <input
               type="text"
               value={search}
@@ -383,7 +383,7 @@ export default function PeoplePage() {
       {lightbox && (
         <div
           onClick={() => setLightbox(null)}
-          className="fixed inset-0 z-[980] grid place-items-center bg-wine/85 p-4 backdrop-blur-sm anim-fade"
+          className="fixed inset-0 z-[980] grid place-items-center bg-wine/85 p-4"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -426,7 +426,7 @@ function AddPersonForm({ onDone }: { onDone: () => void }) {
   return (
     <form
       onSubmit={submit}
-      className="mt-5 space-y-3 rounded-xl border border-wine/45 bg-marble p-5 sm:p-6 anim-fade"
+      className="glass-card mt-5 space-y-3 p-5 sm:p-6"
     >
       <h2 className="font-display text-[22px] text-wine">Someone new</h2>
       <p className="font-body text-[18px] text-wine opacity-70">
@@ -533,7 +533,7 @@ function PersonProfile({
   };
 
   return (
-    <article className="mx-auto max-w-2xl space-y-6 rounded-2xl border-2 border-wine bg-marble p-6 sm:p-8">
+    <article className="glass-tile mx-auto max-w-2xl space-y-6 p-6 sm:p-8">
       {/* Photo + name */}
       <header className="flex items-start gap-5">
         <span className="grid h-20 w-20 shrink-0 place-items-center rounded-full border-2 border-wine bg-wine font-display text-[38px] text-marble">

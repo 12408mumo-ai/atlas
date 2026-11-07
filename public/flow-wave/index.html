@@ -4,6 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Flow Wave</title>
+<link rel="stylesheet" href="/glass-tokens.css" />
 <style>
   html, body { margin:0; padding:0; background:#000; }
   #scene { position:fixed; inset:0; width:100vw; height:100vh; display:block; }
@@ -11,10 +12,14 @@
     position:fixed; bottom:22px; left:50%; transform:translateX(-50%);
     font-family: ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
     font-size:18px; letter-spacing:.24em; text-transform:uppercase;
-    color: rgba(174,240,192,.42); pointer-events:none; user-select:none;
+    padding: 10px 16px; border: var(--glass-border); border-radius: var(--glass-control-radius);
+    background: var(--glass-bg); box-shadow: var(--glass-highlight);
+    color: #d9f8e5; pointer-events:none; user-select:none;
     text-shadow: 0 0 18px rgba(10,255,127,.25);
     transition: opacity .6s ease;
   }
+  @media (prefers-reduced-transparency: reduce) { #scroll-hint { background: #18382a; } }
+  @media (prefers-reduced-motion: reduce) { #scroll-hint { transition: none; } }
 </style>
 <script type="importmap">
 {

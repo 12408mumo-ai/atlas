@@ -686,6 +686,7 @@ export default function AtlasStage() {
     /* ---- Animation Loop ---- */
     let raf = 0;
     let prevTime = performance.now();
+    const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
     const globeWorldCenter = new THREE.Vector3();
     const orbWorldPos = new THREE.Vector3();
     const projVec = new THREE.Vector3();
@@ -695,7 +696,7 @@ export default function AtlasStage() {
     const animate = (now: number) => {
       const dt = Math.min(0.05, (now - prevTime) / 1000);
       prevTime = now;
-      const elapsed = now / 1000;
+      const elapsed = motionPreference.matches ? 0 : now / 1000;
 
       const w = container.clientWidth;
       const h = Math.max(1, container.clientHeight);
@@ -712,7 +713,7 @@ export default function AtlasStage() {
       PILLARS.forEach((p, i) => {
         const isHovered = hoveredKeyRef.current === p.key;
         const speedFactor = isHovered ? 0.25 : 1.0;
-        orbPhaseAngles[i] += (dt * Math.PI * 2 * speedFactor) / p.orbit.period;
+        if (!motionPreference.matches) orbPhaseAngles[i] += (dt * Math.PI * 2 * speedFactor) / p.orbit.period;
 
         const theta = orbPhaseAngles[i];
         const rx = p.orbit.rx * orbitWidthScale;
@@ -731,7 +732,7 @@ export default function AtlasStage() {
 
         const mesh = orbMeshes[i];
         mesh.position.set(GLOBE_X + x2, GLOBE_Y + p.orbit.liftY + y2, GLOBE_Z + z1);
-        mesh.rotation.y += dt * (1.15 + i * 0.14);
+        if (!motionPreference.matches) mesh.rotation.y += dt * (1.15 + i * 0.14);
 
         const targetScale = isHovered ? 1.26 : 1.0;
         const curScale = mesh.scale.x + (targetScale - mesh.scale.x) * Math.min(1, dt * 12);
@@ -843,7 +844,7 @@ export default function AtlasStage() {
   }, [openPillar]);
 
   return (
-    <div className="relative h-[100svh] w-screen overflow-hidden bg-wine select-none">
+    <div className="glass-page-dark relative h-[100svh] w-screen overflow-hidden select-none">
       {/* 3D WebGL Canvas (Plain background + 3D Atlas + 3D Globe + 4 3D Orbiting Spheres) */}
       <div ref={mountRef} className="absolute inset-0 h-full w-full" />
 
@@ -871,7 +872,7 @@ export default function AtlasStage() {
             }}
             aria-label={`Open ${p.name}`}
             style={{ opacity: 0 }}
-            className="absolute left-0 top-0 cursor-pointer whitespace-nowrap rounded-pill border-2 border-marble/80 bg-wine/90 px-3.5 py-0.5 font-ui text-[15px] uppercase tracking-[0.15em] text-marble shadow-md backdrop-blur-sm transition-colors hover:bg-marble hover:text-wine focus-visible:opacity-100 focus-visible:ring-4 focus-visible:ring-marble"
+            className="absolute left-0 top-0 cursor-pointer whitespace-nowrap rounded-pill border border-white/30 bg-slate-900/75 px-3.5 py-0.5 font-ui text-[15px] uppercase tracking-[0.15em] text-marble shadow-md transition-colors hover:bg-marble hover:text-wine focus-visible:opacity-100 focus-visible:ring-4 focus-visible:ring-marble"
           >
             {p.name}
           </button>

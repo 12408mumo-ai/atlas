@@ -14,6 +14,7 @@ export function Panel({
   className = "",
   icon,
   tone = "marble",
+  glass = true,
 }: {
   title: string;
   hint?: string;
@@ -22,12 +23,13 @@ export function Panel({
   className?: string;
   icon?: React.ReactNode;
   tone?: "marble" | "wine";
+  glass?: boolean;
 }) {
   const wine = tone === "wine";
   return (
     <section
-      className={`relative rounded-2xl border-2 p-5 sm:p-6 ${
-        wine ? "border-wine bg-wine" : "border-wine bg-marble"
+      className={`relative min-w-0 p-5 sm:p-6 ${
+        wine ? "glass-panel-dark" : glass ? "glass-card" : "glass-tile"
       } ${className}`}
     >
       <GreekKeyCorner className={`pointer-events-none absolute right-2.5 top-2.5 h-6 w-6 ${wine ? "text-marble" : "text-wine"}`} />
@@ -61,10 +63,10 @@ export function Stat({
   sub?: string;
   tone?: "marble" | "wine" | "gold";
 }) {
-  const bg = tone === "wine" ? "bg-wine border-wine" : tone === "gold" ? "bg-marbleDim border-wine" : "bg-marble border-wine";
+  const bg = tone === "wine" ? "glass-tile-dark" : "glass-tile";
   const ink = tone === "wine" ? "text-marble" : "text-wine";
   return (
-    <div className={`rounded-xl border-2 px-4 py-4 sm:px-5 ${bg}`}>
+    <div className={`px-4 py-4 sm:px-5 ${bg}`}>
       <p className={`font-ui text-[17px] uppercase tracking-[0.18em] ${ink} opacity-70`}>{label}</p>
       <p className={`mt-2 font-display text-[34px] leading-none tracking-[0.02em] ${ink}`}>{value}</p>
       {sub && <p className={`mt-2 font-body text-[19px] italic ${ink} opacity-65`}>{sub}</p>}
@@ -172,7 +174,7 @@ export function Tabs({
   onChange?: (k: string) => void;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-1.5 rounded-pill border-2 border-wine bg-marble p-1.5">
+    <div className="glass-card flex flex-wrap items-center gap-1.5 p-1.5">
       {tabs.map((t) => {
         const active = t.key === value;
         const cls = `block rounded-pill px-4 py-2.5 font-ui text-[17.5px] uppercase tracking-[0.15em] transition-colors ${

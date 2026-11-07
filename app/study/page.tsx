@@ -71,7 +71,7 @@ export default function StudyPage() {
         {tab === "courses" && (
           <div className="grid gap-3.5 md:grid-cols-2">
             {s.courses.map((c) => (
-              <Panel key={c.id} title={c.title} hint={`${c.code} · next: ${c.next}`}>
+              <Panel glass={false} key={c.id} title={c.title} hint={`${c.code} · next: ${c.next}`}>
                 <div className="flex items-center gap-5">
                   <Ring value={c.progress} max={100} label={`${c.progress}%`} color={c.status === "complete" ? "gold" : "wine"} sub={c.status} size={104} />
                   <div className="flex-1">
@@ -114,7 +114,7 @@ export default function StudyPage() {
         {tab === "self" && (
           <div className="grid gap-3.5 md:grid-cols-3">
             {s.skills.map((k) => (
-              <Panel key={k.id} title={k.name} hint={`${k.sessions} sessions · ${k.hours}h`}>
+              <Panel glass={false} key={k.id} title={k.name} hint={`${k.sessions} sessions · ${k.hours}h`}>
                 <div className="flex items-center gap-4">
                   <Ring value={k.hours} max={40} label={`${k.hours}h`} color="gold" size={98} />
                   <div>
