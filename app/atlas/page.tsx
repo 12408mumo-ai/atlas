@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { PageShell } from "@/components/Chrome";
 import { Panel, Empty } from "@/components/ui";
+import { VoicePlayer } from "@/components/VoicePlayer";
 import { useAtlas, togglePlanStep, removePlan, prettyDate } from "@/lib/store";
+import { describeAtlasAction, executeAtlasAction, type AtlasAction } from "@/lib/atlas-actions";
 import {
   askAtlas,
   isConfigured,
@@ -54,6 +56,8 @@ export default function AtlasAssistantPage() {
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [chatReady, setChatReady] = useState(false);
   const [draft, setDraft] = useState("");
+  const [pendingActions, setPendingActions] = useState<AtlasAction[]>([]);
+  const pendingRef = useRef<AtlasAction[]>([]);
   const [status, setStatus] = useState<Status>("idle");
   const [configured, setConfigured] = useState(false);
   const [providerLabel, setProviderLabel] = useState("");
@@ -85,7 +89,7 @@ export default function AtlasAssistantPage() {
   /* ---------------- the oracle answers ---------------- */
   async function send(text: string) {
     const content = text.trim();
-    if (!content || status === "thinking") return;
+    if (!content || status === "thinking" || pendingRef.current.length) return;
     if (!isConfigured()) {
       setMsgs((m) => [
         ...m,
@@ -112,10 +116,11 @@ export default function AtlasAssistantPage() {
         id: `a${Date.now()}`,
         role: "assistant",
         content: res.text,
-        actions: res.actions,
         time: nowTime(),
       };
       setMsgs((m) => [...m, reply]);
+      pendingRef.current = res.proposedActions;
+      setPendingActions(res.proposedActions);
       setStatus("idle");
     } catch (e) {
       const msg = e instanceof Error ? e.message : "The way to Olympus is blocked.";
@@ -130,6 +135,24 @@ export default function AtlasAssistantPage() {
       ]);
       setStatus("idle");
     }
+  }
+
+  function resolveActions(approve: boolean) {
+    const pending = pendingRef.current;
+    if (!pending.length) return;
+    pendingRef.current = [];
+    setPendingActions([]);
+    const results = approve ? pending.map((action) => {
+      try { return executeAtlasAction(action); }
+      catch { return { label: "Could not save this change. Check browser storage and try again.", ok: false }; }
+    }) : [];
+    setMsgs((messages) => [...messages, {
+      id: `result-${Date.now()}`,
+      role: "assistant",
+      content: approve ? "Here is the result of each approved change:" : "Cancelled. Nothing was changed.",
+      actions: results,
+      time: nowTime(),
+    }]);
   }
 
   const nowTime = () =>
@@ -241,6 +264,7 @@ export default function AtlasAssistantPage() {
                   }`}
                 >
                   <p className="whitespace-pre-wrap font-body text-[20.5px] leading-relaxed">{m.content}</p>
+                  {m.role === "assistant" && m.content && <VoicePlayer text={m.content} />}
                   {m.actions && m.actions.length > 0 && (
                     <div
                       className={`mt-2.5 space-y-1 border-t-2 pt-2 ${
@@ -275,11 +299,36 @@ export default function AtlasAssistantPage() {
             )}
           </div>
 
+          {pendingActions.length > 0 && (
+            <section aria-label="Changes awaiting approval" className="glass-tile mt-4 p-4 text-wine">
+              <h3 className="font-ui text-[16px] font-semibold uppercase tracking-[0.12em]">Review proposed changes</h3>
+              <p className="mt-1 font-body text-[17px]">Nothing is changed until you approve. Deletes cannot be undone.</p>
+              <ol className="mt-3 space-y-2">
+                {pendingActions.map((action, index) => (
+                  <li key={index} className="rounded-xl border border-wine/20 bg-white/50 p-3">
+                    <p className="break-words font-ui text-[15px] font-semibold">{String(action.type || "Unknown action")} · {String(action.collection || "unknown collection")}: {describeAtlasAction(action)}</p>
+                    {action.id && <p className="break-all font-ui text-[13px]">Item ID: {String(action.id)}</p>}
+                    {action.parentId && <p className="break-all font-ui text-[13px]">Parent ID: {String(action.parentId)}</p>}
+                    {action.collection === "projects" && action.type === "delete" && <p className="font-ui text-[13px]">Deleting a project also removes its tasks and associated hours logs.</p>}
+                    {action.fields && <pre className="mt-1 whitespace-pre-wrap break-all font-ui text-[13px]">{JSON.stringify(action.fields, null, 2)}</pre>}
+                  </li>
+                ))}
+              </ol>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button type="button" className="btn-wine btn-sm" onClick={() => resolveActions(true)}>Approve changes</button>
+                <button type="button" className="glass-button px-4 py-2 font-ui text-[15px]" onClick={() => resolveActions(false)}>Cancel changes</button>
+              </div>
+            </section>
+          )}
+
+          <p className="mt-3 font-ui text-[14px] text-wine opacity-75">Your app data, including unlocked journal and Memories text, is sent to your selected AI provider when you ask a question. Media files and the API key in settings are excluded from the snapshot; sensitive information you wrote in entries may still be sent.</p>
+
           {/* composer */}
           <div className="mt-4 flex items-stretch gap-2.5">
             <input
               className="field flex-1"
               placeholder={configured ? "Command the Titan… (try a quick edict below)" : "Lay a key in settings first…"}
+              disabled={pendingActions.length > 0}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => {
@@ -289,7 +338,7 @@ export default function AtlasAssistantPage() {
                 }
               }}
             />
-            <button className="btn-wine px-6" onClick={() => void send(draft)} disabled={status === "thinking"}>
+            <button className="btn-wine px-6" onClick={() => void send(draft)} disabled={status === "thinking" || pendingActions.length > 0}>
               Send
             </button>
           </div>
@@ -299,7 +348,7 @@ export default function AtlasAssistantPage() {
               <button
                 key={q.label}
                 onClick={() => void send(q.prompt)}
-                disabled={status === "thinking"}
+                disabled={status === "thinking" || pendingActions.length > 0}
                 className="rounded-pill border-2 border-wine px-3.5 py-2 font-ui text-[17px] uppercase tracking-[0.12em] text-wine transition-colors hover:bg-wine hover:text-marble disabled:opacity-40"
               >
                 {q.label}

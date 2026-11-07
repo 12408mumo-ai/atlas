@@ -535,10 +535,16 @@ function ensureCousinInPeople() {
   }
 }
 
-export function hydrateMemories() {
-  if (memHydrated || typeof window === "undefined") return;
+let peopleSeedChecked = false;
+
+export function hydrateMemories(ensurePeople = true) {
+  if (typeof window === "undefined") return;
+  if (ensurePeople && !peopleSeedChecked) {
+    ensureCousinInPeople();
+    peopleSeedChecked = true;
+  }
+  if (memHydrated) return;
   memHydrated = true;
-  ensureCousinInPeople();
   try {
     const raw = localStorage.getItem(MEM_KEY);
     if (raw) memState = normalizeMemories(JSON.parse(raw) as Partial<MemoriesState>, true);
@@ -568,6 +574,11 @@ export function setMemories(
   if (requireStorage) localStorage.setItem(MEM_KEY, JSON.stringify(updated));
   memState = updated;
   persistMemories();
+}
+
+export function getMemoriesState(): MemoriesState {
+  hydrateMemories(false);
+  return memState;
 }
 
 export function useMemories(): MemoriesState {

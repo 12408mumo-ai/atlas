@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { PageShell } from "@/components/Chrome";
 import { Panel } from "@/components/ui";
+import { VoicePlayer } from "@/components/VoicePlayer";
+import { clearVoiceSettings, loadVoiceSettings, saveVoiceSettings, type VoiceSettings } from "@/lib/atlas-voice";
 import {
   DEFAULT_SETTINGS,
   PROVIDERS,
@@ -17,7 +19,7 @@ import {
 /* ------------------------------------------------------------------ */
 /*  Atlas Assistant Settings — the altar where a key is laid.         */
 /*  Paste any provider's API key, choose a model, test which one      */
-/*  answers best. The key never leaves this browser — Atlas calls     */
+/*  answers best. The browser sends the key to the chosen provider.  */
 /*  the provider directly, local-first like the rest of the world.    */
 /* ------------------------------------------------------------------ */
 
@@ -30,10 +32,17 @@ export default function AtlasSettingsPage() {
   const [customModel, setCustomModel] = useState(false);
   const [test, setTest] = useState<TestState>({ phase: "idle", detail: "" });
   const [savedAt, setSavedAt] = useState("");
+  const [voice, setVoice] = useState<VoiceSettings>({ apiKey: "", referenceId: "" });
+  const [voiceSaved, setVoiceSaved] = useState(false);
+  const [voiceError, setVoiceError] = useState("");
+  const [showVoiceKey, setShowVoiceKey] = useState(false);
 
   useEffect(() => {
     const settings = loadAISettings();
     setForm(settings);
+    const storedVoice = loadVoiceSettings();
+    setVoice(storedVoice);
+    setVoiceSaved(Boolean(storedVoice.apiKey && storedVoice.referenceId));
     const known = PROVIDERS[settings.provider].models.some((m) => m.id === settings.model);
     setCustomModel(!known);
     setLoaded(true);
@@ -56,6 +65,7 @@ export default function AtlasSettingsPage() {
     setForm((f) => ({
       ...f,
       provider: p,
+      apiKey: p === f.provider ? f.apiKey : "",
       model: models.length ? models[0].id : f.model,
       baseUrl: p === "custom" ? f.baseUrl : "",
     }));
@@ -126,11 +136,12 @@ export default function AtlasSettingsPage() {
 
             {/* api key */}
             <div>
-              <label className="mb-1.5 block font-ui text-[17.5px] uppercase tracking-[0.18em] text-wine opacity-75">
+              <label htmlFor="ai-key" className="mb-1.5 block font-ui text-[17.5px] uppercase tracking-[0.18em] text-wine opacity-75">
                 API key
               </label>
               <div className="flex flex-wrap gap-2">
                 <input
+                  id="ai-key"
                   type={showKey ? "text" : "password"}
                   className="field min-w-[220px] flex-1"
                   placeholder="Paste the key here…"
@@ -261,11 +272,30 @@ export default function AtlasSettingsPage() {
 
         {/* ================= SECURITY ================= */}
         <div className="space-y-3.5">
-          <Panel title="On safety" hint="Where the key lives">
+          <Panel title="Fish Audio voice" hint="Optional · testing in this tab">
+            <div className="space-y-3">
+              <p className="font-body text-[18px] text-wine">Use a new, limited-spend key. This testing key is unencrypted in this tab&apos;s session storage and is sent through the Atlas server to Fish Audio only when you generate speech. Anyone with access to this browser or malicious scripts on this site could read it.</p>
+              <label className="block font-ui text-[16px] text-wine" htmlFor="fish-key">Fish Audio API key</label>
+              <div className="flex flex-wrap gap-2">
+                <input id="fish-key" className="field min-w-0 flex-1" type={showVoiceKey ? "text" : "password"} value={voice.apiKey} onChange={(e) => { setVoice({ ...voice, apiKey: e.target.value }); setVoiceSaved(false); }} autoComplete="off" spellCheck={false} />
+                <button type="button" onClick={() => setShowVoiceKey(!showVoiceKey)} className="glass-button px-3 py-2 font-ui text-[15px]">{showVoiceKey ? "Hide" : "Show"}</button>
+              </div>
+              <label className="block font-ui text-[16px] text-wine" htmlFor="fish-voice-id">Fish Audio voice ID</label>
+              <input id="fish-voice-id" className="field" value={voice.referenceId} onChange={(e) => { setVoice({ ...voice, referenceId: e.target.value }); setVoiceSaved(false); }} placeholder="32-character voice ID" autoComplete="off" spellCheck={false} />
+              <div className="flex flex-wrap gap-2">
+                <button type="button" className="btn-wine btn-sm" onClick={() => { if (!voice.apiKey.trim() || !/^[a-f0-9]{32}$/i.test(voice.referenceId.trim())) { setVoiceError("Enter a key and a valid 32-character Fish voice ID."); return; } try { saveVoiceSettings(voice); setVoiceError(""); setVoiceSaved(true); } catch { setVoiceError("Could not save voice settings in this browser."); setVoiceSaved(false); } }}>Save voice for this tab</button>
+                <button type="button" className="glass-button px-3 py-2 font-ui text-[15px]" onClick={() => { clearVoiceSettings(); setVoice({ apiKey: "", referenceId: "" }); setVoiceSaved(false); setVoiceError(""); }}>Remove voice key</button>
+              </div>
+              {voiceError && <p role="alert" className="font-ui text-[14px] text-wine">{voiceError}</p>}
+              {voiceSaved && <p role="status" className="font-ui text-[14px] text-wine">Voice settings saved for this tab. Test speech uses your provider credits.</p>}
+              {voiceSaved && <VoicePlayer key={`${voice.apiKey.length}-${voice.referenceId}`} text="Hello. I am Atlas, ready to help you carry your world." label="Test voice" />}
+            </div>
+          </Panel>
+          <Panel title="On safety" hint="Testing credentials">
             <ul className="space-y-2.5 font-body text-[20px] leading-snug text-wine opacity-85">
-              <li>· The key is kept in this browser&apos;s <em>local storage</em> only — no server of ours ever sees it.</li>
-              <li>· Calls go straight from your browser to the provider you chose.</li>
-              <li>· “Lift” removes the key at once; clearing browser data does too.</li>
+              <li>· The AI key is stored unencrypted in this browser&apos;s <em>local storage</em>. Anyone with browser access or malicious scripts on this site could read it.</li>
+              <li>· AI calls go directly to your selected provider. Voice requests pass through the Atlas server to Fish Audio; the voice key is not saved on the server.</li>
+              <li>· “Lift” removes the AI key. The voice key is kept only for this tab’s session and can be removed above.</li>
               <li>· Use a key with a spend limit while you test which model works best.</li>
             </ul>
           </Panel>
