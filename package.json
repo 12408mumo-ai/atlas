@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 3000",
     "lint": "next lint",
-    "test:voice": "npx --yes tsx@4.19.2 ribbonsim.mts"
+    "test:voice": "npx --yes tsx@4.19.2 ribbonsim.mts && npx --yes tsx@4.19.2 guesttest.mts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.119.0",

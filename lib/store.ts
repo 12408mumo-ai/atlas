@@ -391,7 +391,7 @@ function read(): AtlasState {
 }
 
 function persistLocalState() {
-  if (typeof window === "undefined") return;
+  if (typeof localStorage === "undefined") return;
   try {
     localStorage.setItem(localStateKey(), JSON.stringify(state));
   } catch {}
@@ -499,40 +499,6 @@ export function useAtlas() {
 
 /* ------------------------------ session ------------------------------ */
 
-/**
- * Sign in without a password.
- *
- * Supabase sends a one-time link to the email address. Clicking the link
- * signs you in. Nothing to remember, nothing to type.
- */
-export async function sendMagicLink(
-  email: string,
-  name = ""
-): Promise<{ ok: boolean; error?: string }> {
-  const normalizedEmail = email.trim().toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-    return { ok: false, error: "Enter a valid email address." };
-  }
-
-  const supabase = getSupabaseBrowserClient();
-  if (!supabase) {
-    return { ok: false, error: "Supabase is not configured. Add the Supabase URL and anon key to your environment." };
-  }
-
-  const redirectTo =
-    typeof window !== "undefined" ? window.location.origin + "/hub" : undefined;
-
-  const { error } = await supabase.auth.signInWithOtp({
-    email: normalizedEmail,
-    options: {
-      emailRedirectTo: redirectTo,
-      data: name.trim() ? { name: name.trim() } : undefined,
-    },
-  });
-  if (error) return { ok: false, error: error.message };
-  return { ok: true };
-}
-
 export async function signIn(email: string, password: string): Promise<{ ok: boolean; error?: string }> {
   const normalizedEmail = email.trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
@@ -592,13 +558,35 @@ export async function createAccount(
 }
 
 export function getSession(): Session | null {
-  if (typeof window === "undefined") return null;
+  if (typeof localStorage === "undefined") return null;
   try {
     const raw = localStorage.getItem(SESSION_KEY);
     return raw ? (JSON.parse(raw) as Session) : null;
   } catch {
     return null;
   }
+}
+
+/**
+ * Come in without signing in.
+ *
+ * The session lives only in this browser. Nothing is sent to Supabase and
+ * nothing is synced to the cloud, so the data stays on this device until
+ * an account is made.
+ */
+export function enterAsGuest(name = "") {
+  if (typeof localStorage === "undefined") return;
+  const session: Session = {
+    name: name.trim() || "Guest",
+    email: "",
+    since: new Date().toISOString().slice(0, 10),
+  };
+  try {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  } catch {}
+  state = { ...state, session };
+  persistLocalState();
+  listeners.forEach((listener) => listener());
 }
 
 export async function clearSession() {

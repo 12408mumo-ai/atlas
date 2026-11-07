@@ -55,18 +55,20 @@ The world now has a mind and a body.
 
 ### Signing in
 
-- **The opening** (`/`) — the ribbon sphere hangs in the dark, woven from
-  flowing strands. It is the visual centre of the site, and it moves on its own.
-- **`/login`** — enter your email and we send a **one-time link**. Open the link
-  in your inbox and you are in. There is no password to remember or type.
+- **The opening** (`/`) — the sign-in form stands on the opening screen, with
+  the ribbon sphere woven behind it. Enter your email and password to sign in.
+- **Enter without signing in** — a button on the form lets you come straight in
+  without an account. Your world is kept in this browser only and is not
+  synced to the cloud, until you make an account.
+- **`/login`** — the same form, on its own page.
 - **`/hub`** — the globe and the spheres you know.
 
 ### The written assistant
 
-- **The opening** (`/`) — a woven ribbon sphere of magenta, blue and teal hangs
-  in the dark. It drifts on its own.
 - **The docked orb** — once inside, the spinning orb sits on the left edge of
   every page. Press it to open `/atlas`.
+- **The ribbon sphere** — a woven form of magenta, blue and teal that drifts on
+  its own. It hangs behind the sign-in form on the opening screen.
 
 ## State
 
