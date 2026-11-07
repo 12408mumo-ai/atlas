@@ -6,10 +6,8 @@ Built with Next.js (App Router), Tailwind, and a hand-made Greek design language
 
 ## The journey
 
-1. **`/login`** — The registry. A parchment **scroll** with turned wooden rods and
-   gilt finials sits on the left; behind it the **ruins of a Greek temple at golden
-   hour play as a looping video** (`public/assets/ruins-loop.mp4`, generated from
-   `ruins-poster.png`). Any email + a 4-character password forges your world.
+1. **`/` and `/login`** — Enter Atlas without an account. Your world is stored
+   locally in this browser.
 2. **`/hub`** — The Titan. A marble **Atlas kneels holding a glowing celestial
    sphere**; five **pillar spheres orbit the world** on tilted rings. Click a sphere
    → light blooms → the doorway opens.
@@ -53,15 +51,10 @@ The world now has a mind and a body.
   model answers, and the key powers every reply. The key lives only in this
   browser's localStorage; calls go straight from browser to provider.
 
-### Signing in
+### Entering Atlas
 
-- **The opening** (`/`) — the sign-in form stands on the opening screen, with
-  the ribbon sphere woven behind it. Enter your email and password to sign in.
-- **Enter without signing in** — a button on the form lets you come straight in
-  without an account. Your world is kept in this browser only and is not
-  synced to the cloud, until you make an account.
-- **`/login`** — the same form, on its own page.
-- **`/hub`** — the globe and the spheres you know.
+Open `/` or `/login` and choose **Enter Atlas**. No account is required.
+Your world is stored in this browser on this device; it does not sync between devices.
 
 ### The written assistant
 
@@ -72,9 +65,12 @@ The world now has a mind and a body.
 
 ## State
 
-Local-first. Everything (session, projects, ledger, people, habits, journal…)
-lives in `localStorage` through one tiny store in `lib/store.ts`, seeded with a
-believable world so the pages are alive on first open.
+Local-first. World data, Memories, assistant settings, and chat live in browser
+`localStorage`, seeded with example data. Clearing browser data can erase them.
+Gallery photos and videos are stored in the browser too and are subject to its
+limited storage quota. Previously uploaded remote media may no longer be available.
+Existing account-specific browser caches are not automatically imported into the
+local world, and previously cloud-synced data is not automatically downloaded.
 
 ## Run
 

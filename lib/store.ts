@@ -1,11 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  getSupabaseBrowserClient,
-  loadAtlasCloudRow,
-  saveAtlasWorldState,
-} from "@/lib/supabase";
+
 
 /* ------------------------------------------------------------------ */
 /*  Atlas — a tiny observable store. Everything is local-first: the    */
@@ -371,12 +367,6 @@ export const seed = (): AtlasState => ({
 let state: AtlasState = seed();
 const listeners = new Set<() => void>();
 let hydrated = false;
-let activeUserId: string | null = null;
-let cloudSaveTimer: ReturnType<typeof setTimeout> | null = null;
-
-function localStateKey() {
-  return activeUserId ? `${KEY}.${activeUserId}` : KEY;
-}
 
 function read(): AtlasState {
   if (typeof window === "undefined") return seed();
@@ -393,83 +383,19 @@ function read(): AtlasState {
 function persistLocalState() {
   if (typeof localStorage === "undefined") return;
   try {
-    localStorage.setItem(localStateKey(), JSON.stringify(state));
+    localStorage.setItem(KEY, JSON.stringify(state));
   } catch {}
-}
-
-function worldStateForCloud(): Record<string, unknown> {
-  const { session: _session, ...worldState } = state;
-  return worldState as unknown as Record<string, unknown>;
-}
-
-function scheduleCloudSave() {
-  if (!activeUserId || !getSupabaseBrowserClient()) return;
-  if (cloudSaveTimer) clearTimeout(cloudSaveTimer);
-  const userId = activeUserId;
-  cloudSaveTimer = setTimeout(() => {
-    void saveAtlasWorldState(worldStateForCloud(), userId).catch((error) => {
-      console.error("Could not save Atlas data to Supabase.", error);
-    });
-  }, 400);
-}
-
-export async function syncWorldFromCloud() {
-  const supabase = getSupabaseBrowserClient();
-  if (!supabase) return;
-  const { data: authData, error: authError } = await supabase.auth.getSession();
-  if (authError) throw authError;
-  const user = authData.session?.user;
-  if (!user) return;
-
-  if (activeUserId !== user.id) state = seed();
-  activeUserId = user.id;
-  const session: Session = {
-    name: String(user.user_metadata?.name ?? user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "Atlas user"),
-    email: user.email ?? "",
-    since: user.created_at?.slice(0, 10) ?? todayISO(),
-    userId: user.id,
-  };
-
-  // Load only this authenticated user's local cache while the network request runs.
-  try {
-    const cached = localStorage.getItem(localStateKey());
-    if (cached) state = { ...seed(), ...(JSON.parse(cached) as Partial<AtlasState>), session };
-  } catch {}
-  listeners.forEach((listener) => listener());
-
-  const cloud = await loadAtlasCloudRow();
-  if (!cloud) return;
-  if (cloud.row?.world_state && Object.keys(cloud.row.world_state).length > 0) {
-    state = { ...seed(), ...cloud.row.world_state, session } as AtlasState;
-  } else {
-    // Never copy another signed-in user's anonymous browser cache into a new account.
-    state = { ...state, session };
-    await saveAtlasWorldState(worldStateForCloud(), activeUserId);
-  }
-  persistLocalState();
-  try {
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-  } catch {}
-  listeners.forEach((l) => l());
 }
 
 export function hydrate() {
   if (hydrated || typeof window === "undefined") return;
   hydrated = true;
-  const cloudConfigured = Boolean(getSupabaseBrowserClient());
-  state = cloudConfigured ? seed() : read();
-  if (!cloudConfigured) {
-    const s = localStorage.getItem(SESSION_KEY);
-    if (s) {
-      try {
-        state.session = JSON.parse(s);
-      } catch {}
-    }
-  }
-  listeners.forEach((l) => l());
-  void syncWorldFromCloud().catch((error) => {
-    console.error("Could not load Atlas data from Supabase.", error);
-  });
+  state = read();
+  try {
+    const session = localStorage.getItem(SESSION_KEY);
+    if (session) state.session = JSON.parse(session);
+  } catch {}
+  listeners.forEach((listener) => listener());
 }
 
 export function getState() {
@@ -480,7 +406,6 @@ export function setState(patch: Partial<AtlasState> | ((s: AtlasState) => Partia
   const next = typeof patch === "function" ? patch(state) : patch;
   state = { ...state, ...next };
   persistLocalState();
-  scheduleCloudSave();
   listeners.forEach((l) => l());
 }
 
@@ -499,64 +424,6 @@ export function useAtlas() {
 
 /* ------------------------------ session ------------------------------ */
 
-export async function signIn(email: string, password: string): Promise<{ ok: boolean; error?: string }> {
-  const normalizedEmail = email.trim().toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-    return { ok: false, error: "Enter a valid email address." };
-  }
-  if (!password) return { ok: false, error: "Enter your password." };
-
-  const supabase = getSupabaseBrowserClient();
-  if (!supabase) {
-    return { ok: false, error: "Supabase is not configured. Add the Supabase URL and anon key to your environment." };
-  }
-
-  const { error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
-  if (error) return { ok: false, error: error.message };
-  try {
-    await syncWorldFromCloud();
-  } catch (syncError) {
-    return {
-      ok: false,
-      error: syncError instanceof Error ? syncError.message : "Signed in, but could not load your Atlas data.",
-    };
-  }
-  return { ok: true };
-}
-
-export async function createAccount(
-  email: string,
-  password: string,
-  name = ""
-): Promise<{ ok: boolean; needsEmailConfirmation?: boolean; error?: string }> {
-  const normalizedEmail = email.trim().toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-    return { ok: false, error: "Enter a valid email address." };
-  }
-  if (password.length < 8) return { ok: false, error: "Use a password with at least 8 characters." };
-
-  const supabase = getSupabaseBrowserClient();
-  if (!supabase) {
-    return { ok: false, error: "Supabase is not configured. Add the Supabase URL and anon key to your environment." };
-  }
-  const { data, error } = await supabase.auth.signUp({
-    email: normalizedEmail,
-    password,
-    options: { data: { name: name.trim() || normalizedEmail.split("@")[0] } },
-  });
-  if (error) return { ok: false, error: error.message };
-  if (!data.session) return { ok: true, needsEmailConfirmation: true };
-  try {
-    await syncWorldFromCloud();
-  } catch (syncError) {
-    return {
-      ok: false,
-      error: syncError instanceof Error ? syncError.message : "Account created, but could not load Atlas data.",
-    };
-  }
-  return { ok: true, needsEmailConfirmation: false };
-}
-
 export function getSession(): Session | null {
   if (typeof localStorage === "undefined") return null;
   try {
@@ -567,15 +434,12 @@ export function getSession(): Session | null {
   }
 }
 
-/**
- * Come in without signing in.
- *
- * The session lives only in this browser. Nothing is sent to Supabase and
- * nothing is synced to the cloud, so the data stays on this device until
- * an account is made.
- */
+/** Create a local-only session on this device. */
 export function enterAsGuest(name = "") {
   if (typeof localStorage === "undefined") return;
+  // Load the saved world before persisting a new session, so entering from
+  // the welcome page cannot overwrite existing local data with the seed.
+  hydrate();
   const session: Session = {
     name: name.trim() || "Guest",
     email: "",
@@ -590,14 +454,7 @@ export function enterAsGuest(name = "") {
 }
 
 export async function clearSession() {
-  const supabase = getSupabaseBrowserClient();
-  if (supabase) {
-    const { error } = await supabase.auth.signOut();
-    if (error) console.error("Could not sign out of Supabase.", error);
-  }
   if (typeof window !== "undefined") localStorage.removeItem(SESSION_KEY);
-  if (cloudSaveTimer) clearTimeout(cloudSaveTimer);
-  activeUserId = null;
   state = { ...state, session: null };
   listeners.forEach((listener) => listener());
 }

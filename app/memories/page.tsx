@@ -880,9 +880,7 @@ function GalleryView({
   const [preview, setPreview] = useState<{
     src: string;
     mediaType: "photo" | "video";
-    file: File;
   } | null>(null);
-  const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   const mediaList = useMemo(() => {
@@ -918,66 +916,19 @@ function GalleryView({
         setPreview({
           src: reader.result,
           mediaType: isVideo ? "video" : "photo",
-          file,
         });
       }
     };
+    reader.onerror = () => setUploadError("Could not read this file. Please try again.");
     reader.readAsDataURL(file);
   };
 
-  /** Ask the server for a signed R2 PUT, then send the file there. */
-  const uploadToStorage = async (
-    file: File
-  ): Promise<{ src: string; key: string }> => {
-    const res = await fetch("/api/r2/upload", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contentType: file.type,
-        size: file.size,
-        filename: file.name,
-      }),
-    });
-
-    const data = await res.json().catch(() => null);
-    if (!res.ok || !data?.ok) {
-      throw new Error(data?.error ?? "Could not start the upload.");
-    }
-
-    const put = await fetch(data.uploadUrl, {
-      method: data.method ?? "PUT",
-      headers: data.headers ?? {},
-      body: file,
-    });
-    if (!put.ok) {
-      throw new Error("Cloudflare rejected the upload. Please try again.");
-    }
-
-    return { src: data.readUrl, key: data.key };
-  };
-
-  const saveMedia = async (e: React.FormEvent) => {
+  const saveMedia = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!preview || uploading) return;
-
-    setUploading(true);
+    if (!preview) return;
     setUploadError(null);
 
     try {
-      let src = preview.src;
-      try {
-        const uploaded = await uploadToStorage(preview.file);
-        src = uploaded.src;
-      } catch (storageError) {
-        // If Cloudflare is not ready yet, keep the file locally so the entry
-        // is not lost. Once storage is live the file lives in R2.
-        setUploadError(
-          storageError instanceof Error
-            ? storageError.message
-            : "Upload failed."
-        );
-      }
-
       addMemoryEntry({
         kind: "media",
         title: caption.trim() || `Uploaded ${preview.mediaType}`,
@@ -994,16 +945,16 @@ function GalleryView({
         media: {
           id: `med-${Date.now()}`,
           mediaType: preview.mediaType,
-          src,
+          src: preview.src,
           album,
         },
-      });
+      }, { requireStorage: true });
       setCaption("");
       setPeople("");
       setPreview(null);
       setShowUpload(false);
-    } finally {
-      setUploading(false);
+    } catch {
+      setUploadError("Could not save this file. Browser storage may be full; try a smaller file or free up space.");
     }
   };
 
@@ -1055,6 +1006,7 @@ function GalleryView({
           onSubmit={saveMedia}
           className="space-y-3 rounded-xl border border-wine/50 bg-marbleDim/45 p-4"
         >
+          <p className="font-ui text-[14px] text-wine opacity-70">Files are saved in this browser only. Storage space is limited, especially for videos.</p>
           <label className="block cursor-pointer rounded-lg border border-dashed border-wine p-4 text-center font-ui text-[16px] text-wine">
             {preview ? `Selected ${preview.mediaType} (click to change)` : "Choose a photo or video"}
             <input type="file" accept="image/*,video/*" onChange={onPickFile} className="hidden" />
@@ -1083,14 +1035,14 @@ function GalleryView({
           </div>
           <button
             type="submit"
-            disabled={!preview || uploading}
+            disabled={!preview}
             className="rounded-pill bg-wine px-5 py-2 font-ui text-[15px] text-marble disabled:opacity-40"
           >
-            {uploading ? "Uploading…" : "Save"}
+            Save
           </button>
           {uploadError && (
             <p className="font-ui text-[14px] text-wine opacity-70">
-              {uploadError} The file was kept in this browser instead.
+              {uploadError}
             </p>
           )}
         </form>

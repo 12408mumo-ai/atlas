@@ -13,7 +13,6 @@ import {
   type AIProvider,
   type AISettings,
 } from "@/lib/atlas-ai";
-import { loadAtlasCloudRow } from "@/lib/supabase";
 
 /* ------------------------------------------------------------------ */
 /*  Atlas Assistant Settings — the altar where a key is laid.         */
@@ -33,37 +32,11 @@ export default function AtlasSettingsPage() {
   const [savedAt, setSavedAt] = useState("");
 
   useEffect(() => {
-    let cancelled = false;
-    const applySettings = (settings: AISettings) => {
-      setForm(settings);
-      const known = PROVIDERS[settings.provider].models.some((m) => m.id === settings.model);
-      setCustomModel(!known);
-      setLoaded(true);
-    };
-    const localSettings = loadAISettings();
-    applySettings(localSettings);
-    void loadAtlasCloudRow().then((cloud) => {
-      const preferences = cloud?.row?.assistant_preferences;
-      if (!cancelled && preferences && Object.keys(preferences).length > 0) {
-        const provider = preferences.provider;
-        const safeProvider = typeof provider === "string" && provider in PROVIDERS
-          ? provider as AIProvider
-          : localSettings.provider;
-        const merged: AISettings = {
-          ...localSettings,
-          ...preferences,
-          provider: safeProvider,
-          apiKey: localSettings.apiKey,
-        } as AISettings;
-        applySettings(merged);
-      }
-    }).catch((error) => {
-      console.error("Could not load Atlas assistant preferences from Supabase.", error);
-    });
-
-    return () => {
-      cancelled = true;
-    };
+    const settings = loadAISettings();
+    setForm(settings);
+    const known = PROVIDERS[settings.provider].models.some((m) => m.id === settings.model);
+    setCustomModel(!known);
+    setLoaded(true);
   }, []);
 
   const provider = PROVIDERS[form.provider];

@@ -10,11 +10,7 @@ import {
   type AtlasState,
   type Person,
 } from "./store";
-import {
-  getSupabaseBrowserClient,
-  loadAtlasCloudRow,
-  saveAtlasMemoriesState,
-} from "@/lib/supabase";
+
 
 /* ------------------------------------------------------------------ */
 /*  Memories Store (Simple Everyday Language)                         */
@@ -506,13 +502,6 @@ export function seedMemories(): MemoriesState {
 let memState: MemoriesState = seedMemories();
 const memListeners = new Set<() => void>();
 let memHydrated = false;
-let memUserId: string | null = null;
-let memSaveTimer: ReturnType<typeof setTimeout> | null = null;
-
-function memoriesCacheKey() {
-  return memUserId ? `${MEM_KEY}.${memUserId}` : MEM_KEY;
-}
-
 function normalizeMemories(parsed: Partial<MemoriesState>, keepEmptyEntries = false): MemoriesState {
   const defaults = seedMemories();
   return {
@@ -546,79 +535,38 @@ function ensureCousinInPeople() {
   }
 }
 
-async function syncMemoriesFromCloud() {
-  const supabase = getSupabaseBrowserClient();
-  if (!supabase) return;
-  const { data: authData, error: authError } = await supabase.auth.getSession();
-  if (authError) throw authError;
-  const userId = authData.session?.user.id;
-  if (!userId) return;
-  if (memUserId !== userId) memState = seedMemories();
-  memUserId = userId;
-
-  // Use only this authenticated user's cache while loading their cloud record.
-  try {
-    const cached = localStorage.getItem(memoriesCacheKey());
-    if (cached) memState = normalizeMemories(JSON.parse(cached) as Partial<MemoriesState>, true);
-  } catch {}
-  memListeners.forEach((listener) => listener());
-
-  const cloud = await loadAtlasCloudRow();
-  if (!cloud) return;
-  const remote = cloud.row?.memories_state;
-  if (remote && Object.keys(remote).length > 0) {
-    memState = normalizeMemories(remote as Partial<MemoriesState>, true);
-  } else {
-    memState = memState ?? seedMemories();
-    await saveAtlasMemoriesState(memState as unknown as Record<string, unknown>, memUserId);
-  }
-  try {
-    localStorage.setItem(memoriesCacheKey(), JSON.stringify(memState));
-  } catch {}
-  memListeners.forEach((listener) => listener());
-}
-
 export function hydrateMemories() {
   if (memHydrated || typeof window === "undefined") return;
   memHydrated = true;
   ensureCousinInPeople();
-  const cloudConfigured = Boolean(getSupabaseBrowserClient());
-  if (cloudConfigured) memState = seedMemories();
   try {
-    const raw = cloudConfigured ? null : localStorage.getItem(memoriesCacheKey());
-    if (raw) memState = normalizeMemories(JSON.parse(raw) as Partial<MemoriesState>);
+    const raw = localStorage.getItem(MEM_KEY);
+    if (raw) memState = normalizeMemories(JSON.parse(raw) as Partial<MemoriesState>, true);
   } catch {
     memState = seedMemories();
   }
-  memListeners.forEach((l) => l());
-  void syncMemoriesFromCloud().catch((error) => {
-    console.error("Could not sync Memories with Supabase.", error);
-  });
+  memListeners.forEach((listener) => listener());
 }
 
 function persistMemories() {
   if (typeof window !== "undefined") {
     try {
-      localStorage.setItem(memoriesCacheKey(), JSON.stringify(memState));
+      localStorage.setItem(MEM_KEY, JSON.stringify(memState));
     } catch {}
   }
-  if (memUserId && getSupabaseBrowserClient()) {
-    if (memSaveTimer) clearTimeout(memSaveTimer);
-    const userId = memUserId;
-    memSaveTimer = setTimeout(() => {
-      void saveAtlasMemoriesState(memState as unknown as Record<string, unknown>, userId).catch((error) => {
-        console.error("Could not save Memories to Supabase.", error);
-      });
-    }, 400);
-  }
-  memListeners.forEach((l) => l());
+  memListeners.forEach((listener) => listener());
 }
 
 export function setMemories(
-  patch: Partial<MemoriesState> | ((prev: MemoriesState) => Partial<MemoriesState>)
+  patch: Partial<MemoriesState> | ((prev: MemoriesState) => Partial<MemoriesState>),
+  requireStorage = false
 ) {
   const next = typeof patch === "function" ? patch(memState) : patch;
-  memState = { ...memState, ...next };
+  const updated = { ...memState, ...next };
+  // Media can exceed localStorage limits. Verify it is saved before adding it
+  // to the visible state, so a failed write cannot look like a successful save.
+  if (requireStorage) localStorage.setItem(MEM_KEY, JSON.stringify(updated));
+  memState = updated;
   persistMemories();
 }
 
@@ -644,7 +592,7 @@ export function nowHHMM(): string {
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
-export function addMemoryEntry(entry: Omit<MemoryEntry, "id">): MemoryEntry {
+export function addMemoryEntry(entry: Omit<MemoryEntry, "id">, options?: { requireStorage?: boolean }): MemoryEntry {
   const created: MemoryEntry = {
     ...entry,
     id: `m-${Date.now().toString(36)}-${Math.floor(Math.random() * 999)}`,
@@ -663,7 +611,7 @@ export function addMemoryEntry(entry: Omit<MemoryEntry, "id">): MemoryEntry {
       entries: [created, ...updated],
       albums: nextAlbums,
     };
-  });
+  }, options?.requireStorage);
 
   if (created.kind === "journal" || created.kind === "milestone" || created.kind === "autolog") {
     setState((s) => ({

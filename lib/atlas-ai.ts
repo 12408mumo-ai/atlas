@@ -2,7 +2,6 @@
 
 import { getState, setState, todayISO, type Assignment, type AtlasState } from "./store";
 import { addMemoryEntry, nowHHMM } from "./memories";
-import { saveAtlasAssistantPreferences } from "@/lib/supabase";
 
 /* ------------------------------------------------------------------ */
 /*  ATLAS AI — the mind of the Titan.                                  */
@@ -99,10 +98,6 @@ export function loadAISettings(): AISettings {
 export function saveAISettings(patch: Partial<AISettings>) {
   const next = { ...loadAISettings(), ...patch };
   if (typeof window !== "undefined") localStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
-  const { apiKey: _apiKey, ...safePreferences } = next;
-  void saveAtlasAssistantPreferences(safePreferences as unknown as Record<string, unknown>).catch((error) => {
-    console.error("Could not save Atlas assistant preferences to Supabase.", error);
-  });
   return next;
 }
 

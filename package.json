@@ -10,7 +10,6 @@
     "test:voice": "npx --yes tsx@4.19.2 ribbonsim.mts && npx --yes tsx@4.19.2 guesttest.mts"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.119.0",
     "@types/three": "^0.187.0",
     "lucide-react": "0.454.0",
     "next": "14.2.15",
