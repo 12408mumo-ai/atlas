@@ -499,6 +499,40 @@ export function useAtlas() {
 
 /* ------------------------------ session ------------------------------ */
 
+/**
+ * Sign in without a password.
+ *
+ * Supabase sends a one-time link to the email address. Clicking the link
+ * signs you in. Nothing to remember, nothing to type.
+ */
+export async function sendMagicLink(
+  email: string,
+  name = ""
+): Promise<{ ok: boolean; error?: string }> {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+    return { ok: false, error: "Enter a valid email address." };
+  }
+
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) {
+    return { ok: false, error: "Supabase is not configured. Add the Supabase URL and anon key to your environment." };
+  }
+
+  const redirectTo =
+    typeof window !== "undefined" ? window.location.origin + "/hub" : undefined;
+
+  const { error } = await supabase.auth.signInWithOtp({
+    email: normalizedEmail,
+    options: {
+      emailRedirectTo: redirectTo,
+      data: name.trim() ? { name: name.trim() } : undefined,
+    },
+  });
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
 export async function signIn(email: string, password: string): Promise<{ ok: boolean; error?: string }> {
   const normalizedEmail = email.trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {

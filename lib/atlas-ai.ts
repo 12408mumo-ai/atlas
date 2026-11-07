@@ -22,8 +22,6 @@ export type AISettings = {
   model: string;
   apiKey: string;
   baseUrl: string;
-  speak: boolean; // read replies aloud
-  voiceURI: string; // speechSynthesis voice identifier
 };
 
 const SETTINGS_KEY = "atlas.ai.v1";
@@ -77,15 +75,22 @@ export const DEFAULT_SETTINGS: AISettings = {
   model: "gpt-4o-mini",
   apiKey: "",
   baseUrl: "",
-  speak: true,
-  voiceURI: "",
 };
 
 export function loadAISettings(): AISettings {
   if (typeof window === "undefined") return DEFAULT_SETTINGS;
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
-    return raw ? { ...DEFAULT_SETTINGS, ...JSON.parse(raw) } : DEFAULT_SETTINGS;
+    if (!raw) return DEFAULT_SETTINGS;
+    const saved = JSON.parse(raw) as Partial<AISettings>;
+    // Keep only the fields we still use, so settings saved by an older
+    // version cannot carry dead options along.
+    return {
+      provider: saved.provider ?? DEFAULT_SETTINGS.provider,
+      model: saved.model ?? DEFAULT_SETTINGS.model,
+      apiKey: saved.apiKey ?? DEFAULT_SETTINGS.apiKey,
+      baseUrl: saved.baseUrl ?? DEFAULT_SETTINGS.baseUrl,
+    };
   } catch {
     return DEFAULT_SETTINGS;
   }
@@ -551,26 +556,4 @@ function executeAction(a: AtlasAction): { label: string; ok: boolean } {
     default:
       return fail(`unknown edict “${a.type}”`);
   }
-}
-
-/* ------------------------------------------------------------------ */
-/*  The voice of the Titan                                            */
-/* ------------------------------------------------------------------ */
-
-export function speak(text: string, settings = loadAISettings(), onEnd?: () => void) {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return onEnd?.();
-  window.speechSynthesis.cancel();
-  const utter = new SpeechSynthesisUtterance(text);
-  const voices = window.speechSynthesis.getVoices();
-  const chosen = voices.find((v) => v.voiceURI === settings.voiceURI) ?? voices.find((v) => /en[-_]/i.test(v.lang)) ?? voices[0];
-  if (chosen) utter.voice = chosen;
-  utter.rate = 0.92;
-  utter.pitch = 0.72; // the Titan speaks low
-  utter.onend = () => onEnd?.();
-  utter.onerror = () => onEnd?.();
-  window.speechSynthesis.speak(utter);
-}
-
-export function stopSpeaking() {
-  if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
 }

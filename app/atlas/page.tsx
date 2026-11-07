@@ -10,8 +10,6 @@ import {
   isConfigured,
   loadAISettings,
   saveAISettings,
-  speak,
-  stopSpeaking,
   PROVIDERS,
   type ChatTurn,
 } from "@/lib/atlas-ai";
@@ -37,19 +35,7 @@ type Msg = {
 const CHAT_KEY = "atlas.ai.chat.v1";
 const MAX_HISTORY = 16; // turns sent to the model
 
-type VoiceStatus = "idle" | "listening" | "thinking" | "speaking";
-
-type RecognitionLike = {
-  start: () => void;
-  stop: () => void;
-  abort: () => void;
-  lang: string;
-  interimResults: boolean;
-  continuous: boolean;
-  onresult: ((e: { results: { [k: number]: { [k: number]: { transcript: string } } } }) => void) | null;
-  onend: (() => void) | null;
-  onerror: (() => void) | null;
-};
+type Status = "idle" | "thinking";
 
 function loadChat(key = CHAT_KEY): Msg[] {
   try {
@@ -73,13 +59,10 @@ export default function AtlasAssistantPage() {
   const [chatUserId, setChatUserId] = useState<string | null>(null);
   const [chatReady, setChatReady] = useState(false);
   const [draft, setDraft] = useState("");
-  const [status, setStatus] = useState<VoiceStatus>("idle");
+  const [status, setStatus] = useState<Status>("idle");
   const [configured, setConfigured] = useState(false);
   const [providerLabel, setProviderLabel] = useState("");
   const [model, setModel] = useState("");
-  const [speakOn, setSpeakOn] = useState(true);
-  const [micSupported, setMicSupported] = useState(false);
-  const recRef = useRef<RecognitionLike | null>(null);
   const transcriptRef = useRef<HTMLDivElement>(null);
   const chatSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -122,9 +105,6 @@ export default function AtlasAssistantPage() {
     const st = loadAISettings();
     setProviderLabel(PROVIDERS[st.provider].label);
     setModel(st.model);
-    setSpeakOn(st.speak);
-    const w = window as unknown as { SpeechRecognition?: unknown; webkitSpeechRecognition?: unknown };
-    setMicSupported(Boolean(w.SpeechRecognition || w.webkitSpeechRecognition));
     return () => {
       cancelled = true;
       if (chatSaveTimer.current) clearTimeout(chatSaveTimer.current);
@@ -149,47 +129,6 @@ export default function AtlasAssistantPage() {
     }
     transcriptRef.current?.scrollTo({ top: transcriptRef.current.scrollHeight, behavior: "smooth" });
   }, [msgs, chatReady, chatUserId]);
-
-  useEffect(() => () => stopSpeaking(), []);
-
-  /* ---------------- voice in ---------------- */
-  function startListening() {
-    const w = window as unknown as {
-      SpeechRecognition?: new () => RecognitionLike;
-      webkitSpeechRecognition?: new () => RecognitionLike;
-    };
-    const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
-    if (!Ctor || status !== "idle") return;
-    stopSpeaking();
-    const rec = new Ctor();
-    rec.lang = "en-US";
-    rec.interimResults = false;
-    rec.continuous = false;
-    let heard = "";
-    rec.onresult = (e) => {
-      heard = e.results?.[0]?.[0]?.transcript ?? "";
-    };
-    rec.onend = () => {
-      recRef.current = null;
-      if (heard.trim()) {
-        setDraft(heard.trim());
-        void send(heard.trim());
-      } else {
-        setStatus("idle");
-      }
-    };
-    rec.onerror = () => {
-      recRef.current = null;
-      setStatus("idle");
-    };
-    recRef.current = rec;
-    setStatus("listening");
-    rec.start();
-  }
-
-  function stopListening() {
-    recRef.current?.stop();
-  }
 
   /* ---------------- the oracle answers ---------------- */
   async function send(text: string) {
@@ -225,13 +164,7 @@ export default function AtlasAssistantPage() {
         time: nowTime(),
       };
       setMsgs((m) => [...m, reply]);
-      const st = loadAISettings();
-      if (st.speak && reply.content) {
-        setStatus("speaking");
-        speak(reply.content, st, () => setStatus("idle"));
-      } else {
-        setStatus("idle");
-      }
+      setStatus("idle");
     } catch (e) {
       const msg = e instanceof Error ? e.message : "The way to Olympus is blocked.";
       setMsgs((m) => [
@@ -250,11 +183,9 @@ export default function AtlasAssistantPage() {
   const nowTime = () =>
     new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 
-  const statusLine: Record<VoiceStatus, string> = {
-    idle: configured ? "The Titan is awake. Speak." : "The Titan sleeps — a key must be laid.",
-    listening: "Listening… speak now.",
+  const statusLine: Record<Status, string> = {
+    idle: configured ? "The Titan is awake. Ask." : "The Titan sleeps — a key must be laid.",
     thinking: "Atlas weighs your words…",
-    speaking: "The Titan speaks…",
   };
 
   const activePlans = s.plans;
@@ -263,7 +194,7 @@ export default function AtlasAssistantPage() {
     <PageShell
       greek="Ὁ Τιτὰν ἐνεργός · the awakened titan"
       title="Atlas AI"
-      subtitle="The mind that holds your world. Ask him to analyse it, add to it, strike from it, or lay a plan — then listen, for the Titan speaks."
+      subtitle="The mind that holds your world. Ask him to analyse it, add to it, strike from it, or lay a plan."
       action={
         <Link href="/atlas/settings" className="btn-ghost btn-sm">
           Assistant settings
@@ -285,13 +216,7 @@ export default function AtlasAssistantPage() {
             <div className="absolute left-1/2 top-5 -translate-x-1/2">
               <div
                 className={`grid h-14 w-14 place-items-center rounded-full border-2 ${
-                  status === "idle"
-                    ? "border-marble bg-wine"
-                    : status === "listening"
-                      ? "border-wine bg-marble anim-breathe"
-                      : status === "thinking"
-                        ? "border-marble bg-wine anim-breathe"
-                        : "border-wine bg-marble anim-breathe"
+                  status === "idle" ? "border-marble bg-wine" : "border-marble bg-wine anim-breathe"
                 }`}
               >
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
@@ -299,7 +224,7 @@ export default function AtlasAssistantPage() {
                     cx="12"
                     cy="12"
                     r="8"
-                    stroke={status === "listening" || status === "speaking" ? "#28282A" : "#F5E8D3"}
+                    stroke="#F5E8D3"
                     strokeWidth="2"
                   />
                   <ellipse
@@ -307,7 +232,7 @@ export default function AtlasAssistantPage() {
                     cy="12"
                     rx="8"
                     ry="3.4"
-                    stroke={status === "listening" || status === "speaking" ? "#28282A" : "#F5E8D3"}
+                    stroke="#F5E8D3"
                     strokeWidth="1.4"
                   />
                 </svg>
@@ -317,47 +242,6 @@ export default function AtlasAssistantPage() {
               <p className="font-ui text-[17px] uppercase tracking-[0.22em] text-marble opacity-85">The body of Atlas · v1.0 mind</p>
               <p className="mt-1.5 font-body text-[20.5px] italic leading-snug text-marble opacity-90">{statusLine[status]}</p>
               <div className="mt-3.5 flex items-center gap-2.5">
-                {/* mic */}
-                {micSupported && (
-                  <button
-                    onClick={status === "listening" ? stopListening : startListening}
-                    disabled={status === "thinking" || status === "speaking"}
-                    className={`grid h-12 w-12 place-items-center rounded-full border-2 transition-colors disabled:opacity-40 ${
-                      status === "listening"
-                        ? "border-marble bg-marble text-wine"
-                        : "border-marble bg-wine text-marble hover:bg-marble hover:text-wine"
-                    }`}
-                    aria-label={status === "listening" ? "Stop listening" : "Speak to Atlas"}
-                  >
-                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                      <rect x="9" y="3" width="6" height="11" rx="3" />
-                      <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
-                    </svg>
-                  </button>
-                )}
-                {/* voice toggle */}
-                <button
-                  onClick={() => {
-                    const next = !speakOn;
-                    setSpeakOn(next);
-                    stopSpeaking();
-                    saveAISettings({ speak: next });
-                  }}
-                  className={`grid h-12 w-12 place-items-center rounded-full border-2 transition-colors ${
-                    speakOn ? "border-marble bg-marble text-wine" : "border-marble bg-transparent text-marble"
-                  }`}
-                  aria-label={speakOn ? "Mute the Titan's voice" : "Give the Titan voice"}
-                >
-                  {speakOn ? (
-                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M11 5 6 9H2v6h4l5 4zM15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13" />
-                    </svg>
-                  ) : (
-                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M11 5 6 9H2v6h4l5 4zM22 9l-6 6M16 9l6 6" />
-                    </svg>
-                  )}
-                </button>
                 <div className="ml-auto text-right">
                   <p className="font-ui text-[16.5px] uppercase tracking-[0.18em] text-marble opacity-75">powered by</p>
                   <p className="font-ui text-[18px] uppercase tracking-[0.14em] text-marble">
@@ -370,7 +254,7 @@ export default function AtlasAssistantPage() {
         </div>
 
         {/* ==== THE ORACLE — chat ==== */}
-        <Panel title="The oracle" hint="Type, or touch the disc and speak" tone="marble" className="flex flex-col">
+        <Panel title="The oracle" hint="Type your question" tone="marble" className="flex flex-col">
           {!configured && (
             <div className="mb-3.5 rounded-xl border-2 border-wine bg-marbleDim px-4 py-3.5">
               <p className="font-ui text-[18px] uppercase tracking-[0.18em] text-wine">No API key laid</p>
@@ -542,7 +426,6 @@ export default function AtlasAssistantPage() {
               ["Πρόσθεσις", "Add — tasks, habits, people, journal entries, expenses, assignments."],
               ["Ἀφαίρεσις", "Remove — strike tasks, habits, projects, people and ledger entries."],
               ["Βουλή", "Plan — he lays staircases of steps that appear beside you."],
-              ["Φωνή", "Voice — speak to him; he answers aloud, low, like stone moving."],
             ].map(([greek, line]) => (
               <li key={greek} className="flex gap-3.5">
                 <span className="mt-0.5 w-32 shrink-0 font-display text-[19px] tracking-[0.06em] text-marble">{greek}</span>

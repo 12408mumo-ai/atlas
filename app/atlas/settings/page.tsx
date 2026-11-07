@@ -9,13 +9,11 @@ import {
   PROVIDERS,
   loadAISettings,
   saveAISettings,
-  speak,
   testConnection,
   type AIProvider,
   type AISettings,
 } from "@/lib/atlas-ai";
 import { loadAtlasCloudRow } from "@/lib/supabase";
-import { clearStoredPin, getStoredPin, setStoredPin } from "@/lib/voice-pass";
 
 /* ------------------------------------------------------------------ */
 /*  Atlas Assistant Settings — the altar where a key is laid.         */
@@ -33,9 +31,6 @@ export default function AtlasSettingsPage() {
   const [customModel, setCustomModel] = useState(false);
   const [test, setTest] = useState<TestState>({ phase: "idle", detail: "" });
   const [savedAt, setSavedAt] = useState("");
-  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [voicePin, setVoicePin] = useState("");
-  const [voicePinState, setVoicePinState] = useState<"idle" | "saved" | "cleared">("idle");
 
   useEffect(() => {
     let cancelled = false;
@@ -66,12 +61,8 @@ export default function AtlasSettingsPage() {
       console.error("Could not load Atlas assistant preferences from Supabase.", error);
     });
 
-    const collect = () => setVoices(window.speechSynthesis?.getVoices?.() ?? []);
-    collect();
-    window.speechSynthesis?.addEventListener?.("voiceschanged", collect);
     return () => {
       cancelled = true;
-      window.speechSynthesis?.removeEventListener?.("voiceschanged", collect);
     };
   }, []);
 
@@ -107,7 +98,7 @@ export default function AtlasSettingsPage() {
   async function runTest() {
     saveAISettings(form);
     setTest({ phase: "running", detail: "Sending a probe to Olympus…" });
-    const res = await testConnection({ ...form, speak: false });
+    const res = await testConnection(form);
     setTest({ phase: res.ok ? "ok" : "fail", detail: res.detail });
   }
 
@@ -287,7 +278,7 @@ export default function AtlasSettingsPage() {
                 <p className="mt-1 whitespace-pre-wrap font-body text-[20px] leading-snug opacity-90">{test.detail}</p>
                 {test.phase === "ok" && (
                   <Link href="/atlas" className="btn-gold btn-sm mt-3">
-                    Go speak with Atlas →
+                    Go to Atlas →
                   </Link>
                 )}
               </div>
@@ -295,59 +286,8 @@ export default function AtlasSettingsPage() {
           </div>
         </Panel>
 
-        {/* ================= VOICE + SECURITY ================= */}
+        {/* ================= SECURITY ================= */}
         <div className="space-y-3.5">
-          <Panel title="The voice of the Titan" hint="Speech is poured from your browser's own voices" tone="wine">
-            <div className="space-y-4">
-              <label className="flex cursor-pointer items-center justify-between gap-3">
-                <span className="font-body text-[20.5px] text-marble">Atlas speaks his replies aloud</span>
-                <button
-                  role="switch"
-                  aria-checked={form.speak}
-                  onClick={() => patch({ speak: !form.speak })}
-                  className={`relative h-8 w-14 shrink-0 rounded-pill border-2 border-marble transition-colors ${
-                    form.speak ? "bg-marble" : "bg-transparent"
-                  }`}
-                >
-                  <span
-                    className={`absolute top-1 rounded-full transition-all ${form.speak ? "left-7 bg-wine" : "left-1 bg-marble"}`}
-                    style={{ height: 20, width: 20 }}
-                  />
-                </button>
-              </label>
-
-              <div>
-                <label className="mb-1.5 block font-ui text-[17.5px] uppercase tracking-[0.18em] text-marble">
-                  Choose his voice
-                </label>
-                <select
-                  className="field"
-                  value={form.voiceURI}
-                  onChange={(e) => {
-                    const voiceURI = e.target.value;
-                    patch({ voiceURI });
-                    saveAISettings({ voiceURI });
-                    speak("I am Atlas. I hold the world you give me.", { ...form, voiceURI });
-                  }}
-                >
-                  <option value="">The default voice of this device</option>
-                  {voices.map((v) => (
-                    <option key={v.voiceURI} value={v.voiceURI}>
-                      {v.name} · {v.lang}
-                    </option>
-                  ))}
-                </select>
-                <p className="mt-2 font-body text-[19.5px] italic text-marble opacity-70">
-                  Choosing a voice plays a short preview.
-                </p>
-              </div>
-
-              <button onClick={save} className="btn-gold btn-sm w-full">
-                Save voice & key together
-              </button>
-            </div>
-          </Panel>
-
           <Panel title="On safety" hint="Where the key lives">
             <ul className="space-y-2.5 font-body text-[20px] leading-snug text-wine opacity-85">
               <li>· The key is kept in this browser&apos;s <em>local storage</em> only — no server of ours ever sees it.</li>
@@ -357,59 +297,6 @@ export default function AtlasSettingsPage() {
             </ul>
           </Panel>
 
-          <Panel title="Voice pass" hint="Sign in by speaking">
-            <div className="space-y-3">
-              <p className="font-body text-[20px] leading-snug text-wine opacity-85">
-                {getStoredPin()
-                  ? "A voice pass is set. Speak its digits on the opening screen to come in."
-                  : "No voice pass is set yet. Choose a few digits below — the first digits you speak on the opening screen become your pass."}
-              </p>
-              <div className="flex gap-2">
-                <input
-                  className="field flex-1"
-                  inputMode="numeric"
-                  placeholder="Digits, e.g. 742"
-                  value={voicePin}
-                  onChange={(e) => setVoicePin(e.target.value.replace(/\D/g, "").slice(0, 8))}
-                  aria-label="Voice pass digits"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (voicePin.length < 3) return;
-                    setStoredPin(voicePin);
-                    setVoicePin("");
-                    setVoicePinState("saved");
-                  }}
-                  className="btn-gold btn-sm shrink-0"
-                >
-                  Set pass
-                </button>
-              </div>
-              {voicePinState === "saved" && (
-                <p className="font-ui text-[15px] text-wine opacity-70">
-                  Voice pass saved in this browser.
-                </p>
-              )}
-              {getStoredPin() && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    clearStoredPin();
-                    setVoicePinState("cleared");
-                  }}
-                  className="font-ui text-[16px] text-wine underline underline-offset-4 opacity-70"
-                >
-                  Remove voice pass
-                </button>
-              )}
-              {voicePinState === "cleared" && (
-                <p className="font-ui text-[15px] text-wine opacity-70">
-                  Voice pass removed.
-                </p>
-              )}
-            </div>
-          </Panel>
         </div>
       </div>
     </PageShell>

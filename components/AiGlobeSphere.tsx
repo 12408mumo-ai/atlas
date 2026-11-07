@@ -9,21 +9,17 @@ import { useEffect, useRef } from "react";
 /* ------------------------------------------------------------------ */
 
 export function AiGlobeSphere({
-  speaking = false,
   onLightSurface = false,
   onClick,
   ariaLabel = "Atlas AI spinning orb",
 }: {
-  speaking?: boolean;
   onLightSurface?: boolean;
   onClick?: () => void;
   ariaLabel?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pointer = useRef({ tx: 0, ty: 0, cx: 0, cy: 0 });
-  const speakingRef = useRef(speaking);
   const lightRef = useRef(onLightSurface);
-  speakingRef.current = speaking;
   lightRef.current = onLightSurface;
 
   useEffect(() => {
@@ -128,18 +124,14 @@ export function AiGlobeSphere({
 
       const cx = w / 2;
       const cy = h / 2;
-      const isSpeaking = speakingRef.current;
       const onLight = lightRef.current;
       const creamRgb = "245, 232, 211";
       const wineRgb = "40, 40, 42";
       const outerRingRgb = onLight ? wineRgb : creamRgb;
 
-      const voiceMod = isSpeaking
-        ? 1 + (Math.sin(dt * 8.5) * 0.025 + Math.sin(dt * 13.2) * 0.015)
-        : 1 + Math.sin(dt * 1.6) * 0.012;
-      const R = Math.min(w, h) * 0.34 * voiceMod;
+      const R = Math.min(w, h) * 0.34 * (1 + Math.sin(dt * 1.6) * 0.012);
 
-      const spin = dt * (isSpeaking ? 0.85 : 0.68) + pointer.current.cx * 0.7;
+      const spin = dt * 0.68 + pointer.current.cx * 0.7;
       const tiltX = 0.28 + pointer.current.cy * 0.32;
       const tiltZ = -0.34;
 
@@ -217,18 +209,6 @@ export function AiGlobeSphere({
         ctx.strokeStyle = "#F5E8D3";
         ctx.lineWidth = 1.8;
         ctx.stroke();
-      }
-
-      // Dual voice waves while Atlas AI speaks
-      if (isSpeaking) {
-        for (let k = 0; k < 2; k++) {
-          const wave = (dt * 1.15 + k * 0.5) % 1;
-          ctx.beginPath();
-          ctx.arc(cx, cy, R * (1.03 + wave * 0.24), 0, Math.PI * 2);
-          ctx.strokeStyle = `rgba(${outerRingRgb}, ${(1 - wave) * 0.65})`;
-          ctx.lineWidth = 2.2;
-          ctx.stroke();
-        }
       }
 
       // 7. Front half of outer AI orbital ring + 3 orbiting beacons

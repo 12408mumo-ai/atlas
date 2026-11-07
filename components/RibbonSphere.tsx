@@ -8,9 +8,8 @@
 /*  a spray of small particles off the left edge.                      */
 /*                                                                     */
 /*  The colour of a strand comes from where it sits, so the bands      */
-/*  form out of the same flow. The form breathes with the voice: the  */
-/*  strands swell and the arcs brighten when Atlas speaks, and draw   */
-/*  in when the microphone is open.                                    */
+/*  form out of the same flow. The strands drift and breathe on their */
+/*  own, so the form is always alive.                                 */
 /* ================================================================== */
 
 "use client";
@@ -75,22 +74,8 @@ function colourAt(nx: number, ny: number) {
   };
 }
 
-export function RibbonSphere({
-  /** 0 = still, 1 = full voice energy. */
-  energy = 0,
-  /** True while the microphone is open. */
-  listening = false,
-  className = "",
-}: {
-  energy?: number;
-  listening?: boolean;
-  className?: string;
-}) {
+export function RibbonSphere({ className = "" }: { className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const energyRef = useRef(energy);
-  const listeningRef = useRef(listening);
-  energyRef.current = energy;
-  listeningRef.current = listening;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -167,8 +152,6 @@ export function RibbonSphere({
       ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
       ctx.clearRect(0, 0, w, h);
 
-      const en = energyRef.current;
-      const isListening = listeningRef.current;
 
       /* ---- the deep field ---- */
       // The orb carries its own night-blue ground so the ribbon colours
@@ -206,8 +189,6 @@ export function RibbonSphere({
           const nlat = lat + Math.sin(lon * s.turns + s.phase + t * speed * 4) * s.amp;
           const nlon = lon + 0.055 + speed * 0.02;
           let nrad = radius * (1 + Math.sin(u * Math.PI * 2 + s.phase) * 0.26);
-          nrad *= 1 + en * 0.04;
-          if (isListening) nrad *= 0.97;
 
           const x = Math.cos(nlon) * Math.cos(nlat) * nrad;
           const y = Math.sin(nlat) * nrad;
@@ -255,25 +236,11 @@ export function RibbonSphere({
       for (const d of dots) {
         const sx = cx + Math.cos(d.ang) * d.rad * R;
         const sy = cy + Math.sin(d.ang) * d.rad * R;
-        const alpha = 0.5 * (0.3 + d.bright * 0.7) * (0.6 + en * 0.5);
+        const alpha = 0.5 * (0.3 + d.bright * 0.7) * 0.85;
         ctx.beginPath();
         ctx.arc(sx, sy, d.size, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(${TEAL_SOFT.join(",")}, ${alpha.toFixed(3)})`;
         ctx.fill();
-      }
-
-      /* ---- voice rings leaving the centre ---- */
-      if (en > 0.02) {
-        for (let k = 0; k < 3; k++) {
-          const wave = (t * 0.55 + k / 3) % 1;
-          const r = R * (0.35 + wave * 1.05);
-          const fade = Math.pow(1 - wave, 1.6);
-          ctx.beginPath();
-          ctx.arc(cx, cy, r, 0, Math.PI * 2);
-          ctx.strokeStyle = `rgba(120, 190, 235, ${(fade * en * 0.16).toFixed(3)})`;
-          ctx.lineWidth = 1 + en * 2;
-          ctx.stroke();
-        }
       }
 
       raf = requestAnimationFrame(tick);
