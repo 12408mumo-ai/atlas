@@ -22,6 +22,7 @@ export default function WelcomePage() {
     updateClock();
     const timer = window.setInterval(updateClock, 1000);
     router.prefetch("/login");
+    router.prefetch("/hub");
     return () => window.clearInterval(timer);
   }, [router]);
 

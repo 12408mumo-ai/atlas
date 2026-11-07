@@ -12,7 +12,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AiGlobeSphere } from "@/components/AiGlobeSphere";
-import { GoldenParticleSphere } from "@/components/GoldenParticleSphere";
+import { RibbonSphere } from "@/components/RibbonSphere";
 import { VoiceAssistant } from "@/components/VoiceAssistant";
 import { VoiceGreeting } from "@/components/VoiceGreeting";
 import { loadAISettings, speak, stopSpeaking } from "@/lib/atlas-ai";
@@ -226,7 +226,7 @@ export function PersistentAiOrb() {
         }
       >
         {isWelcome ? (
-          <GoldenParticleSphere
+          <RibbonSphere
             energy={speaking ? 1 : listening ? 0.45 : 0.16}
             listening={listening}
           />
