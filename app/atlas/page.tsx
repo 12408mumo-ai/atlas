@@ -160,7 +160,9 @@ export default function AtlasAssistantPage() {
           <div className="relative">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/assets/atlas-god.png"
+              src="/assets/optimized/atlas-god.webp"
+              width={1024}
+              height={1536}
               alt="The body of Atlas — warm-cream marble statue of the Titan bearing the celestial sphere"
               className="h-[490px] w-full object-cover object-top sm:h-[550px]"
             />

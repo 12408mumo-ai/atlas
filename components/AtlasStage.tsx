@@ -236,17 +236,10 @@ function createPillarOrbTextures(
 /* ------------------------------------------------------------------ */
 
 async function buildSculptedAtlasMesh(
-  albedoTex: THREE.Texture
+  albedoTex: THREE.Texture,
+  depthImg: HTMLImageElement
 ): Promise<{ group: THREE.Group; hitMesh: THREE.Mesh; normalTex: THREE.DataTexture }> {
   const group = new THREE.Group();
-
-  const depthImg = await new Promise<HTMLImageElement>((resolve, reject) => {
-    const im = new Image();
-    im.crossOrigin = "anonymous";
-    im.onload = () => resolve(im);
-    im.onerror = reject;
-    im.src = "/assets/atlas-body-depth.png?v=4";
-  });
 
   const albedoImg = albedoTex.image as HTMLImageElement;
   const gw = 196;
@@ -565,7 +558,16 @@ export default function AtlasStage() {
     let statueHitMesh: THREE.Mesh | null = null;
     let statueNormalTex: THREE.DataTexture | null = null;
     let statueAlbedoTex: THREE.Texture | null = null;
-    texLoader.load("/assets/atlas-body-3d.png?v=4", (albedoTex) => {
+    // Fetch the depth map alongside the body texture, rather than waiting for
+    // the body texture to finish before starting the second request.
+    const depthImage = new Promise<HTMLImageElement | null>((resolve) => {
+      const image = new Image();
+      image.crossOrigin = "anonymous";
+      image.onload = () => resolve(image);
+      image.onerror = () => resolve(null);
+      image.src = "/assets/optimized/atlas-body-depth.webp";
+    });
+    texLoader.load("/assets/optimized/atlas-body-3d.webp", (albedoTex) => {
       if (disposed) {
         albedoTex.dispose();
         return;
@@ -573,7 +575,12 @@ export default function AtlasStage() {
       statueAlbedoTex = albedoTex;
       albedoTex.colorSpace = THREE.SRGBColorSpace;
       albedoTex.anisotropy = 8;
-      void buildSculptedAtlasMesh(albedoTex).then(({ group, hitMesh, normalTex }) => {
+      void depthImage.then((image) => {
+        if (!image || disposed) return null;
+        return buildSculptedAtlasMesh(albedoTex, image);
+      }).then((result) => {
+        if (!result) return;
+        const { group, hitMesh, normalTex } = result;
         if (disposed) {
           normalTex.dispose();
           hitMesh.geometry.dispose();

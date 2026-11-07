@@ -1,4 +1,4 @@
-const CACHE_NAME = "atlas-pwa-v11";
+const CACHE_NAME = "atlas-pwa-v12";
 const PRECACHE_URLS = [
   "/manifest.webmanifest",
   "/favicon.ico?v=5",
@@ -6,13 +6,9 @@ const PRECACHE_URLS = [
   "/icons/icon-512.png?v=5",
   "/icons/maskable-512.png?v=5",
   "/apple-touch-icon.png?v=5",
-  "/assets/atlas-body-3d.png?v=4",
-  "/assets/atlas-body-depth.png?v=4",
+  "/assets/optimized/atlas-body-3d.webp",
+  "/assets/optimized/atlas-body-depth.webp",
   "/assets/celestial-globe-map.jpg?v=4",
-  "/audio/greeting-morning.mp3",
-  "/audio/greeting-afternoon.mp3",
-  "/audio/greeting-evening.mp3",
-  "/audio/greeting-night.mp3",
 ];
 
 self.addEventListener("install", (event) => {

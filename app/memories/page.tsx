@@ -33,6 +33,13 @@ import {
 /*  The 5 Memory Branches (Simple Everyday Labels)                    */
 /* ------------------------------------------------------------------ */
 
+// Keep existing saved entries intact while serving smaller copies of built-in media.
+function optimizedMediaUrl(src: string | undefined): string | undefined {
+  if (src === "/assets/memories/jacaranda-walk.jpg") return "/assets/optimized/jacaranda-walk.webp";
+  if (src === "/assets/ruins-poster.png") return "/assets/optimized/ruins-poster.webp";
+  return src;
+}
+
 type BranchMeta = {
   key: MemoryBranchKey;
   name: string;
@@ -602,7 +609,9 @@ function TimelineView({
                   {thumb && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={thumb}
+                      src={optimizedMediaUrl(thumb)}
+                      loading="lazy"
+                      decoding="async"
                       alt=""
                       className="h-16 w-16 shrink-0 rounded-lg object-cover"
                     />
@@ -814,7 +823,7 @@ function EntryItem({
                 <div className="relative">
                   <video
                     src={m.src}
-                    poster={m.poster}
+                    poster={optimizedMediaUrl(m.poster)}
                     muted
                     playsInline
                     loop
@@ -829,7 +838,9 @@ function EntryItem({
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={m.src}
+                  src={optimizedMediaUrl(m.src)}
+                  loading="lazy"
+                  decoding="async"
                   alt={entry.title}
                   className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
@@ -1071,7 +1082,7 @@ function GalleryView({
                           <>
                             <video
                               src={m.src}
-                              poster={m.poster}
+                              poster={optimizedMediaUrl(m.poster)}
                               muted
                               loop
                               playsInline
@@ -1086,7 +1097,9 @@ function GalleryView({
                         ) : (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
-                            src={m.src}
+                            src={optimizedMediaUrl(m.src)}
+                            loading="lazy"
+                            decoding="async"
                             alt={item.title}
                             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                           />
@@ -1752,7 +1765,9 @@ function MilestonesView({
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={photo.src}
+                        src={optimizedMediaUrl(photo.src)}
+                        loading="lazy"
+                        decoding="async"
                         alt={ms.title}
                         className="h-44 w-full object-cover"
                       />
@@ -1869,7 +1884,7 @@ function LightboxModal({
             {media.mediaType === "video" ? (
               <video
                 src={media.src}
-                poster={media.poster}
+                poster={optimizedMediaUrl(media.poster)}
                 controls
                 autoPlay
                 playsInline
@@ -1878,7 +1893,7 @@ function LightboxModal({
             ) : (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={media.src}
+                src={optimizedMediaUrl(media.src)}
                 alt={entry.title}
                 className="max-h-[52svh] w-full object-contain"
               />
