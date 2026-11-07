@@ -31,7 +31,7 @@ function FlipCard({ value, previous }: { value: string; previous?: string }) {
 }
 
 /** A local-time, 24-hour clock. Its display updates on each second boundary. */
-export function FlipClock() {
+export function FlipClock({ compact = false }: { compact?: boolean }) {
   const [reading, setReading] = useState<ClockReading | null>(null);
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export function FlipClock() {
     : [];
 
   return (
-    <section className={styles.clock} aria-label="Local time and date">
+    <section className={`${styles.clock} ${compact ? styles.compact : ""}`} aria-label="Local time and date">
       <p className={styles.date}>{date}</p>
       <div className={styles.cards} role="timer" aria-label={current ? `Local time ${parts.join(":")}` : "Loading local time"} aria-live="off">
         {parts.map((value, index) => (
