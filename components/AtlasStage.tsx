@@ -845,6 +845,12 @@ export default function AtlasStage() {
 
   return (
     <div className="glass-page-dark relative h-[100svh] w-screen overflow-hidden select-none">
+      {/* Set behind the transparent WebGL scene; never intercept sphere clicks. */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden font-display font-medium uppercase tracking-[0.14em] text-[#f5e8d3]/55" aria-label="Veni, vidi, vici">
+        <span className="absolute left-[4%] top-[62%] -translate-y-1/2 text-[clamp(20px,4.2vw,64px)] sm:left-[8%]">Veni</span>
+        <span className="absolute left-1/2 top-[6%] -translate-x-1/2 text-[clamp(20px,4.2vw,64px)]">Vidi</span>
+        <span className="absolute right-[4%] top-[62%] -translate-y-1/2 text-[clamp(20px,4.2vw,64px)] sm:right-[8%]">Vici</span>
+      </div>
       {/* 3D WebGL Canvas (Plain background + 3D Atlas + 3D Globe + 4 3D Orbiting Spheres) */}
       <div ref={mountRef} className="absolute inset-0 h-full w-full" />
 
