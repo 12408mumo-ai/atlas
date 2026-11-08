@@ -3,13 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import * as THREE from "three";
+import { clearanceField } from "@/lib/orb-clearance";
 
 /* ------------------------------------------------------------------ */
 /*  AtlasStage — Clean 3D Page-Selection Stage (/hub)                 */
 /*  • Plain flat background (no galaxy/starfield background)          */
 /*  • Watertight 3D sculpted marble Atlas statue + 3D celestial globe */
-/*  • 4 spinning 3D spheres orbiting in 3D space with ZERO visible    */
-/*    orbit lines, visibly eclipsing & disappearing behind the globe  */
+/*  • Four spinning spheres move in safe paths outside the statue.   */
 /* ------------------------------------------------------------------ */
 
 export type Pillar = {
@@ -20,11 +20,6 @@ export type Pillar = {
   image: string;
   blurb: string;
   orbit: {
-    rx: number;
-    rz: number;
-    tiltZ: number;
-    pitchX: number;
-    liftY: number;
     period: number;
     phase: number;
   };
@@ -38,7 +33,7 @@ export const PILLARS: Pillar[] = [
     href: "/work",
     image: "/assets/optimized/emblems/work.webp",
     blurb: "Client projects, tasks, time, income and your own ventures.",
-    orbit: { rx: 1.66, rz: 1.92, tiltZ: -19, pitchX: 5, liftY: 0.06, period: 12.5, phase: 0.2 },
+    orbit: { period: 12.5, phase: 0.2 },
   },
   {
     key: "people",
@@ -47,7 +42,7 @@ export const PILLARS: Pillar[] = [
     href: "/people",
     image: "/assets/optimized/emblems/people.webp",
     blurb: "Everyone who matters — dates, promises, gifts, check-ins.",
-    orbit: { rx: 1.8, rz: 2.02, tiltZ: 25, pitchX: 4, liftY: 0.12, period: 13.6, phase: 1.77 },
+    orbit: { period: 13.6, phase: 1.77 },
   },
   {
     key: "memories",
@@ -56,7 +51,7 @@ export const PILLARS: Pillar[] = [
     href: "/memories",
     image: "/assets/optimized/emblems/memories.webp",
     blurb: "Every log, journal and milestone — the timeline of you.",
-    orbit: { rx: 2.32, rz: 2.36, tiltZ: 9, pitchX: 4, liftY: 0.14, period: 17.6, phase: 3.34 },
+    orbit: { period: 17.6, phase: 3.34 },
   },
   {
     key: "atlas",
@@ -65,7 +60,7 @@ export const PILLARS: Pillar[] = [
     href: "/atlas",
     image: "/icons/icon-512.png?v=5",
     blurb: "Speak with the Titan AI that weighs and plans your world.",
-    orbit: { rx: 1.52, rz: 1.82, tiltZ: -10, pitchX: -4, liftY: -0.12, period: 11.4, phase: 4.91 },
+    orbit: { period: 11.4, phase: 4.91 },
   },
 ];
 
@@ -459,6 +454,7 @@ export default function AtlasStage() {
   const hoveredKeyRef = useRef<string | null>(null);
   const openingRef = useRef(false);
   const [opening, setOpening] = useState<Pillar | null>(null);
+  const [showFallback, setShowFallback] = useState(false);
 
   const openPillar = useCallback(
     (p: Pillar) => {
@@ -555,6 +551,7 @@ export default function AtlasStage() {
     globeMesh.userData = { pillarKey: "atlas" };
     monumentGroup.add(globeMesh);
 
+    let silhouetteDirty = true;
     let statueHitMesh: THREE.Mesh | null = null;
     let statueNormalTex: THREE.DataTexture | null = null;
     let statueAlbedoTex: THREE.Texture | null = null;
@@ -576,7 +573,8 @@ export default function AtlasStage() {
       albedoTex.colorSpace = THREE.SRGBColorSpace;
       albedoTex.anisotropy = 8;
       void depthImage.then((image) => {
-        if (!image || disposed) return null;
+        if (disposed) return null;
+        if (!image) { setShowFallback(true); return null; }
         return buildSculptedAtlasMesh(albedoTex, image);
       }).then((result) => {
         if (!result) return;
@@ -589,10 +587,11 @@ export default function AtlasStage() {
         statueHitMesh = hitMesh;
         statueNormalTex = normalTex;
         monumentGroup.add(group);
-      });
-    });
+        silhouetteDirty = true;
+      }).catch(() => { if (!disposed) setShowFallback(true); });
+    }, undefined, () => { if (!disposed) setShowFallback(true); });
 
-    /* ---- Six Orbiting 3D Spheres (ZERO visible orbit lines!) ---- */
+    /* ---- Four Navigable 3D Spheres (ZERO visible orbit lines!) ---- */
     const orbMeshes: THREE.Mesh[] = [];
     const orbMaps: THREE.Texture[] = [];
     const orbBumpMaps: THREE.Texture[] = [];
@@ -612,6 +611,7 @@ export default function AtlasStage() {
         metalness: 0.08,
         emissive: new THREE.Color("#F5E8D3"),
         emissiveIntensity: 0.0,
+        transparent: true,
       });
       orbMaterials.push(mat);
 
@@ -651,7 +651,7 @@ export default function AtlasStage() {
         -(((clientY - rect.top) / rect.height) * 2 - 1)
       );
       raycaster.setFromCamera(ndc, camera);
-      const targets: THREE.Object3D[] = [...orbMeshes, globeMesh];
+      const targets: THREE.Object3D[] = [...orbMeshes.filter((mesh) => mesh.visible && (mesh.material as THREE.MeshStandardMaterial).opacity > 0.45), globeMesh];
       if (statueHitMesh) targets.push(statueHitMesh);
       const hits = raycaster.intersectObjects(targets, false);
       if (!hits.length) return null;
@@ -678,6 +678,7 @@ export default function AtlasStage() {
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
+      silhouetteDirty = true;
     };
     const ro = new ResizeObserver(onResize);
     ro.observe(container);
@@ -687,11 +688,77 @@ export default function AtlasStage() {
     let raf = 0;
     let prevTime = performance.now();
     const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const globeWorldCenter = new THREE.Vector3();
     const orbWorldPos = new THREE.Vector3();
     const projVec = new THREE.Vector3();
-    const rayDir = new THREE.Vector3();
-    const toGlobe = new THREE.Vector3();
+    const projectedCenter = new THREE.Vector3();
+    const projectedEdge = new THREE.Vector3();
+    const screenPoint = new THREE.Vector3();
+    let safeAnchors: { x: number; y: number }[] = [];
+    const silhouetteMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+    let silhouette: { width: number; height: number; scale: number; distances: Float32Array } | null = null;
+
+    // Cache a low-resolution silhouette only after loading or resizing. Its
+    // distance field protects the full outline (globe, arms and body), even
+    // when a sphere passes in front rather than behind the monument.
+    const updateSilhouette = (w: number, h: number) => {
+      if (!statueHitMesh) return; // Wait until the complete statue is ready.
+      const scale = Math.min(1, 320 / Math.max(w, h));
+      const width = Math.max(1, Math.ceil(w * scale));
+      const height = Math.max(1, Math.ceil(h * scale));
+      const target = new THREE.WebGLRenderTarget(width, height, { depthBuffer: true });
+      const pixels = new Uint8Array(width * height * 4);
+      const wasVisible = orbMeshes.map((mesh) => mesh.visible);
+      orbMeshes.forEach((mesh) => { mesh.visible = false; });
+      const oldTarget = renderer.getRenderTarget();
+      const oldOverride = scene.overrideMaterial;
+      try {
+        scene.overrideMaterial = silhouetteMaterial;
+        renderer.setRenderTarget(target);
+        renderer.clear();
+        renderer.render(scene, camera);
+        renderer.readRenderTargetPixels(target, 0, 0, width, height, pixels);
+        silhouette = { width, height, scale, distances: clearanceField(pixels, width, height) };
+        // Pick four separate screen-space stations, each with room for the
+        // sphere, hover enlargement, its small orbit, and a visible gap.
+        projectedCenter.set(0, GLOBE_Y, 0).project(camera);
+        const sizeFactor = w < 480 ? 0.72 : 1;
+        projectedEdge.set(R_ORB * 1.26 * sizeFactor, GLOBE_Y, R_ORB * 1.26 * sizeFactor).project(camera);
+        const radiusPx = Math.abs(projectedEdge.x - projectedCenter.x) * w / 2 + 5;
+        const orbitPx = Math.min(10, w * 0.022);
+        const clearance = (radiusPx + orbitPx + 10) * scale + 2;
+        const desired = [[0.18, 0.20], [0.82, 0.20], [0.14, 0.72], [0.86, 0.72]];
+        safeAnchors = [];
+        for (const [x, y] of desired) {
+          let best: { x: number; y: number } | null = null;
+          let bestScore = Infinity;
+          for (let gy = 0; gy < height; gy++) for (let gx = 0; gx < width; gx++) {
+            if (silhouette.distances[gy * width + gx] < clearance) continue;
+            const sx = (gx + 0.5) / scale;
+            const sy = h - (gy + 0.5) / scale;
+            const labelMargin = Math.max(radiusPx + orbitPx + 8, 67);
+            if (sx < labelMargin || sx > w - labelMargin || sy < radiusPx + orbitPx + 8 || sy > h - radiusPx - orbitPx - 38) continue;
+            // Leave the persistent assistant orb at the left edge unobstructed.
+            if (sx < 125 && Math.abs(sy - h / 2) < radiusPx + orbitPx + 48) continue;
+            if (safeAnchors.some((a) => Math.hypot(a.x - sx, a.y - sy) < radiusPx * 2 + orbitPx * 2 + 18 || (Math.abs(a.x - sx) < (w < 480 ? 90 : 130) && Math.abs(a.y - sy) < (w < 480 ? 42 : 55)))) continue;
+            const score = (sx - x * w) ** 2 + (sy - y * h) ** 2;
+            if (score < bestScore) { bestScore = score; best = { x: sx, y: sy }; }
+          }
+          if (best) safeAnchors.push(best);
+        }
+        if (safeAnchors.length !== PILLARS.length) safeAnchors = [];
+        setShowFallback(safeAnchors.length !== PILLARS.length);
+        silhouetteDirty = false;
+      } catch {
+        safeAnchors = [];
+        silhouetteDirty = false;
+        setShowFallback(true);
+      } finally {
+        scene.overrideMaterial = oldOverride;
+        renderer.setRenderTarget(oldTarget);
+        orbMeshes.forEach((mesh, index) => { mesh.visible = wasVisible[index]; });
+        target.dispose();
+      }
+    };
 
     const animate = (now: number) => {
       const dt = Math.min(0.05, (now - prevTime) / 1000);
@@ -707,44 +774,37 @@ export default function AtlasStage() {
       // Keep the 3D Atlas god statue completely still; only the globe & spheres spin/orbit
       globeMesh.rotation.y = elapsed * 0.24;
 
-      const aspect = w / h;
-      const orbitWidthScale = aspect < 0.65 ? 0.72 : aspect < 0.95 ? 0.88 : 1.0;
-
       PILLARS.forEach((p, i) => {
         const isHovered = hoveredKeyRef.current === p.key;
         const speedFactor = isHovered ? 0.25 : 1.0;
         if (!motionPreference.matches) orbPhaseAngles[i] += (dt * Math.PI * 2 * speedFactor) / p.orbit.period;
-
-        const theta = orbPhaseAngles[i];
-        const rx = p.orbit.rx * orbitWidthScale;
-        const rz = p.orbit.rz;
-
-        const x0 = rx * Math.cos(theta);
-        const z0 = rz * Math.sin(theta);
-
-        const pitch = (p.orbit.pitchX * Math.PI) / 180;
-        const y1 = -z0 * Math.sin(pitch);
-        const z1 = z0 * Math.cos(pitch);
-
-        const tilt = (p.orbit.tiltZ * Math.PI) / 180;
-        const x2 = x0 * Math.cos(tilt) - y1 * Math.sin(tilt);
-        const y2 = x0 * Math.sin(tilt) + y1 * Math.cos(tilt);
-
         const mesh = orbMeshes[i];
-        mesh.position.set(GLOBE_X + x2, GLOBE_Y + p.orbit.liftY + y2, GLOBE_Z + z1);
         if (!motionPreference.matches) mesh.rotation.y += dt * (1.15 + i * 0.14);
-
-        const targetScale = isHovered ? 1.26 : 1.0;
-        const curScale = mesh.scale.x + (targetScale - mesh.scale.x) * Math.min(1, dt * 12);
-        mesh.scale.setScalar(curScale);
+        const targetScale = (w < 480 ? 0.72 : 1) * (isHovered ? 1.26 : 1.0);
+        mesh.scale.setScalar(Math.min((w < 480 ? 0.72 : 1) * 1.26, mesh.scale.x + (targetScale - mesh.scale.x) * Math.min(1, dt * 12)));
         orbMaterials[i].emissiveIntensity = isHovered ? 0.22 : 0.0;
       });
 
       scene.updateMatrixWorld();
+      if (silhouetteDirty) updateSilhouette(w, h);
+      orbMeshes.forEach((mesh, i) => {
+        const anchor = safeAnchors[i];
+        if (!anchor) { mesh.visible = false; return; }
+        const orbitPx = Math.min(10, w * 0.022);
+        const x = anchor.x + Math.cos(orbPhaseAngles[i]) * orbitPx;
+        const y = anchor.y + Math.sin(orbPhaseAngles[i]) * orbitPx;
+        // Unproject the protected screen-space station onto the z=0 plane.
+        screenPoint.set((x / w) * 2 - 1, 1 - (y / h) * 2, 0.5).unproject(camera);
+        screenPoint.sub(camera.position).normalize();
+        mesh.position.copy(camera.position).addScaledVector(screenPoint, -camera.position.z / screenPoint.z);
+        mesh.visible = true;
+        orbMaterials[i].opacity = 1;
+      });
+      scene.updateMatrixWorld();
 
       if (pointerInside) {
         raycaster.setFromCamera(pointerNdc, camera);
-        const targets: THREE.Object3D[] = [...orbMeshes, globeMesh];
+        const targets: THREE.Object3D[] = [...orbMeshes.filter((mesh) => mesh.visible && (mesh.material as THREE.MeshStandardMaterial).opacity > 0.45), globeMesh];
         if (statueHitMesh) targets.push(statueHitMesh);
         const hits = raycaster.intersectObjects(targets, false);
         if (hits.length > 0 && hits[0].object !== statueHitMesh) {
@@ -758,41 +818,12 @@ export default function AtlasStage() {
         }
       }
 
-      globeMesh.getWorldPosition(globeWorldCenter);
-
       PILLARS.forEach((p, i) => {
         const labelEl = labelRefs.current[i];
         if (!labelEl) return;
-
         const mesh = orbMeshes[i];
         mesh.getWorldPosition(orbWorldPos);
-
-        let visibility = 1.0;
-        if (orbWorldPos.z < globeWorldCenter.z) {
-          rayDir.subVectors(orbWorldPos, camera.position);
-          const distToOrb = rayDir.length();
-          rayDir.divideScalar(Math.max(1e-5, distToOrb));
-
-          toGlobe.subVectors(globeWorldCenter, camera.position);
-          const tProj = toGlobe.dot(rayDir);
-          if (tProj > 0 && tProj < distToOrb) {
-            const perpSq = Math.max(0, toGlobe.lengthSq() - tProj * tProj);
-            const perpDist = Math.sqrt(perpSq);
-            const outerEdge = R_GLOBE + R_ORB * 0.9;
-            const innerEdge = R_GLOBE - R_ORB * 0.25;
-            const globeVis = Math.max(
-              0,
-              Math.min(1, (perpDist - innerEdge) / Math.max(0.01, outerEdge - innerEdge))
-            );
-            visibility = Math.min(visibility, globeVis);
-          }
-
-          if (orbWorldPos.y < globeWorldCenter.y && orbWorldPos.y > STATUE_CENTER_Y - STATUE_H * 0.45) {
-            const xDist = Math.abs(orbWorldPos.x - globeWorldCenter.x);
-            const torsoVis = Math.max(0, Math.min(1, (xDist - 0.72) / 0.36));
-            visibility = Math.min(visibility, torsoVis);
-          }
-        }
+        const visibility = mesh.visible ? 1 : 0;
 
         projVec.copy(orbWorldPos);
         projVec.y -= R_ORB * 1.44 * mesh.scale.y;
@@ -802,7 +833,7 @@ export default function AtlasStage() {
         const sy = (-projVec.y * 0.5 + 0.5) * h;
         const isHovered = hoveredKeyRef.current === p.key;
 
-        const depthFactor = Math.max(0.82, Math.min(1.12, 1 + (orbWorldPos.z - globeWorldCenter.z) * 0.06));
+        const depthFactor = 1;
         labelEl.style.transform = `translate3d(${sx.toFixed(1)}px, ${sy.toFixed(1)}px, 0) translate(-50%, 0) scale(${(
           (isHovered ? 1.1 : depthFactor) *
           (0.9 + visibility * 0.1)
@@ -826,6 +857,7 @@ export default function AtlasStage() {
       container.removeEventListener("pointerleave", onPointerLeave);
       renderer.domElement.removeEventListener("click", onClickCanvas);
 
+      silhouetteMaterial.dispose();
       globeGeo.dispose();
       globeMat.dispose();
       globeTex.dispose();
@@ -854,7 +886,7 @@ export default function AtlasStage() {
       {/* 3D WebGL Canvas (Plain background + 3D Atlas + 3D Globe + 4 3D Orbiting Spheres) */}
       <div ref={mountRef} className="absolute inset-0 h-full w-full" />
 
-      {/* 3D-projected sphere labels (automatically disappear when occluded behind the 3D globe) */}
+      {/* Labels follow their 3D spheres without blocking the canvas. */}
       <div className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
         {PILLARS.map((p, i) => (
           <button
@@ -878,12 +910,16 @@ export default function AtlasStage() {
             }}
             aria-label={`Open ${p.name}`}
             style={{ opacity: 0 }}
-            className="absolute left-0 top-0 cursor-pointer whitespace-nowrap rounded-pill border border-white/30 bg-slate-900/75 px-3.5 py-0.5 font-ui text-[15px] uppercase tracking-[0.15em] text-marble shadow-md transition-colors hover:bg-marble hover:text-wine focus-visible:opacity-100 focus-visible:ring-4 focus-visible:ring-marble"
+            className="absolute left-0 top-0 cursor-pointer whitespace-nowrap rounded-pill border border-white/30 bg-slate-900/75 px-2 py-0.5 font-ui text-[11px] uppercase tracking-[0.1em] sm:px-3.5 sm:text-[15px] sm:tracking-[0.15em] text-marble shadow-md transition-colors hover:bg-marble hover:text-wine focus-visible:opacity-100 focus-visible:ring-4 focus-visible:ring-marble"
           >
             {p.name}
           </button>
         ))}
       </div>
+
+      {showFallback && <nav aria-label="Choose a page" className="absolute inset-x-3 bottom-5 z-20 flex flex-wrap justify-center gap-2">
+        {PILLARS.map((pillar) => <button key={pillar.key} type="button" onClick={() => openPillar(pillar)} className="rounded-full border border-white/30 bg-slate-900 px-3 py-2 font-ui text-sm uppercase tracking-wider text-marble">{pillar.name}</button>)}
+      </nav>}
 
       {/* Doorway transition when a 3D sphere is pressed */}
       {opening && (
