@@ -46,6 +46,7 @@ export function MemorySphere({
   initial?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const redrawRef = useRef<() => void>(() => {});
   const activeRef = useRef(active);
   const toneRef = useRef(tone);
   activeRef.current = active;
@@ -58,15 +59,19 @@ export function MemorySphere({
     if (!ctx) return;
 
     const LOGICAL = 220;
-    const DPR = 2;
-    canvas.width = LOGICAL * DPR;
-    canvas.height = LOGICAL * DPR;
+    // Render at the displayed size (up to 2x density), not a fixed 440px for
+    // every small rail icon. This avoids painting excess pixels each frame.
+    const pixels = Math.max(1, Math.round(size * Math.min(window.devicePixelRatio || 1, 2)));
+    const scale = pixels / LOGICAL;
+    canvas.width = pixels;
+    canvas.height = pixels;
+    let requestDraw = () => {};
 
     const EMBLEM_PATHS: Partial<Record<SphereGlyph, string>> = {
-      memories: "/assets/emblems/memories.png",
-      people: "/assets/emblems/people.png",
-      work: "/assets/emblems/work.png",
-      study: "/assets/emblems/study.png",
+      memories: "/assets/optimized/emblems/memories.webp",
+      people: "/assets/optimized/emblems/people.webp",
+      work: "/assets/optimized/emblems/work.webp",
+      study: "/assets/optimized/emblems/study.webp",
     };
 
     let emblemImg: HTMLImageElement | null = null;
@@ -76,6 +81,7 @@ export function MemorySphere({
       im.src = emblemPath;
       im.onload = () => {
         emblemImg = im;
+        requestDraw();
       };
     }
 
@@ -281,15 +287,18 @@ export function MemorySphere({
     };
 
     let raf = 0;
+    let visible = typeof IntersectionObserver === "undefined";
     const t0 = performance.now();
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const tick = (now: number) => {
+      raf = 0;
+      if (!visible) return;
       const dt = (now - t0) / 1000;
       const isAct = activeRef.current;
       const darkCore = toneRef.current === "wine" || isAct;
 
-      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      ctx.setTransform(scale, 0, 0, scale, 0, 0);
       ctx.clearRect(0, 0, LOGICAL, LOGICAL);
 
       const cx = LOGICAL / 2;
@@ -439,12 +448,28 @@ export function MemorySphere({
         ctx.setLineDash([]);
       }
 
-      if (!reducedMotion) raf = requestAnimationFrame(tick);
+      if (!reducedMotion) requestDraw();
     };
 
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [glyph, phaseOffset, speed]);
+    requestDraw = () => { if (visible && !raf) raf = requestAnimationFrame(tick); };
+    redrawRef.current = requestDraw;
+    const observer = typeof IntersectionObserver === "undefined" ? null : new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      if (visible) requestDraw();
+      else if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    });
+    if (observer) observer.observe(canvas);
+    else requestDraw();
+    return () => {
+      observer?.disconnect();
+      cancelAnimationFrame(raf);
+      redrawRef.current = () => {};
+      requestDraw = () => {};
+    };
+  }, [glyph, phaseOffset, size, speed]);
+
+  // Reduced-motion spheres still need a fresh frame when their state changes.
+  useEffect(() => { redrawRef.current(); }, [active, tone]);
 
   return (
     <canvas

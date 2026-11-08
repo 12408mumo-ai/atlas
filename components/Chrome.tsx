@@ -26,6 +26,7 @@ export function PageShell({
         <header className="mb-7 flex items-center gap-4 anim-fade-up">
           <Link
             href={resolvedBack}
+            prefetch={resolvedBack === "/hub" ? false : undefined}
             aria-label="Back"
             className="glass-button grid h-12 w-12 shrink-0 place-items-center font-ui text-[24px] leading-none"
           >

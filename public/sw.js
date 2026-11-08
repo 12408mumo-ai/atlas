@@ -6,9 +6,6 @@ const PRECACHE_URLS = [
   "/icons/icon-512.png?v=5",
   "/icons/maskable-512.png?v=5",
   "/apple-touch-icon.png?v=5",
-  "/assets/optimized/atlas-body-3d.webp",
-  "/assets/optimized/atlas-body-depth.webp",
-  "/assets/celestial-globe-map.jpg?v=4",
 ];
 
 self.addEventListener("install", (event) => {

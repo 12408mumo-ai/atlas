@@ -74,8 +74,12 @@ local world, and previously cloud-synced data is not automatically downloaded.
 
 ## Run
 
+Node.js 20.9 or later is required. The Next.js 16 upgrade removes `next lint`;
+use the type-check command below until an ESLint configuration is added.
+
 ```bash
 npm install
 npm run dev     # http://localhost:3000
 npm run build
+npm run typecheck
 ```
