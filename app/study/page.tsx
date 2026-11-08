@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PageShell } from "@/components/Chrome";
 import { Timetable } from "@/components/Timetable";
 import { Panel, Stat, Bar, Badge, Tabs, Ring } from "@/components/ui";
@@ -10,6 +10,16 @@ import { useAtlas, relativeDue, prettyDate } from "@/lib/store";
 export default function StudyPage() {
   const s = useAtlas();
   const [tab, setTab] = useState("timetable");
+  useEffect(() => {
+    const allowed = ["timetable", "courses", "assignments", "self", "sessions"];
+    const select = (value: unknown) => { if (typeof value === "string" && allowed.includes(value)) setTab(value); };
+    select(new URLSearchParams(window.location.search).get("view"));
+    const listener = (event: Event) => select((event as CustomEvent).detail);
+    const history = () => select(new URLSearchParams(window.location.search).get("view"));
+    window.addEventListener("atlas:show-view", listener);
+    window.addEventListener("popstate", history);
+    return () => { window.removeEventListener("atlas:show-view", listener); window.removeEventListener("popstate", history); };
+  }, []);
 
   const open = s.assignments.filter((a) => a.status === "open");
   const avg = Math.round(s.courses.reduce((a, c) => a + c.progress, 0) / s.courses.length);

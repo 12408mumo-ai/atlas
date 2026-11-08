@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PageShell } from "@/components/Chrome";
 import { Panel, Stat, Bar, Ring, Tabs } from "@/components/ui";
 import { MeanderWine } from "@/components/Ornaments";
@@ -9,6 +9,16 @@ import { useAtlas, toggleHabit, setMoodToday } from "@/lib/store";
 export default function LifePage() {
   const s = useAtlas();
   const [tab, setTab] = useState("health");
+  useEffect(() => {
+    const allowed = ["health", "money", "habits", "mood"];
+    const select = (value: unknown) => { if (typeof value === "string" && allowed.includes(value)) setTab(value); };
+    select(new URLSearchParams(window.location.search).get("view"));
+    const listener = (event: Event) => select((event as CustomEvent).detail);
+    const history = () => select(new URLSearchParams(window.location.search).get("view"));
+    window.addEventListener("atlas:show-view", listener);
+    window.addEventListener("popstate", history);
+    return () => { window.removeEventListener("atlas:show-view", listener); window.removeEventListener("popstate", history); };
+  }, []);
 
   const today = new Date().toLocaleDateString("en-GB", { weekday: "short" });
   const moodToday = s.mood.find((m) => m.day === today)?.score ?? 0;
