@@ -1,16 +1,26 @@
-import { FlipClock } from "@/components/FlipClock";
-import { LoginForm } from "@/components/LoginForm";
+"use client";
 
-/** Shared entry layout for the opening and login routes. */
+import { useRouter } from "next/navigation";
+import { enterAsGuest } from "@/lib/store";
+
+/** Both entry routes lead into the same browser-local world. */
 export function EntryScreen() {
+  const router = useRouter();
+
+  function enter() {
+    enterAsGuest();
+    router.push("/hub");
+  }
+
   return (
-    <main className="glass-page-dark relative z-10 grid min-h-[100svh] w-full place-items-center overflow-x-hidden px-5 py-10 text-marble sm:px-8">
-      <div className="flex w-full max-w-[480px] flex-col items-center gap-8">
-        <FlipClock compact />
-        <div className="w-full">
-          <LoginForm />
-        </div>
-      </div>
+    <main className="flex min-h-[100svh] w-full flex-col items-center justify-center overflow-hidden bg-[#09111e] px-5 py-8 text-[#f5e8d3]">
+      <p className="font-ui text-[11px] uppercase tracking-[0.42em] text-[#f5e8d3]/55 sm:text-xs">The world you carry</p>
+      <h1 className="mt-3 font-display text-[clamp(32px,7vw,52px)] tracking-[0.18em]">ATLAS</h1>
+      <button type="button" onClick={enter} aria-label="Enter Atlas" className="group relative mt-3 block w-[min(78vw,440px)] rounded-full outline-none focus-visible:ring-2 focus-visible:ring-[#f5e8d3] focus-visible:ring-offset-4 focus-visible:ring-offset-[#09111e]">
+        <img src="/assets/zeus-entry.webp" alt="" width="800" height="800" fetchPriority="high" className="h-auto w-full rounded-full transition-transform duration-500 group-hover:scale-[1.025] motion-reduce:transition-none motion-reduce:group-hover:scale-100" />
+      </button>
+      <p className="mt-5 text-center font-ui text-[11px] uppercase tracking-[0.25em] text-[#f5e8d3]/75 sm:text-xs">Tap the face to enter</p>
+      <p className="mt-3 text-center font-body text-base text-[#f5e8d3]/50">Your world stays in this browser.</p>
     </main>
   );
 }

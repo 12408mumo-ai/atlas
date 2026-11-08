@@ -6,7 +6,7 @@ Built with Next.js (App Router), Tailwind, and a hand-made Greek design language
 
 ## The journey
 
-1. **`/` and `/login`** — Enter Atlas without an account. Your world is stored
+1. **`/` and `/login`** — Tap the face of Zeus to enter Atlas without an account. Your world is stored
    locally in this browser.
 2. **`/hub`** — The Titan. A marble **Atlas kneels holding a glowing celestial
    sphere**; five **pillar spheres orbit the world** on tilted rings. Click a sphere
@@ -31,7 +31,6 @@ Work and Study are the same pillar's two chambers — linked both ways.
   the Greek feeling holds even if the kit does not resolve.
 - **Ornaments**: `components/Ornaments.tsx` — meander borders, laurel dividers,
   twinkling starfield, Greek-key corners.
-- **Scroll**: `components/ScrollFrame.tsx` — paper grain, aged edges, brass rods.
 - **Stage**: `components/AtlasStage.tsx` — orbit math, canvas rings, DOM-driven
   sphere animation (no animation library), doorway transition.
 
@@ -59,9 +58,8 @@ Your world is stored in this browser on this device; it does not sync between de
 ### The written assistant
 
 - **The docked orb** — once inside, the spinning orb sits on the left edge of
-  every page. Press it to open `/atlas`.
-- **The ribbon sphere** — a woven form of magenta, blue and teal that drifts on
-  its own. It hangs behind the sign-in form on the opening screen.
+  app page. Press it to open the conversation.
+- **The entry face** — tap the face of Zeus to open your locally stored world.
 
 ## State
 

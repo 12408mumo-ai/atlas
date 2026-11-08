@@ -1,6 +1,7 @@
 const CACHE_NAME = "atlas-pwa-v12";
 const PRECACHE_URLS = [
   "/manifest.webmanifest",
+  "/assets/zeus-entry.webp",
   "/favicon.ico?v=5",
   "/icons/icon-192.png?v=5",
   "/icons/icon-512.png?v=5",
