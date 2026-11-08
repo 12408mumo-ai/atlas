@@ -10,21 +10,25 @@ const twoDigits = (value: number) => String(value).padStart(2, "0");
 type ClockReading = { current: Date; previous: Date | null };
 
 function FlipCard({ value, previous }: { value: string; previous?: string }) {
-  const changed = previous !== undefined && previous !== value;
-
   return (
     <div className={styles.card} aria-hidden="true">
-      <span className={styles.number}>{value}</span>
-      {changed && (
-        <div key={`${previous}-${value}`} className={styles.animation}>
-          <div className={`${styles.half} ${styles.flipTop}`}>
-            <span className={styles.halfNumber}>{previous}</span>
+      {value.split("").map((digit, index) => {
+        const old = previous?.[index] ?? digit;
+        const changed = old !== digit;
+        return (
+          <div className={styles.digit} key={index}>
+            <div className={`${styles.half} ${styles.top}`}><span className={styles.halfNumber}>{digit}</span></div>
+            <div className={`${styles.half} ${styles.bottom} ${changed ? styles.oldBottom : ""}`}><span className={styles.halfNumber}>{old}</span></div>
+            {changed && <>
+              <div className={`${styles.half} ${styles.bottom} ${styles.reducedBottom}`}><span className={styles.halfNumber}>{digit}</span></div>
+              <div key={`${old}-${digit}`} className={styles.animation}>
+                <div className={`${styles.half} ${styles.flipTop}`}><span className={styles.halfNumber}>{old}</span></div>
+                <div className={`${styles.half} ${styles.flipBottom}`}><span className={styles.halfNumber}>{digit}</span></div>
+              </div>
+            </>}
           </div>
-          <div className={`${styles.half} ${styles.flipBottom}`}>
-            <span className={styles.halfNumber}>{value}</span>
-          </div>
-        </div>
-      )}
+        );
+      })}
       <span className={styles.seam} />
     </div>
   );
@@ -53,7 +57,9 @@ export function FlipClock({ compact = false }: { compact?: boolean }) {
   const parts = current
     ? [twoDigits(current.getHours()), twoDigits(current.getMinutes()), twoDigits(current.getSeconds())]
     : ["--", "--", "--"];
-  const oldParts = previous
+  // After a long pause or a clock adjustment, show the current time directly.
+  const animate = current && previous && current.getTime() - previous.getTime() > 0 && current.getTime() - previous.getTime() < 2000;
+  const oldParts = animate && previous
     ? [twoDigits(previous.getHours()), twoDigits(previous.getMinutes()), twoDigits(previous.getSeconds())]
     : [];
 

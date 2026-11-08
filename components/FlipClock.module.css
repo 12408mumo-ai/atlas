@@ -30,28 +30,36 @@
 
 .card {
   position: relative;
+  display: flex;
   width: clamp(82px, 24vw, 260px);
   height: clamp(114px, 31vw, 330px);
   overflow: hidden;
   border: var(--glass-border);
   border-radius: clamp(14px, 1.8vw, 20px);
-  background: rgba(30, 35, 45, 0.72);
+  background: #1e232d;
   box-shadow: var(--glass-shadow), var(--glass-highlight);
   perspective: 700px;
 }
 
-.number,
+.digit {
+  position: relative;
+  width: 50%;
+  height: 100%;
+  perspective: 700px;
+}
+
 .halfNumber {
   display: grid;
   position: absolute;
-  inset: 0;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 200%;
   place-items: center;
   font-size: clamp(56px, 17.5vw, 190px);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.065em;
   line-height: 1;
-  padding-right: 0.065em;
 }
 
 .separator {
@@ -85,29 +93,27 @@
   width: 100%;
   height: 50%;
   overflow: hidden;
-  background: #1e1e1e;
+  background: #1e232d;
   backface-visibility: hidden;
 }
 
-.halfNumber {
-  height: 200%;
-}
+.top, .flipTop { top: 0; }
+.bottom, .flipBottom { bottom: 0; }
+.bottom .halfNumber, .flipBottom .halfNumber { top: -100%; }
+.reducedBottom { display: none; }
 
 .flipTop {
   top: 0;
   transform-origin: bottom;
-  animation: flip-top 220ms ease-in both;
+  animation: flip-top 280ms cubic-bezier(0.4, 0, 1, 1) both;
 }
 
 .flipBottom {
   bottom: 0;
   transform-origin: top;
-  animation: flip-bottom 220ms ease-out 220ms both;
+  animation: flip-bottom 280ms cubic-bezier(0, 0, 0.2, 1) 280ms both;
 }
 
-.flipBottom .halfNumber {
-  top: -100%;
-}
 
 .caption {
   margin: clamp(36px, 5vw, 58px) 0 0;
@@ -131,6 +137,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .animation { display: none; }
+  .oldBottom { display: none; }
+  .reducedBottom { display: block; }
 }
 
 @media (max-width: 340px) {
@@ -160,7 +168,6 @@
   border-radius: 12px;
 }
 
-.compact .number,
 .compact .halfNumber {
   font-size: min(18cqw, 78px);
 }
