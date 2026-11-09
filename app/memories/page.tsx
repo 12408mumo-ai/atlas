@@ -1,7 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+
+const Waves = lazy(() => import("@/components/Waves"));
 import { MemorySphere, type SphereGlyph } from "@/components/MemorySphere";
 import { prettyDate, todayISO, useAtlas } from "@/lib/store";
 import {
@@ -2059,8 +2061,9 @@ function LockScreen({
   };
 
   return (
-    <main className="glass-page-dark grid min-h-[100svh] w-screen place-items-center px-6 text-marble">
-      <div className="glass-clear w-full max-w-sm p-7 text-center">
+    <main style={{ backgroundColor: "var(--atlas-charcoal)" }} className="glass-page-dark relative grid min-h-[100svh] w-screen place-items-center px-6 text-marble">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0"><Suspense fallback={null}><Waves lineColor="#C2B280" spacing={18} amplitude={22} speed={0.35} twist={0.65} opacity={0.24} dpr={1} /></Suspense></div>
+      <div className="glass-clear relative w-full max-w-sm p-7 text-center">
         <div className="mx-auto flex justify-center">
           <MemorySphere glyph="memories" size={84} tone="wine" />
         </div>

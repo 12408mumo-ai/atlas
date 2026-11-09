@@ -7,11 +7,11 @@ export const metadata: Metadata = {
 
 export default function FlowWavePage() {
   return (
-    <main className="relative h-screen w-screen overflow-hidden bg-black">
+    <main className="relative h-screen w-screen overflow-hidden">
       <iframe
         src="/flow-wave/index.html"
         title="Flow Wave — Three.js scene"
-        className="fixed inset-0 h-full w-full border-0"
+        className="fixed inset-0 h-full w-full border-0 opacity-75"
         allow="autoplay; fullscreen"
       />
       <a

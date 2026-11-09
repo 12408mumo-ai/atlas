@@ -24,6 +24,7 @@
 html, body { height: 100%; }
 
 body {
+  isolation: isolate;
   background-color: var(--marble);
   color: var(--wine);
   font-family: var(--font-body), Georgia, serif;
@@ -158,16 +159,9 @@ body {
 }
 
 /* Glass surfaces are limited to major panels and popovers, not list rows. */
-.glass-page {
-  background: radial-gradient(ellipse at 8% 4%, rgba(194, 178, 128, 0.38), transparent 52%),
-    radial-gradient(ellipse at 92% 25%, rgba(194, 178, 128, 0.25), transparent 50%),
-    #e4dfcf;
-}
-.glass-page-dark {
-  background: radial-gradient(ellipse at 12% 12%, rgba(194, 178, 128, 0.13), transparent 48%),
-    radial-gradient(ellipse at 86% 25%, rgba(194, 178, 128, 0.09), transparent 48%),
-    var(--atlas-charcoal);
-}
+/* The shared fixed Waves layer supplies the page field without affecting layout. */
+.atlas-waves-background { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+.glass-page, .glass-page-dark { background: transparent; }
 .glass-card, .glass, .glass-soft {
   background: #eee9d9;
   border: var(--glass-border);
