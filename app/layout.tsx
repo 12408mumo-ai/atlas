@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ServiceWorkerRegister } from "@/components/PwaInstall";
+import { AtlasGlowCursor } from "@/components/AtlasGlowCursor";
 import { WavesBackground } from "@/components/WavesBackground";
 import { PersistentAiOrb } from "@/components/PersistentAiOrb";
 
@@ -48,6 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <WavesBackground />
+        <AtlasGlowCursor />
         <ServiceWorkerRegister />
         <PersistentAiOrb />
         {children}
