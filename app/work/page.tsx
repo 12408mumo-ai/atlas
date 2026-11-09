@@ -1,5 +1,6 @@
 "use client";
 
+import { WorkClock } from "@/components/WorkClock";
 import { AtlasHoldButton } from "@/components/AtlasHoldButton";
 
 import { useRouter } from "next/navigation";
@@ -8,7 +9,6 @@ import { MemorySphere, type SphereGlyph } from "@/components/MemorySphere";
 import { Timetable } from "@/components/Timetable";
 import {
   addDeadline,
-  addHoursLog,
   addInvoice,
   addProject,
   addStudySession,
@@ -308,7 +308,7 @@ export default function WorkPage() {
             <h2 className="mb-5 font-display text-[27px] text-wine">{openSectionMeta.name}</h2>
 
             {section === "projects" && <ProjectsSection projects={atlas.projects} />}
-            {section === "hours" && <HoursSection projects={atlas.projects} logs={atlas.hoursLogs} />}
+            {section === "hours" && <WorkClock />}
             {section === "money" && <MoneySection ledger={atlas.ledger} />}
             {section === "timetable" && <Timetable slots={atlas.timetable} />}
             {section === "deadlines" && <DeadlinesSection assignments={atlas.assignments} />}
@@ -512,136 +512,6 @@ function ProjectsSection({ projects }: { projects: Project[] }) {
           })
         )}
       </div>
-    </div>
-  );
-}
-
-/* ================================================================== */
-/*  2. HOURS LOGGED                                                    */
-/* ================================================================== */
-
-function HoursSection({
-  projects,
-  logs,
-}: {
-  projects: Project[];
-  logs: { id: string; projectId: string; date: string; hours: number }[];
-}) {
-  const [showAdd, setShowAdd] = useState(false);
-  const [projectId, setProjectId] = useState("");
-  const [date, setDate] = useState(todayISO());
-  const [hours, setHours] = useState("");
-
-  const projectName = (id: string) => projects.find((p) => p.id === id)?.name ?? "Unknown";
-
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const h = Number(hours);
-    if (!projectId || !h || h <= 0) return;
-    addHoursLog(projectId, h, date);
-    setHours("");
-    setShowAdd(false);
-  };
-
-  const total = logs.reduce((a, l) => a + l.hours, 0);
-
-  return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="font-ui text-[15px] text-wine">
-          <span className="font-display text-[24px]">{total}</span> hours logged
-        </p>
-        <button
-          type="button"
-          onClick={() => setShowAdd((v) => !v)}
-          className="rounded-pill border border-wine bg-wine px-4 py-1.5 font-ui text-[15px] text-marble"
-        >
-          {showAdd ? "Close" : "+ Log hours"}
-        </button>
-      </div>
-
-      {showAdd && (
-        <form
-          onSubmit={submit}
-          className="glass-card space-y-3 p-4"
-        >
-          <div className="grid gap-3 sm:grid-cols-3">
-            <Field label="Project">
-              <select
-                className="field py-2.5"
-                value={projectId}
-                onChange={(e) => setProjectId(e.target.value)}
-                required
-              >
-                <option value="">Choose a project</option>
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Date">
-              <input
-                type="date"
-                className="field py-2.5"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                required
-              />
-            </Field>
-            <Field label="Hours">
-              <input
-                type="number"
-                min="0.5"
-                step="0.5"
-                className="field py-2.5"
-                placeholder="e.g. 6"
-                value={hours}
-                onChange={(e) => setHours(e.target.value)}
-                required
-              />
-            </Field>
-          </div>
-          <div className="flex gap-3">
-            <button
-              type="submit"
-              className="rounded-pill bg-wine px-5 py-2 font-ui text-[15px] text-marble"
-            >
-              Log hours
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowAdd(false)}
-              className="rounded-pill border border-wine/45 px-4 py-2 font-ui text-[15px] text-wine"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      )}
-
-      {logs.length === 0 ? (
-        <p className="rounded-xl border border-wine/30 bg-marble p-6 text-center font-body text-[20px] text-wine opacity-65">
-          No hours logged yet.
-        </p>
-      ) : (
-        <ul className="divide-y-2 divide-wine/15">
-          {logs.map((l) => (
-            <li key={l.id} className="flex items-center gap-4 py-3">
-              <span className="w-24 shrink-0 font-ui text-[15px] text-wine opacity-70">
-                {prettyDate(l.date)}
-              </span>
-              <span className="min-w-0 flex-1 truncate font-body text-[19.5px] text-wine">
-                {projectName(l.projectId)}
-              </span>
-              <span className="font-ui text-[16px] text-wine opacity-75">
-                {l.hours}h
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
     </div>
   );
 }
