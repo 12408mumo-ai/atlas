@@ -8,10 +8,8 @@ Built with Next.js (App Router), Tailwind, and a hand-made Greek design language
 
 1. **`/` and `/login`** — Tap the face of Zeus to enter Atlas without an account. Your world is stored
    locally in this browser.
-2. **`/hub`** — The Titan. A marble **Atlas kneels holding a glowing celestial
-   sphere**; five **pillar spheres orbit the world** on tilted rings. Click a sphere
-   → light blooms → the doorway opens.
-3. Each sphere opens its own page with sub-branches (the pillar method):
+2. **`/hub`** — A simple home page with links to each part of your world.
+3. Choose a section to open it:
 
 | Sphere | Greek | Page(s) |
 |---|---|---|
@@ -31,8 +29,7 @@ Work and Study are the same pillar's two chambers — linked both ways.
   the Greek feeling holds even if the kit does not resolve.
 - **Ornaments**: `components/Ornaments.tsx` — meander borders, laurel dividers,
   twinkling starfield, Greek-key corners.
-- **Stage**: `components/AtlasStage.tsx` — orbit math, canvas rings, DOM-driven
-  sphere animation (no animation library), doorway transition.
+- **Home**: `app/hub/page.tsx` — accessible links to the six sections.
 
 ## Atlas AI — the awakened Titan
 

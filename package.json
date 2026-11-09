@@ -10,11 +10,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@types/three": "^0.187.0",
+    "@hugeicons/core-free-icons": "^4.4.0",
+    "@hugeicons/react": "^1.1.10",
     "next": "16.4.5",
     "react": "18.3.1",
-    "react-dom": "18.3.1",
-    "three": "^0.187.0"
+    "react-dom": "18.3.1"
   },
   "devDependencies": {
     "@types/node": "22.7.5",

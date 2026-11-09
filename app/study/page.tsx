@@ -2,14 +2,24 @@
 
 import { useEffect, useState } from "react";
 import { PageShell } from "@/components/Chrome";
+import { AtlasHoldButton } from "@/components/AtlasHoldButton";
 import { Timetable } from "@/components/Timetable";
 import { Panel, Stat, Bar, Badge, Tabs, Ring } from "@/components/ui";
 import { MeanderWine } from "@/components/Ornaments";
-import { useAtlas, relativeDue, prettyDate } from "@/lib/store";
+import { useAtlas, setState, relativeDue, prettyDate } from "@/lib/store";
 
 export default function StudyPage() {
   const s = useAtlas();
   const [tab, setTab] = useState("timetable");
+  const [skillName, setSkillName] = useState("");
+  const [skillStatus, setSkillStatus] = useState("Just started");
+  const addSkill = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const name = skillName.trim();
+    if (!name) return;
+    setState((current) => ({ skills: [...current.skills, { id: crypto.randomUUID(), name, hours: 0, sessions: 0, status: skillStatus }] }));
+    setSkillName("");
+  };
   useEffect(() => {
     const allowed = ["timetable", "courses", "assignments", "self", "sessions"];
     const select = (value: unknown) => { if (typeof value === "string" && allowed.includes(value)) setTab(value); };
@@ -117,16 +127,16 @@ export default function StudyPage() {
               </Panel>
             ))}
             <Panel title="Add a subject" hint="Anything you are teaching yourself">
-              <div className="space-y-3">
-                <input className="field" placeholder="Subject or skill" />
-                <select className="field">
+              <form className="space-y-3" onSubmit={addSkill}>
+                <input className="field" aria-label="Subject or skill" placeholder="Subject or skill" value={skillName} onChange={(e) => setSkillName(e.target.value)} required />
+                <select className="field" aria-label="Skill status" value={skillStatus} onChange={(e) => setSkillStatus(e.target.value)}>
                   <option>Just started</option>
                   <option>Practising</option>
                   <option>Compounding</option>
                   <option>Taught to others</option>
                 </select>
-                <button className="btn-wine w-full">Add subject</button>
-              </div>
+                <AtlasHoldButton submit disabled={!skillName.trim()} className="w-full">Hold to add subject</AtlasHoldButton>
+              </form>
             </Panel>
           </div>
         )}

@@ -1,5 +1,7 @@
 "use client";
 
+import { AtlasHoldButton } from "@/components/AtlasHoldButton";
+
 import { useState } from "react";
 import { addTimetableSlot, removeTimetableSlot, updateTimetableSlot, type Slot } from "@/lib/store";
 
@@ -72,7 +74,7 @@ export function Timetable({ slots }: { slots: Slot[] }) {
             </label>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button type="submit" className="btn-wine btn-sm">{editingId ? "Save changes" : "Add entry"}</button>
+            {editingId ? <button type="submit" className="btn-wine btn-sm">Save changes</button> : <AtlasHoldButton submit>Hold to add entry</AtlasHoldButton>}
             <button type="button" className="glass-button px-4 py-2 font-ui text-[15px]" onClick={resetForm}>Cancel</button>
           </div>
         </form>
@@ -94,7 +96,7 @@ export function Timetable({ slots }: { slots: Slot[] }) {
                     {slot.lecturer && <p className="mt-0.5 break-words font-ui text-[13.5px] text-wine opacity-70">{slot.lecturer}</p>}
                     <div className="mt-3 flex flex-wrap gap-2">
                       <button type="button" onClick={() => edit(slot)} aria-label={`Edit ${slot.title} on ${day} at ${slot.time}`} className="glass-button px-3 py-1 font-ui text-[14px]">Edit</button>
-                      <button type="button" onClick={() => remove(slot)} aria-label={`Delete ${slot.title} on ${day} at ${slot.time}`} className="glass-button px-3 py-1 font-ui text-[14px]">Delete</button>
+                      <AtlasHoldButton action={() => remove(slot)} label={`Delete ${slot.title} on ${day} at ${slot.time}`}>Hold to delete</AtlasHoldButton>
                     </div>
                   </article>
                 ))}

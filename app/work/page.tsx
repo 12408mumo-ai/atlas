@@ -1,5 +1,7 @@
 "use client";
 
+import { AtlasHoldButton } from "@/components/AtlasHoldButton";
+
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { MemorySphere, type SphereGlyph } from "@/components/MemorySphere";
@@ -415,12 +417,7 @@ function ProjectsSection({ projects }: { projects: Project[] }) {
             </Field>
           </div>
           <div className="flex gap-3">
-            <button
-              type="submit"
-              className="rounded-pill bg-wine px-5 py-2 font-ui text-[15px] text-marble"
-            >
-              Add project
-            </button>
+            <AtlasHoldButton submit>Hold to add project</AtlasHoldButton>
             <button
               type="button"
               onClick={() => setShowAdd(false)}
@@ -748,12 +745,7 @@ function MoneySection({
             </Field>
           </div>
           <div className="flex gap-3">
-            <button
-              type="submit"
-              className="rounded-pill bg-wine px-5 py-2 font-ui text-[15px] text-marble"
-            >
-              Add invoice
-            </button>
+            <AtlasHoldButton submit>Hold to add invoice</AtlasHoldButton>
             <button
               type="button"
               onClick={() => setShowInvoice(false)}
@@ -909,12 +901,7 @@ function DeadlinesSection({ assignments }: { assignments: Assignment[] }) {
             </Field>
           </div>
           <div className="flex gap-3">
-            <button
-              type="submit"
-              className="rounded-pill bg-wine px-5 py-2 font-ui text-[15px] text-marble"
-            >
-              Add deadline
-            </button>
+            <AtlasHoldButton submit>Hold to add deadline</AtlasHoldButton>
             <button
               type="button"
               onClick={() => setShowAdd(false)}
@@ -1073,12 +1060,7 @@ function SubjectsSection({ courses }: { courses: Course[] }) {
             </Field>
           </div>
           <div className="flex gap-3">
-            <button
-              type="submit"
-              className="rounded-pill bg-wine px-5 py-2 font-ui text-[15px] text-marble"
-            >
-              Add subject
-            </button>
+            <AtlasHoldButton submit>Hold to add subject</AtlasHoldButton>
             <button
               type="button"
               onClick={() => setShowAdd(false)}

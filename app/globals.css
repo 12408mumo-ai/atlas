@@ -255,3 +255,12 @@ body {
 @media (prefers-reduced-transparency: reduce) {
   .glass-rail { background: #eee9d9; }
 }
+
+/* The home carousel uses the same charcoal and sand palette as the rest of Atlas. */
+.home-stack .atlas-card-stack {
+  --swap-tile: linear-gradient(155deg, #475a65, #27333b) !important;
+  --swap-tile-edge: rgba(194, 178, 128, 0.5) !important;
+  --swap-tile-highlight: rgba(238, 233, 217, 0.24) !important;
+  --swap-ink: #eee9d9 !important;
+  --swap-shade: #27333b !important;
+}

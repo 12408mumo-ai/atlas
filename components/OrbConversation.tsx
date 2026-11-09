@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { AtlasVoicePill } from "@/components/AtlasVoicePill";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { askAtlas, isConfigured, type ChatTurn } from "@/lib/atlas-ai";
@@ -12,7 +13,7 @@ type Recognition = {
   onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
   onerror: ((event: { error: string }) => void) | null;
   onend: (() => void) | null;
-  start: () => void; abort: () => void;
+  start: () => void; stop: () => void; abort: () => void;
 };
 type Turn = ChatTurn & { id: string };
 
@@ -45,7 +46,7 @@ export function OrbConversation({ open, onClose }: { open: boolean; onClose: () 
 
   useEffect(() => () => { if (audioUrl) URL.revokeObjectURL(audioUrl); }, [audioUrl]);
   useEffect(() => {
-    if (!open) { recognition.current?.abort(); recognition.current = null; setListening(false); audioRef.current?.pause(); return; }
+    if (!open) { const rec = recognition.current; recognition.current = null; rec?.abort(); setListening(false); audioRef.current?.pause(); return; }
     const oldOverflow = document.body.style.overflow;
     const previous = document.activeElement as HTMLElement | null;
     document.body.style.overflow = "hidden";
@@ -95,19 +96,35 @@ export function OrbConversation({ open, onClose }: { open: boolean; onClose: () 
     finally { busyRef.current = false; setBusy(false); }
   }
 
-  function startListening() {
-    if (listening) { recognition.current?.abort(); recognition.current = null; setListening(false); return; }
+  function startListening(): boolean {
     const w = window as unknown as { SpeechRecognition?: new () => Recognition; webkitSpeechRecognition?: new () => Recognition };
     const Constructor = w.SpeechRecognition || w.webkitSpeechRecognition;
-    if (!Constructor) { setNotice("Speech recognition isn't supported in this browser. Type your command instead."); return; }
+    if (!Constructor) { setNotice("Speech recognition isn't supported in this browser. Type your command instead."); return false; }
     try {
       const rec = new Constructor(); recognition.current = rec;
+      let result = "";
+      let cancelled = false;
       rec.lang = "en-US"; rec.continuous = false; rec.interimResults = false;
-      rec.onresult = (event) => { const text = event.results[0]?.[0]?.transcript?.trim(); if (text && active.current) void send(text); };
-      rec.onerror = (event) => { if (event.error !== "aborted") setNotice(`Microphone: ${event.error}. Check permission or type instead.`); };
-      rec.onend = () => { recognition.current = null; setListening(false); };
+      rec.onresult = (event) => { result = event.results[0]?.[0]?.transcript?.trim() || ""; };
+      rec.onerror = (event) => { cancelled = true; if (event.error !== "aborted") setNotice(`Microphone: ${event.error}. Check permission or type instead.`); };
+      rec.onend = () => {
+        if (recognition.current !== rec) return;
+        recognition.current = null; setListening(false);
+        if (!cancelled && result && active.current) void send(result);
+      };
       setNotice(""); setListening(true); rec.start();
-    } catch { setListening(false); setNotice("Could not start the microphone. Check browser permissions."); }
+      return true;
+    } catch { recognition.current = null; setListening(false); setNotice("Could not start the microphone. Check browser permissions."); return false; }
+  }
+
+  function stopListening(reason: string) {
+    const rec = recognition.current;
+    if (!rec) return;
+    if (["cancel", "escape", "blur", "disabled", "unmount"].includes(reason)) {
+      recognition.current = null; setListening(false); rec.abort();
+    } else {
+      try { rec.stop(); } catch { recognition.current = null; setListening(false); }
+    }
   }
 
   function resolve(approve: boolean) {
@@ -128,7 +145,7 @@ export function OrbConversation({ open, onClose }: { open: boolean; onClose: () 
         </header>
         <div className="relative mx-auto flex w-full max-w-2xl flex-1 flex-col justify-end pt-[min(28vh,200px)]">
           <div ref={transcriptRef} aria-live="polite" className="max-h-[35vh] space-y-3 overflow-y-auto py-3">
-            {!turns.length && <p className="text-center font-body text-xl">Tap the microphone and speak. Your command will be sent when you finish. Or type a command.</p>}
+            {!turns.length && <p className="text-center font-body text-xl">Tap the microphone and speak, or hold it while speaking. Slide left to cancel. Your command will be sent when you finish, or you can type it.</p>}
             {turns.map((turn) => <div key={turn.id} className={`rounded-xl px-4 py-3 font-body text-lg whitespace-pre-wrap ${turn.role === "user" ? "ml-8 bg-white/10" : "mr-8 bg-white/5"}`}><strong className="font-ui text-xs uppercase tracking-wider">{turn.role === "user" ? "You" : "Atlas"}</strong><p>{turn.content}</p></div>)}
             {busy && <p className="font-body italic">Atlas is thinking…</p>}
           </div>
@@ -136,8 +153,8 @@ export function OrbConversation({ open, onClose }: { open: boolean; onClose: () 
           {notice && <p role="alert" className="my-2 text-sm">{notice}</p>}
           {audioUrl && <audio ref={audioRef} controls autoPlay src={audioUrl} className="mb-2 h-9 w-full" aria-label="Atlas spoken reply" />}
           <form onSubmit={(event) => { event.preventDefault(); void send(draft); }} className="flex gap-2">
-            <button type="button" onClick={startListening} disabled={busy || pending.length > 0} className="shrink-0 rounded-full border border-marble/70 px-4 py-2 disabled:opacity-50" aria-pressed={listening}>{listening ? "Stop" : "Mic"}</button>
             <input aria-label="Command Atlas" value={draft} onChange={(e) => setDraft(e.target.value)} disabled={pending.length > 0} placeholder="Ask Atlas or show me my timetable…" className="min-w-0 flex-1 rounded-full border border-marble/70 bg-white/10 px-4 py-3 text-white placeholder:text-white/75" />
+            <AtlasVoicePill label="Voice command" active={listening} onStart={startListening} onStop={stopListening} disabled={busy || pending.length > 0} />
             <button type="submit" disabled={busy || pending.length > 0 || !draft.trim()} className="rounded-full bg-marble px-5 text-wine disabled:opacity-50">Send</button>
           </form>
           <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-marbleDim"><label><input type="checkbox" checked={spokenReplies} onChange={(e) => setSpokenReplies(e.target.checked)} /> Speak replies with Fish Audio</label><span>Voice transcription may be processed by your browser provider. AI requests send unlocked app text to your chosen provider. Spoken replies send text through this server to Fish Audio and may incur charges.</span></div>

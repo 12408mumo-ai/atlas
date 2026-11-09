@@ -1,5 +1,7 @@
 "use client";
 
+import { AtlasHoldButton } from "@/components/AtlasHoldButton";
+
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { PageShell } from "@/components/Chrome";
@@ -387,13 +389,7 @@ export default function AtlasAssistantPage() {
                           laid {prettyDate(p.created)} · {done}/{p.steps.length} climbed {p.byAtlas ? "· by the Titan" : ""}
                         </p>
                       </div>
-                      <button
-                        onClick={() => removePlan(p.id)}
-                        className="font-ui text-[18px] uppercase tracking-[0.14em] text-wine opacity-50 transition-opacity hover:opacity-100"
-                        aria-label="Remove plan"
-                      >
-                        ×
-                      </button>
+                      <AtlasHoldButton action={() => removePlan(p.id)} label={`Remove plan ${p.title}`}>Hold to remove</AtlasHoldButton>
                     </div>
                     <div className="mt-3 space-y-2">
                       {p.steps.map((st) => (

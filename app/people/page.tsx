@@ -1,5 +1,7 @@
 "use client";
 
+import { AtlasHoldButton } from "@/components/AtlasHoldButton";
+
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { MemorySphere } from "@/components/MemorySphere";
@@ -483,12 +485,7 @@ function AddPersonForm({ onDone }: { onDone: () => void }) {
       </details>
 
       <div className="flex items-center gap-3 pt-1">
-        <button
-          type="submit"
-          className="rounded-pill bg-wine px-5 py-2 font-ui text-[15px] text-marble"
-        >
-          Add to People
-        </button>
+        <AtlasHoldButton submit>Hold to add to People</AtlasHoldButton>
         <button
           type="button"
           onClick={onDone}

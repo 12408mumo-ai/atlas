@@ -1,5 +1,9 @@
 "use client";
 
+import { MemoriesWelcome } from "@/components/MemoriesWelcome";
+import { AtlasVoicePill } from "@/components/AtlasVoicePill";
+import { AtlasHoldButton } from "@/components/AtlasHoldButton";
+
 import { useRouter } from "next/navigation";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 
@@ -81,6 +85,10 @@ export default function MemoriesPage() {
   const mem = useMemories();
 
   const [globeDocked, setGlobeDocked] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+  const [entered, setEntered] = useState(false);
+  useEffect(() => { setHydrated(true); }, []);
+  useEffect(() => { if (mem.lock.locked) setEntered(false); }, [mem.lock.locked]);
   const [activeBranch, setActiveBranch] = useState<MemoryBranchKey | null>(null);
   const [jumpDate, setJumpDate] = useState<string | null>(null);
 
@@ -127,6 +135,8 @@ export default function MemoriesPage() {
     if (found) setLightboxEntry(found);
   };
 
+  if (!hydrated) return <main className="glass-page min-h-[100svh]" aria-busy="true" />;
+
   if (mem.lock.locked) {
     return (
       <LockScreen
@@ -137,6 +147,8 @@ export default function MemoriesPage() {
       />
     );
   }
+
+  if (!entered) return <MemoriesWelcome entries={mem.entries} onNext={() => setEntered(true)} onBack={() => router.push("/hub")} />;
 
   const currentBranchMeta = BRANCHES.find((b) => b.key === activeBranch);
 
@@ -1046,13 +1058,7 @@ function GalleryView({
               onChange={(e) => setPeople(e.target.value)}
             />
           </div>
-          <button
-            type="submit"
-            disabled={!preview}
-            className="rounded-pill bg-wine px-5 py-2 font-ui text-[15px] text-marble disabled:opacity-40"
-          >
-            Save
-          </button>
+          <AtlasHoldButton submit disabled={!preview}>Hold to add media</AtlasHoldButton>
           {uploadError && (
             <p className="font-ui text-[14px] text-wine opacity-70">
               {uploadError}
@@ -1260,91 +1266,105 @@ function JournalView({
   const [location, setLocation] = useState("");
   const [photo, setPhoto] = useState<string | null>(null);
 
-  // Voice recording
+  // The pill shares the actual recorder stream; permission and cleanup belong here.
   const [recording, setRecording] = useState(false);
-  const [recSec, setRecSec] = useState(0);
+  const [audioSaving, setAudioSaving] = useState(false);
+  const [recordError, setRecordError] = useState("");
+  const [recordStream, setRecordStream] = useState<MediaStream | null>(null);
   const [voiceNote, setVoiceNote] = useState<VoiceAttachment | null>(null);
-  const mrRef = useRef<MediaRecorder | null>(null);
-  const speechRef = useRef<SpeechRecLike | null>(null);
-  const timerRef = useRef<number | null>(null);
-  const t0Ref = useRef(0);
+  const sessionRef = useRef<{ stream?: MediaStream; recorder?: MediaRecorder; speech?: SpeechRecLike; discarded: boolean; started: number; transcript: string } | null>(null);
+  const mountedRef = useRef(true);
 
-  const startRecording = async () => {
-    setVoiceNote(null);
-    setRecSec(0);
-    t0Ref.current = Date.now();
-    setRecording(true);
-    timerRef.current = window.setInterval(() => {
-      setRecSec(Math.max(1, Math.round((Date.now() - t0Ref.current) / 1000)));
-    }, 500);
-
-    let transcript = "";
-    const w = window as unknown as {
-      SpeechRecognition?: new () => SpeechRecLike;
-      webkitSpeechRecognition?: new () => SpeechRecLike;
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      const session = sessionRef.current;
+      sessionRef.current = null;
+      if (!session) return;
+      session.discarded = true;
+      try { session.speech?.stop(); } catch {}
+      if (session.recorder?.state === "recording") session.recorder.stop();
+      session.stream?.getTracks().forEach((track) => track.stop());
     };
-    const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
-    if (Ctor) {
-      try {
-        const rec = new Ctor();
-        rec.lang = "en-US";
-        rec.continuous = true;
-        rec.interimResults = false;
-        rec.onresult = (ev) => {
-          const parts: string[] = [];
-          for (let i = 0; i < ev.results.length; i++) {
-            parts.push(ev.results[i]?.[0]?.transcript ?? "");
-          }
-          transcript = parts.join(" ").trim();
-          if (transcript) setText((prev) => (prev ? `${prev} ${transcript}` : transcript));
-        };
-        rec.onerror = () => undefined;
-        speechRef.current = rec;
-        rec.start();
-      } catch {}
-    }
+  }, []);
 
-    if (navigator.mediaDevices?.getUserMedia) {
+  const startRecording = () => {
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      setRecordError("Voice recording is not supported in this browser.");
+      return false;
+    }
+    const session = { discarded: false, started: Date.now(), transcript: "" } as NonNullable<typeof sessionRef.current>;
+    sessionRef.current = session;
+    setRecordError(""); setRecording(true);
+    void (async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const mr = new MediaRecorder(stream);
+        if (sessionRef.current !== session || !mountedRef.current) { stream.getTracks().forEach((track) => track.stop()); return; }
+        session.stream = stream;
+        const recorder = new MediaRecorder(stream);
+        session.recorder = recorder;
         const chunks: BlobPart[] = [];
-        mr.ondataavailable = (ev) => {
-          if (ev.data.size > 0) chunks.push(ev.data);
+        recorder.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); };
+        recorder.onstop = () => {
+          stream.getTracks().forEach((track) => track.stop());
+          if (session.discarded || !mountedRef.current) return;
+          if (sessionRef.current === session) {
+            sessionRef.current = null;
+            try { session.speech?.stop(); } catch {}
+            setRecording(false); setRecordStream(null); setAudioSaving(true);
+          }
+          const durationSec = Math.max(1, Math.round((Date.now() - session.started) / 1000));
+          const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
+          if (!blob.size) { setAudioSaving(false); setRecordError("No audio was captured. Please try again."); return; }
+          const reader = new FileReader();
+          reader.onload = () => {
+            if (!mountedRef.current || session.discarded) return;
+            setVoiceNote({ durationSec, audioUrl: String(reader.result), transcript: session.transcript || undefined });
+            if (session.transcript) setText((previous) => previous ? `${previous} ${session.transcript}` : session.transcript);
+            setAudioSaving(false);
+          };
+          reader.onerror = () => { if (mountedRef.current) { setAudioSaving(false); setRecordError("Could not prepare the recording."); } };
+          reader.readAsDataURL(blob);
         };
-        mr.onstop = () => {
-          stream.getTracks().forEach((t) => t.stop());
-          const dur = Math.max(1, Math.round((Date.now() - t0Ref.current) / 1000));
-          const blob = new Blob(chunks, { type: "audio/webm" });
-          setVoiceNote({
-            durationSec: dur,
-            audioUrl: URL.createObjectURL(blob),
-            transcript: transcript || undefined,
-          });
-        };
-        mrRef.current = mr;
-        mr.start();
-      } catch {}
-    }
+        recorder.start();
+        setRecordStream(stream);
+        const w = window as unknown as { SpeechRecognition?: new () => SpeechRecLike; webkitSpeechRecognition?: new () => SpeechRecLike };
+        const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
+        if (Ctor) {
+          try {
+            const rec = new Ctor(); session.speech = rec;
+            rec.lang = "en-US"; rec.continuous = true; rec.interimResults = false;
+            rec.onresult = (event) => { session.transcript = Array.from(event.results, (result) => result[0]?.transcript || "").join(" ").trim(); };
+            rec.onerror = () => undefined;
+            rec.start();
+          } catch { session.speech = undefined; }
+        }
+      } catch {
+        session.stream?.getTracks().forEach((track) => track.stop());
+        if (sessionRef.current === session && mountedRef.current) {
+          sessionRef.current = null; setRecording(false); setRecordStream(null);
+          setRecordError("Could not start recording. Check microphone permission and try again.");
+        }
+      }
+    })();
+    return true;
   };
 
-  const stopRecording = () => {
-    if (timerRef.current) {
-      window.clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    speechRef.current?.stop();
-    speechRef.current = null;
-    if (mrRef.current && mrRef.current.state !== "inactive") {
-      mrRef.current.stop();
-      mrRef.current = null;
+  const stopRecording = (reason: string) => {
+    const session = sessionRef.current;
+    if (!session) return;
+    sessionRef.current = null;
+    session.discarded = ["cancel", "escape", "blur", "disabled", "unmount"].includes(reason);
+    try { session.speech?.stop(); } catch {}
+    setRecording(false); setRecordStream(null);
+    if (session.recorder?.state === "recording") {
+      if (!session.discarded) setAudioSaving(true);
+      session.recorder.stop();
     } else {
-      setVoiceNote({
-        durationSec: Math.max(2, Math.round((Date.now() - t0Ref.current) / 1000)),
-        transcript: text.trim() || "Voice note recorded.",
-      });
+      session.stream?.getTracks().forEach((track) => track.stop());
+      if (!session.discarded) setRecordError("Recording was stopped before the microphone was ready.");
     }
-    setRecording(false);
   };
 
   const onPhotoPick = (ev: React.ChangeEvent<HTMLInputElement>) => {
@@ -1359,9 +1379,10 @@ function JournalView({
 
   const saveEntry = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!text.trim() && !voiceNote) return;
+    if (recording || audioSaving || (!text.trim() && !voiceNote)) return;
 
-    addMemoryEntry({
+    try {
+      addMemoryEntry({
       kind: "journal",
       journalSubtype: subtype,
       title: title.trim() || (subtype === "idea" ? "Idea" : subtype === "reflection" ? "Reflection" : "Daily note"),
@@ -1381,7 +1402,12 @@ function JournalView({
       mediaAttachments: photo
         ? [{ id: `att-${Date.now()}`, mediaType: "photo", src: photo, album: "Events" }]
         : undefined,
-    });
+      }, { requireStorage: true });
+    } catch {
+      setRecordError("Could not save this entry. Browser storage may be full; remove an attachment or free up space.");
+      return;
+    }
+    setRecordError("");
 
     setTitle("");
     setText("");
@@ -1515,6 +1541,9 @@ function JournalView({
           </div>
         )}
 
+        <p className="font-ui text-xs text-wine/75">Tap to record or hold while speaking; slide left to cancel. Audio stays in this browser. Speech transcription may be processed by your browser provider.</p>
+        {recordError && <p role="alert" className="font-ui text-sm text-wine">{recordError}</p>}
+        {audioSaving && <p role="status" className="font-ui text-sm text-wine">Preparing voice note…</p>}
         <div className="flex flex-wrap items-center gap-2 border-t border-wine/15 pt-3">
           <span className="font-ui text-[14.5px] text-wine opacity-65">Mood:</span>
           {[1, 2, 3, 4, 5].map((n) => (
@@ -1531,15 +1560,10 @@ function JournalView({
           ))}
 
           <div className="ml-auto flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={recording ? stopRecording : () => void startRecording()}
-              className={`rounded-pill border border-wine/50 px-3.5 py-1.5 font-ui text-[14.5px] ${
-                recording ? "bg-wine text-marble" : "text-wine"
-              }`}
-            >
-              {recording ? `Stop (${recSec}s)` : "Voice"}
-            </button>
+            <div className="flex min-w-[130px] items-center justify-end gap-2">
+              {!recording && <span className="font-ui text-sm text-wine">Voice</span>}
+              <AtlasVoicePill label="Record voice note" active={recording} stream={recordStream} onStart={startRecording} onStop={stopRecording} disabled={audioSaving} />
+            </div>
 
             <label className="cursor-pointer rounded-pill border border-wine/50 px-3.5 py-1.5 font-ui text-[14.5px] text-wine">
               Photo
@@ -1556,7 +1580,8 @@ function JournalView({
 
             <button
               type="submit"
-              className="rounded-pill bg-wine px-5 py-1.5 font-ui text-[15px] text-marble"
+              disabled={recording || audioSaving}
+              className="rounded-pill bg-wine px-5 py-1.5 font-ui text-[15px] text-marble disabled:opacity-50"
             >
               Save
             </button>
@@ -1718,12 +1743,7 @@ function MilestonesView({
               </option>
             ))}
           </select>
-          <button
-            type="submit"
-            className="rounded-pill bg-wine px-5 py-2 font-ui text-[15px] text-marble"
-          >
-            Save milestone
-          </button>
+          <AtlasHoldButton submit>Hold to add milestone</AtlasHoldButton>
         </form>
       )}
 
