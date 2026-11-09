@@ -1,6 +1,7 @@
 "use client";
 
 import { MemoriesWelcome } from "@/components/MemoriesWelcome";
+import { Tabs } from "@/components/ui";
 import { AtlasVoicePill } from "@/components/AtlasVoicePill";
 import { AtlasHoldButton } from "@/components/AtlasHoldButton";
 
@@ -992,19 +993,9 @@ function GalleryView({
     <div className="space-y-6">
       {/* Type filter + Upload button */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex gap-2">
-          {(
-            [
-              ["all", "All"],
-              ["photo", "Photos"],
-              ["video", "Videos"],
-            ] as const
-          ).map(([k, label]) => (
-            <FilterPill key={k} active={mediaFilter === k} onClick={() => setMediaFilter(k)}>
-              {label}
-            </FilterPill>
-          ))}
-        </div>
+        <Tabs label="Gallery media filters" value={mediaFilter} onChange={(key) => setMediaFilter(key as "all" | "photo" | "video")} tabs={[
+          { key: "all", label: "All" }, { key: "photo", label: "Photos" }, { key: "video", label: "Videos" },
+        ]} />
 
         <button
           type="button"
@@ -1435,20 +1426,10 @@ function JournalView({
   return (
     <div className="space-y-6">
       {/* Sub-filters */}
-      <div className="flex flex-wrap gap-2">
-        {(
-          [
-            ["all", "All"],
-            ["daily", "Daily"],
-            ["reflections", "Reflections & Ideas"],
-            ["highlights", "★ Starred"],
-          ] as const
-        ).map(([k, label]) => (
-          <FilterPill key={k} active={subFilter === k} onClick={() => setSubFilter(k)}>
-            {label}
-          </FilterPill>
-        ))}
-      </div>
+      <Tabs label="Journal filters" value={subFilter} onChange={(key) => setSubFilter(key as "all" | "daily" | "reflections" | "highlights")} tabs={[
+        { key: "all", label: "All" }, { key: "daily", label: "Daily" },
+        { key: "reflections", label: "Reflections & Ideas" }, { key: "highlights", label: "★ Starred" },
+      ]} />
 
       {/* Simple clean composer */}
       <form

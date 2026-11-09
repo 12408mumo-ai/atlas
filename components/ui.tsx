@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import GooeyNav from "@/components/GooeyNav";
+import type { ComponentType } from "react";
 import { GreekKeyCorner } from "./Ornaments";
 
 /* Flat two-colour UI kit: warm cream (var(--atlas-sand)) surface, charcoal (var(--atlas-charcoal)) structure.
@@ -164,34 +166,25 @@ export function Badge({
   );
 }
 
-export function Tabs({
-  tabs,
-  value,
-  onChange,
-}: {
+type GooeyTabsProps = {
+  items: { label: string; href?: string }[];
+  activeIndex: number;
+  onChange: (index: number) => void;
+  theme: string; color: string; activeTextColor: string; size: string;
+  frame: boolean; particleCount: number; spread: number; className: string; ariaLabel: string;
+};
+const ThemedGooeyNav = GooeyNav as ComponentType<GooeyTabsProps>;
+
+export function Tabs({ tabs, value, onChange, label = "Sections" }: {
   tabs: { key: string; label: string; href?: string }[];
   value: string;
   onChange?: (k: string) => void;
+  label?: string;
 }) {
-  return (
-    <div className="glass-card flex flex-wrap items-center gap-1.5 p-1.5">
-      {tabs.map((t) => {
-        const active = t.key === value;
-        const cls = `block rounded-pill px-4 py-2.5 font-ui text-[17.5px] uppercase tracking-[0.15em] transition-colors ${
-          active ? "bg-wine text-marble" : "text-wine hover:bg-marbleDim"
-        }`;
-        return t.href ? (
-          <Link key={t.key} href={t.href} className={cls}>
-            {t.label}
-          </Link>
-        ) : (
-          <button key={t.key} onClick={() => onChange?.(t.key)} className={cls}>
-            {t.label}
-          </button>
-        );
-      })}
-    </div>
-  );
+  const activeIndex = Math.max(0, tabs.findIndex((tab) => tab.key === value));
+  return <ThemedGooeyNav items={tabs.map(({ label: title, href }) => ({ label: title, href }))} activeIndex={activeIndex}
+    onChange={(index) => onChange?.(tabs[index].key)} theme="light" color="#36454F" activeTextColor="#eee9d9"
+    size="sm" frame particleCount={10} spread={38} className="atlas-gooey" ariaLabel={label} />;
 }
 
 export function Empty({ children }: { children: React.ReactNode }) {
