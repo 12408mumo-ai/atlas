@@ -60,7 +60,7 @@ export function atlasDataSnapshot(): string {
     ...(mediaAttachments ? { mediaAttachments: mediaAttachments.map(({ id, mediaType, album, duration }) => ({ id, mediaType, album, duration })) } : {}),
     ...(voice ? { voice: { durationSec: voice.durationSec, transcript: voice.transcript } } : {}),
   }));
-  return JSON.stringify({ today: todayISO(), user: { name: session?.name ?? "Guest" }, world: { ...world, ...(memories.lock.locked ? {} : { journal }) }, memories: memories.lock.locked ? { locked: true } : { locked: false, entries, albums: memories.albums, customSummaries: memories.customSummaries } });
+  return JSON.stringify({ today: todayISO(), user: { name: session?.name ?? "Guest" }, world: { ...world, lifeVision: world.lifeVision.map(({ image, ...entry }) => ({ ...entry, ...(image ? { hasImage: true } : {}) })), ...(memories.lock.locked ? {} : { journal }) }, memories: memories.lock.locked ? { locked: true } : { locked: false, entries, albums: memories.albums, customSummaries: memories.customSummaries } });
 }
 
 /** Execute only a single explicitly approved, schema-checked action. */

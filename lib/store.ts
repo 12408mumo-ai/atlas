@@ -104,7 +104,7 @@ export type Plan = {
 };
 
 export type LifeVisionCategory = "goals" | "places" | "experiences" | "becoming";
-export type LifeVisionEntry = { id: string; category: LifeVisionCategory; title: string; notes: string; done: boolean };
+export type LifeVisionEntry = { id: string; category: LifeVisionCategory; title: string; notes: string; done: boolean; image?: string };
 
 export type AtlasState = {
   session: Session | null;
@@ -517,15 +517,28 @@ export function toggleTask(projectId: string, taskId: string) {
 }
 
 /** Personal intentions stay local with the rest of the Atlas world. */
-export function addLifeVision(category: LifeVisionCategory, title: string, notes = "") {
-  const trimmed = title.trim();
-  if (!trimmed) return;
-  setState((current) => ({ lifeVision: [...current.lifeVision, { id: `life-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`, category, title: trimmed, notes: notes.trim(), done: false }] }));
+// Commit Life edits only after storage succeeds, so a full browser does not
+// appear to save an image that would disappear on reload.
+function saveLifeVision(lifeVision: LifeVisionEntry[]): boolean {
+  const next = { ...state, lifeVision };
+  try {
+    if (typeof localStorage === "undefined") return false;
+    localStorage.setItem(KEY, JSON.stringify(next));
+  } catch { return false; }
+  state = next;
+  listeners.forEach((listener) => listener());
+  return true;
 }
 
-export function updateLifeVision(id: string, changes: Partial<Pick<LifeVisionEntry, "title" | "notes" | "done">>) {
-  if (changes.title !== undefined && !changes.title.trim()) return;
-  setState((current) => ({ lifeVision: current.lifeVision.map((entry) => entry.id === id ? { ...entry, ...changes, ...(changes.title !== undefined ? { title: changes.title.trim() } : {}), ...(changes.notes !== undefined ? { notes: changes.notes.trim() } : {}) } : entry) }));
+export function addLifeVision(category: LifeVisionCategory, title: string, notes = "", image?: string): boolean {
+  const trimmed = title.trim();
+  if (!trimmed) return false;
+  return saveLifeVision([...state.lifeVision, { id: `life-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`, category, title: trimmed, notes: notes.trim(), done: false, ...(category === "experiences" && image ? { image } : {}) }]);
+}
+
+export function updateLifeVision(id: string, changes: Partial<Pick<LifeVisionEntry, "title" | "notes" | "done" | "image">>): boolean {
+  if (changes.title !== undefined && !changes.title.trim()) return false;
+  return saveLifeVision(state.lifeVision.map((entry) => entry.id === id ? { ...entry, ...changes, ...(changes.title !== undefined ? { title: changes.title.trim() } : {}), ...(changes.notes !== undefined ? { notes: changes.notes.trim() } : {}) } : entry));
 }
 
 export function removeLifeVision(id: string) {

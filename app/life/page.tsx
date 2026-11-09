@@ -13,11 +13,41 @@ const categories: { key: LifeVisionCategory; label: string; heading: string; pro
   { key: "becoming", label: "Who I want to become", heading: "Who I want to become", prompt: "The qualities and ways of living you want to grow into.", placeholder: "Who do you want to become?", doneLabel: "Living it" },
 ];
 
+function ImagePicker({ image, onChange, onBusy, onError }: { image: string; onChange: (value: string) => void; onBusy: (value: boolean) => void; onError: (value: string) => void }) {
+  async function pick(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/") || file.size > 8 * 1024 * 1024) { onError("Choose an image under 8 MB."); return; }
+    onError(""); onBusy(true);
+    const url = URL.createObjectURL(file);
+    try {
+      const picture = new Image();
+      picture.src = url;
+      await picture.decode();
+      const scale = Math.min(1, 1200 / Math.max(picture.naturalWidth, picture.naturalHeight));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(picture.naturalWidth * scale));
+      canvas.height = Math.max(1, Math.round(picture.naturalHeight * scale));
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("Image processing unavailable");
+      context.drawImage(picture, 0, 0, canvas.width, canvas.height);
+      onChange(canvas.toDataURL("image/jpeg", 0.8));
+    } catch { onError("Could not read this image. Please try another file."); }
+    finally { URL.revokeObjectURL(url); onBusy(false); }
+  }
+  return <div className="space-y-2"><label className="block font-ui text-sm text-wine">Image <span className="opacity-60">(optional, up to 8 MB)</span><input type="file" accept="image/*" onChange={pick} className="mt-2 block w-full text-sm file:mr-3 file:rounded-full file:border file:border-wine/50 file:bg-transparent file:px-4 file:py-2 file:text-wine" /></label>{image && <div><img src={image} alt="Selected preview" className="max-h-48 max-w-full rounded-xl object-contain" /><button type="button" onClick={() => onChange("")} className="mt-2 font-ui text-sm underline text-wine">Remove image</button></div>}</div>;
+}
+
 export default function LifePage() {
   const world = useAtlas();
   const [tab, setTab] = useState<LifeVisionCategory>("goals");
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
+  const [image, setImage] = useState("");
+  const [editImage, setEditImage] = useState("");
+  const [imageBusy, setImageBusy] = useState(false);
+  const [error, setError] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
@@ -33,7 +63,7 @@ export default function LifePage() {
     window.addEventListener("popstate", history);
     return () => { window.removeEventListener("atlas:show-view", listener); window.removeEventListener("popstate", history); };
   }, []);
-  useEffect(() => { setShowAdd(false); setTitle(""); setNotes(""); setEditing(null); }, [tab]);
+  useEffect(() => { setShowAdd(false); setTitle(""); setNotes(""); setImage(""); setError(""); setEditing(null); }, [tab]);
 
   const active = categories.find((category) => category.key === tab)!;
   const entries = (world.lifeVision || []).filter((entry) => entry.category === tab);
@@ -41,17 +71,19 @@ export default function LifePage() {
   function add(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!title.trim()) return;
-    addLifeVision(tab, title, notes);
-    setTitle(""); setNotes(""); setShowAdd(false);
+    if (imageBusy) return;
+    if (!addLifeVision(tab, title, notes, image)) { setError("Could not save. Browser storage may be full; try removing an image or freeing up space."); return; }
+    setError(""); setTitle(""); setNotes(""); setImage(""); setShowAdd(false);
   }
   function edit(entry: LifeVisionEntry) {
-    setEditing(entry.id); setEditTitle(entry.title); setEditNotes(entry.notes);
+    setEditing(entry.id); setEditTitle(entry.title); setEditNotes(entry.notes); setEditImage(entry.image || ""); setError("");
   }
   function saveEdit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!editing || !editTitle.trim()) return;
-    updateLifeVision(editing, { title: editTitle, notes: editNotes });
-    setEditing(null);
+    if (imageBusy) return;
+    if (!updateLifeVision(editing, { title: editTitle, notes: editNotes, ...(tab === "experiences" ? { image: editImage } : {}) })) { setError("Could not save. Browser storage may be full; try removing an image or freeing up space."); return; }
+    setError(""); setEditing(null);
   }
 
   return (
@@ -66,22 +98,26 @@ export default function LifePage() {
             <div><h3 id="life-category" className="font-display text-[28px] text-wine">{active.heading}</h3><p className="mt-1 font-body text-lg italic text-wine/75">{active.prompt}</p></div>
             <button type="button" onClick={() => setShowAdd((value) => !value)} className="rounded-full bg-wine px-5 py-2.5 font-ui text-sm text-marble focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine">{showAdd ? "Close" : "+ Add"}</button>
           </div>
+          {error && <p role="alert" className="mt-4 font-ui text-sm text-red-800">{error}</p>}
           {showAdd && <form onSubmit={add} className="glass-card mt-4 space-y-3 p-4 sm:p-5">
             <label className="block font-ui text-sm text-wine">Title<input className="field mt-1" placeholder={active.placeholder} value={title} onChange={(event) => setTitle(event.target.value)} maxLength={200} required autoFocus /></label>
             <label className="block font-ui text-sm text-wine">Notes <span className="opacity-60">(optional)</span><textarea className="field mt-1 min-h-[85px]" placeholder="Add a little more, if you like" value={notes} onChange={(event) => setNotes(event.target.value)} maxLength={4000} /></label>
-            <div className="flex flex-wrap gap-2"><AtlasHoldButton submit disabled={!title.trim()}>Add to {active.label}</AtlasHoldButton><button type="button" onClick={() => setShowAdd(false)} className="rounded-full border border-wine/50 px-4 py-2 font-ui text-sm text-wine">Cancel</button></div>
+            {tab === "experiences" && <ImagePicker image={image} onChange={setImage} onBusy={setImageBusy} onError={setError} />}
+            <div className="flex flex-wrap gap-2"><AtlasHoldButton submit disabled={!title.trim() || imageBusy}>Add to {active.label}</AtlasHoldButton><button type="button" onClick={() => setShowAdd(false)} className="rounded-full border border-wine/50 px-4 py-2 font-ui text-sm text-wine">Cancel</button></div>
           </form>}
           {entries.length === 0 ? <p className="py-8 font-body text-xl italic text-wine/65">Nothing here yet. Add your first idea when you are ready.</p> : <ul className="divide-y divide-wine/20">
             {entries.map((entry) => <li key={entry.id} className="py-4">
               {editing === entry.id ? <form onSubmit={saveEdit} className="space-y-3 rounded-xl border border-wine/30 bg-marbleDim/50 p-4">
                 <label className="block font-ui text-sm text-wine">Title<input className="field mt-1" value={editTitle} onChange={(event) => setEditTitle(event.target.value)} maxLength={200} required autoFocus /></label>
                 <label className="block font-ui text-sm text-wine">Notes<textarea className="field mt-1 min-h-[80px]" value={editNotes} onChange={(event) => setEditNotes(event.target.value)} maxLength={4000} /></label>
-                <div className="flex gap-2"><button type="submit" className="rounded-full bg-wine px-4 py-2 font-ui text-sm text-marble">Save changes</button><button type="button" onClick={() => setEditing(null)} className="rounded-full border border-wine/50 px-4 py-2 font-ui text-sm text-wine">Cancel</button></div>
+                {tab === "experiences" && <ImagePicker image={editImage} onChange={setEditImage} onBusy={setImageBusy} onError={setError} />}
+                <div className="flex gap-2"><button type="submit" disabled={imageBusy} className="rounded-full bg-wine px-4 py-2 font-ui text-sm text-marble">Save changes</button><button type="button" onClick={() => setEditing(null)} className="rounded-full border border-wine/50 px-4 py-2 font-ui text-sm text-wine">Cancel</button></div>
               </form> : <div className="flex flex-wrap items-start gap-3">
                 <label className="flex min-w-[150px] flex-1 cursor-pointer items-start gap-3">
-                  <input type="checkbox" checked={entry.done} onChange={(event) => updateLifeVision(entry.id, { done: event.target.checked })} aria-label={`${active.doneLabel}: ${entry.title}`} className="mt-1.5 h-5 w-5 shrink-0 accent-[#36454F]" />
+                  <input type="checkbox" checked={entry.done} onChange={(event) => { if (!updateLifeVision(entry.id, { done: event.target.checked })) setError("Could not save. Browser storage may be full."); else setError(""); }} aria-label={`${active.doneLabel}: ${entry.title}`} className="mt-1.5 h-5 w-5 shrink-0 accent-[#36454F]" />
                   <span className="min-w-0"><span className={`block break-words font-body text-[21px] text-wine ${entry.done ? "line-through opacity-60" : ""}`}>{entry.title}</span>{entry.notes && <span className="mt-1 block whitespace-pre-wrap break-words font-body text-[17px] text-wine/75">{entry.notes}</span>}{entry.done && <span className="mt-1 block font-ui text-xs uppercase tracking-wider text-wine/70">{active.doneLabel}</span>}</span>
                 </label>
+                {entry.image && tab === "experiences" && <img src={entry.image} alt={`Image for ${entry.title}`} className="max-h-48 w-full rounded-xl object-cover sm:w-40" />}
                 <div className="flex flex-wrap gap-2"><button type="button" onClick={() => edit(entry)} aria-label={`Edit ${entry.title}`} className="rounded-full border border-wine/50 px-4 py-2 font-ui text-sm text-wine">Edit</button><AtlasHoldButton label={`Delete ${entry.title}`} action={() => removeLifeVision(entry.id)}>Delete</AtlasHoldButton></div>
               </div>}
             </li>)}
