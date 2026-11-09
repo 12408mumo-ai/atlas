@@ -21,7 +21,7 @@ type Turn = ChatTurn & { id: string };
 function destination(text: string): string | null {
   const match = text.trim().toLowerCase().replace(/[.!?]+$/, "").match(/^(?:please )?(?:show me|open|go to) (?:my |the )?([a-z ]+?)(?: page)?$/);
   if (!match) return null;
-  return ({ study: "/study", timetable: "/study?view=timetable", courses: "/study?view=courses", assignments: "/study?view=assignments", deadlines: "/study?view=assignments", "study sessions": "/study?view=sessions", work: "/work", life: "/life", health: "/life?view=health", money: "/life?view=money", habits: "/life?view=habits", mood: "/life?view=mood", people: "/people", memories: "/memories", hub: "/hub" } as Record<string, string>)[match[1]] || null;
+  return ({ study: "/study", timetable: "/study?view=timetable", courses: "/study?view=courses", assignments: "/study?view=assignments", deadlines: "/study?view=assignments", "study sessions": "/study?view=sessions", work: "/work", life: "/life", goals: "/life?view=goals", "my goals": "/life?view=goals", places: "/life?view=places", "places i want to go": "/life?view=places", experiences: "/life?view=experiences", "things to do": "/life?view=experiences", "things i want to do": "/life?view=experiences", "who i want to become": "/life?view=becoming", people: "/people", memories: "/memories", hub: "/hub" } as Record<string, string>)[match[1]] || null;
 }
 
 export function OrbConversation({ open, onClose }: { open: boolean; onClose: () => void }) {

@@ -9,7 +9,7 @@ const sections = [
   { title: "Work", href: "/work", detail: "Projects, plans and progress", number: "01" },
   { title: "Study", href: "/study", detail: "Learning, courses and timetable", number: "02" },
   { title: "People", href: "/people", detail: "The people who matter", number: "03" },
-  { title: "Life", href: "/life", detail: "Habits, health and everyday life", number: "04" },
+  { title: "Life", href: "/life", detail: "Goals, dreams and possibilities", number: "04" },
   { title: "Memories", href: "/memories", detail: "Moments worth keeping", number: "05" },
   { title: "Atlas AI", href: "/atlas", detail: "A little help with your world", number: "06" },
 ];

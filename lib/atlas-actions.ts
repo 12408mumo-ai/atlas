@@ -10,6 +10,7 @@ type FieldType = "string" | "number" | "boolean" | "strings" | readonly string[]
 type Schema = { fields: Record<string, FieldType>; required: string[]; defaults: Record<string, unknown> };
 const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
 const schemas: Record<string, Schema> = {
+  lifeVision: { fields: { category: ["goals", "places", "experiences", "becoming"], title: "string", notes: "string", done: "boolean" }, required: ["category", "title"], defaults: { notes: "", done: false } },
   projects: { fields: { name: "string", client: "string", projectType: ["client", "own product", "side tool"], rate: "number", hours: "number", status: ["active", "paused", "done"], deadline: "string", notes: "string" }, required: ["name"], defaults: { client: "", projectType: "client", rate: 0, hours: 0, status: "active", deadline: "", notes: "", tasks: [] } },
   tasks: { fields: { title: "string", due: "string", done: "boolean" }, required: ["title"], defaults: { due: "", done: false } },
   ledger: { fields: { label: "string", amount: "number", kind: ["income", "expense"], date: "string", bucket: "string", client: "string", status: ["sent", "paid", "expense"] }, required: ["label", "amount", "kind"], defaults: { date: todayISO(), bucket: "", client: "", status: "expense" } },
@@ -143,6 +144,7 @@ export function executeAtlasAction(action: AtlasAction): ActionResult {
     const projectId = action.fields?.projectId ?? existing?.projectId;
     if (!s.projects.some((project) => project.id === projectId)) return fail("Project ID not found.");
   }
+  if (collection === "lifeVision" && action.type === "update" && typeof action.fields?.title === "string" && !action.fields.title.trim()) return fail("Title cannot be empty.");
   const fields = action.fields ?? {};
   const defaults = { ...schema.defaults };
   for (const key of ["date", "lastSeen", "created"]) if (key in defaults) defaults[key] = todayISO();

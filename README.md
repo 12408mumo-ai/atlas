@@ -16,7 +16,7 @@ Built with Next.js (App Router), Tailwind, and a hand-made Greek design language
 | **Work** | Ἔργον | `/work` (projects, steps, clock tools) → `/study` |
 | **Study** | Μάθησις | `/study` (timetable, courses, assignments/exams, self-learning, session log) |
 | **People** | Ἄνθρωποι | `/people` (profiles, dates, promises, gifts, check-ins) |
-| **Life** | Βίος | `/life` (health, money, habits, mood 1–5) |
+| **Life** | Βίος | `/life` (goals, places, experiences and personal aspirations) |
 | **Memories** | Μνῆμαι | `/memories` (journal, on-this-day, cross-pillar logs) |
 
 Work and Study are the same pillar's two chambers — linked both ways.

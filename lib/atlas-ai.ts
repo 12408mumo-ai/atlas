@@ -131,6 +131,7 @@ To propose a change, append one fenced atlas block with JSON {"actions":[...]}. 
 Each action is {"type":"create|update|delete","collection":"...","id":"exact id for update/delete","parentId":"exact project or plan id for tasks or planSteps","fields":{...}}. Omit id for create, omit fields for delete. Propose at most 20 changes. Use fields only from the list below; never include id in fields. Updates may contain only fields being changed. Dates use YYYY-MM-DD; timetable day is Mon, Tue, Wed, Thu, Fri, Sat or Sun; time is text. For mood use its weekday as id. For health and money only update is allowed.
 
 Collections and allowed fields:
+lifeVision: category (goals|places|experiences|becoming), title, notes, done. Create requires category and title. These are the user’s Life goals, places, experiences, and aspirations.
 projects: name, client, projectType (client|own product|side tool), rate, hours, status (active|paused|done), deadline, notes. Create requires name.
 tasks: title, due, done. Parent is project ID. Create requires title.
 ledger: label, amount, kind (income|expense), date, bucket, client, status (sent|paid|expense). Create requires label, amount, kind.

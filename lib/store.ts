@@ -103,8 +103,12 @@ export type Plan = {
   steps: { id: string; text: string; done: boolean }[];
 };
 
+export type LifeVisionCategory = "goals" | "places" | "experiences" | "becoming";
+export type LifeVisionEntry = { id: string; category: LifeVisionCategory; title: string; notes: string; done: boolean };
+
 export type AtlasState = {
   session: Session | null;
+  lifeVision: LifeVisionEntry[];
   projects: Project[];
   ledger: Ledger[];
   courses: Course[];
@@ -135,6 +139,7 @@ const dayOffset = (n: number) => {
 
 export const seed = (): AtlasState => ({
   session: null,
+  lifeVision: [],
   projects: [
     {
       id: "p1",
@@ -509,6 +514,22 @@ export function toggleTask(projectId: string, taskId: string) {
         : { ...p, tasks: p.tasks.map((t) => (t.id === taskId ? { ...t, done: !t.done } : t)) }
     ),
   }));
+}
+
+/** Personal intentions stay local with the rest of the Atlas world. */
+export function addLifeVision(category: LifeVisionCategory, title: string, notes = "") {
+  const trimmed = title.trim();
+  if (!trimmed) return;
+  setState((current) => ({ lifeVision: [...current.lifeVision, { id: `life-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`, category, title: trimmed, notes: notes.trim(), done: false }] }));
+}
+
+export function updateLifeVision(id: string, changes: Partial<Pick<LifeVisionEntry, "title" | "notes" | "done">>) {
+  if (changes.title !== undefined && !changes.title.trim()) return;
+  setState((current) => ({ lifeVision: current.lifeVision.map((entry) => entry.id === id ? { ...entry, ...changes, ...(changes.title !== undefined ? { title: changes.title.trim() } : {}), ...(changes.notes !== undefined ? { notes: changes.notes.trim() } : {}) } : entry) }));
+}
+
+export function removeLifeVision(id: string) {
+  setState((current) => ({ lifeVision: current.lifeVision.filter((entry) => entry.id !== id) }));
 }
 
 /** Project steps are stored on the project, shared with the AI and other views. */
