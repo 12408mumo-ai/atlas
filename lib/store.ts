@@ -511,12 +511,46 @@ export function toggleTask(projectId: string, taskId: string) {
   }));
 }
 
+/** Project steps are stored on the project, shared with the AI and other views. */
+export function addProjectStep(projectId: string, title: string) {
+  const trimmed = title.trim();
+  if (!trimmed) return;
+  setState((s) => ({ projects: s.projects.map((project) => project.id === projectId
+    ? { ...project, tasks: [...project.tasks, { id: `task-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`, title: trimmed, due: "", done: false }] }
+    : project) }));
+}
+
+export function removeProjectStep(projectId: string, taskId: string) {
+  setState((s) => ({ projects: s.projects.map((project) => project.id === projectId
+    ? { ...project, tasks: project.tasks.filter((task) => task.id !== taskId) }
+    : project) }));
+}
+
+/** Match Atlas AI's project deletion: its steps and linked hours go with it. */
+export function removeProject(id: string) {
+  setState((s) => ({ projects: s.projects.filter((project) => project.id !== id), hoursLogs: s.hoursLogs.filter((log) => log.projectId !== id) }));
+}
+
+export function removeDeadline(id: string) {
+  setState((s) => ({ assignments: s.assignments.filter((assignment) => assignment.id !== id) }));
+}
+
+export function removeSubject(id: string) {
+  setState((s) => ({ courses: s.courses.filter((course) => course.id !== id) }));
+}
+
+export function removeStudySession(id: string) {
+  setState((s) => ({ studySessions: s.studySessions.filter((session) => session.id !== id) }));
+}
+
+const newItemId = (prefix: string) => `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+
 export function addProject(name: string, projectType: Project["projectType"]) {
   setState((s) => ({
     projects: [
       ...s.projects,
       {
-        id: `p${Date.now()}`,
+        id: newItemId("p"),
         name: name.trim(),
         client: projectType === "client" ? "New client" : "Own venture",
         projectType,
@@ -543,7 +577,7 @@ export function addHoursLog(projectId: string, hours: number, date?: string) {
 export function addStudySession(subject: string, durationMin: number, date?: string) {
   setState((s) => ({
     studySessions: [
-      { id: `ss${Date.now()}`, subject: subject.trim(), date: date || todayISO(), durationMin },
+      { id: newItemId("ss"), subject: subject.trim(), date: date || todayISO(), durationMin },
       ...s.studySessions,
     ],
   }));
@@ -576,7 +610,7 @@ export function addDeadline(
   setState((s) => ({
     assignments: [
       {
-        id: `a${Date.now()}`,
+        id: newItemId("a"),
         title: title.trim(),
         course: subject.trim() || "—",
         due,
@@ -600,7 +634,7 @@ export function addSubject(
     courses: [
       ...s.courses,
       {
-        id: `c${Date.now()}`,
+        id: newItemId("c"),
         title: name.trim(),
         code: code.trim(),
         progress: 0,

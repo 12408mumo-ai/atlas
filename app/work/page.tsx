@@ -9,8 +9,13 @@ import { MemorySphere, type SphereGlyph } from "@/components/MemorySphere";
 import { Timetable } from "@/components/Timetable";
 import {
   addDeadline,
-  addInvoice,
   addProject,
+  addProjectStep,
+  removeProject,
+  removeProjectStep,
+  removeDeadline,
+  removeSubject,
+  removeStudySession,
   addStudySession,
   addSubject,
   relativeDue,
@@ -27,7 +32,7 @@ import {
 /* ------------------------------------------------------------------ */
 /*  Work Page — Simple Sphere Navigation                              */
 /*  Work                                                             */
-/*  ├── Work (Projects · Hours logged · Money)                      */
+/*  ├── Work (Projects · Hours logged)                      */
 /*  └── Study (Timetable · Deadlines · Subjects · Study sessions)   */
 /* ------------------------------------------------------------------ */
 
@@ -35,14 +40,13 @@ type GroupKey = "work" | "study";
 type SectionKey =
   | "projects"
   | "hours"
-  | "money"
   | "timetable"
   | "deadlines"
   | "subjects"
   | "sessions";
 
 const GROUPS: { key: GroupKey; name: string; sub: string; glyph: SphereGlyph; phase: number }[] = [
-  { key: "work", name: "Work", sub: "Projects, hours, money", glyph: "work", phase: 0.2 },
+  { key: "work", name: "Work", sub: "Projects and hours", glyph: "work", phase: 0.2 },
   { key: "study", name: "Study", sub: "Timetable, deadlines, subjects", glyph: "study", phase: 1.5 },
 ];
 
@@ -56,7 +60,6 @@ const SECTIONS: {
 }[] = [
   { key: "projects", name: "Projects", sub: "Client work & ventures", glyph: "projects", group: "work", phase: 0.3 },
   { key: "hours", name: "Hours logged", sub: "Time as it happened", glyph: "hours", group: "work", phase: 1.1 },
-  { key: "money", name: "Money", sub: "Invoices & costs", glyph: "money", group: "work", phase: 1.9 },
   { key: "timetable", name: "Timetable", sub: "The week ahead", glyph: "timetable", group: "study", phase: 2.7 },
   { key: "deadlines", name: "Deadlines", sub: "What's due", glyph: "deadlines", group: "study", phase: 3.5 },
   { key: "subjects", name: "Subjects", sub: "School & self-learning", glyph: "subjects", group: "study", phase: 4.3 },
@@ -228,7 +231,7 @@ export default function WorkPage() {
             Work
           </h1>
           <p className="mt-1.5 font-body text-[19px] text-wine opacity-65">
-            Your projects, your hours, your money — and everything you're learning.
+            Your projects, your time, and everything you're learning.
           </p>
         </header>
 
@@ -309,7 +312,6 @@ export default function WorkPage() {
 
             {section === "projects" && <ProjectsSection projects={atlas.projects} />}
             {section === "hours" && <WorkClock />}
-            {section === "money" && <MoneySection ledger={atlas.ledger} />}
             {section === "timetable" && <Timetable slots={atlas.timetable} />}
             {section === "deadlines" && <DeadlinesSection assignments={atlas.assignments} />}
             {section === "subjects" && <SubjectsSection courses={atlas.courses} />}
@@ -452,7 +454,7 @@ function ProjectsSection({ projects }: { projects: Project[] }) {
                       <p className="mt-1 font-ui text-[14.5px] text-wine opacity-60">{p.client}</p>
                     )}
                   </div>
-                  <div className="flex shrink-0 flex-col items-end gap-1 font-ui text-[14px] text-wine opacity-70">
+                  <div className="flex shrink-0 flex-col items-end gap-1 font-ui text-[14px] text-wine">
                     {p.deadline ? (
                       <span>
                         Due {prettyDate(p.deadline)} · {relativeDue(p.deadline)}
@@ -461,6 +463,8 @@ function ProjectsSection({ projects }: { projects: Project[] }) {
                       <span>No deadline</span>
                     )}
                     <span>{p.hours}h logged</span>
+                    <span className="max-w-[170px] text-right text-xs">Deleting also removes steps and linked hours.</span>
+                    <AtlasHoldButton label={`Delete project ${p.name}, its steps and linked hours`} action={() => removeProject(p.id)}>Delete project</AtlasHoldButton>
                   </div>
                 </div>
 
@@ -470,43 +474,7 @@ function ProjectsSection({ projects }: { projects: Project[] }) {
                   </p>
                 )}
 
-                {p.tasks.length > 0 && (
-                  <ul className="mt-4 space-y-2">
-                    {p.tasks.map((t) => (
-                      <li key={t.id}>
-                        <button
-                          type="button"
-                          onClick={() => toggleTask(p.id, t.id)}
-                          className="flex w-full items-center gap-3 rounded-lg border border-wine/30 bg-marbleDim/45 px-3.5 py-2.5 text-left transition-colors hover:border-wine"
-                        >
-                          <span
-                            className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 border-wine text-[15px] ${
-                              t.done ? "bg-wine text-marble" : "bg-marble text-transparent"
-                            }`}
-                          >
-                            ✓
-                          </span>
-                          <span
-                            className={`flex-1 font-body text-[19px] text-wine ${
-                              t.done ? "opacity-45 line-through" : ""
-                            }`}
-                          >
-                            {t.title}
-                          </span>
-                          <span className="font-ui text-[13.5px] text-wine opacity-60">
-                            {relativeDue(t.due)}
-                          </span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-
-                {p.tasks.length > 0 && (
-                  <p className="mt-3 font-ui text-[14px] text-wine opacity-55">
-                    {done}/{p.tasks.length} tasks done
-                  </p>
-                )}
+                <ProjectSteps project={p} done={done} />
               </article>
             );
           })
@@ -516,169 +484,33 @@ function ProjectsSection({ projects }: { projects: Project[] }) {
   );
 }
 
-/* ================================================================== */
-/*  3. MONEY                                                           */
-/* ================================================================== */
-
-function MoneySection({
-  ledger,
-}: {
-  ledger: {
-    id: string;
-    label: string;
-    amount: number;
-    kind: "income" | "expense";
-    date: string;
-    bucket: string;
-    client: string;
-    status: "sent" | "paid" | "expense";
-  }[];
-}) {
-  const [showInvoice, setShowInvoice] = useState(false);
-  const [client, setClient] = useState("");
-  const [amount, setAmount] = useState("");
-
-  const invoices = ledger.filter((l) => l.kind === "income");
-  const costs = ledger.filter((l) => l.kind === "expense");
-  const income = invoices.reduce((a, l) => a + l.amount, 0);
-  const expense = costs.reduce((a, l) => a + l.amount, 0);
-  const owed = invoices
-    .filter((l) => l.status === "sent")
-    .reduce((a, l) => a + l.amount, 0);
-
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const amt = Number(amount);
-    if (!client.trim() || !amt || amt <= 0) return;
-    addInvoice(client.trim(), amt);
-    setClient("");
-    setAmount("");
-    setShowInvoice(false);
-  };
-
+function ProjectSteps({ project, done }: { project: Project; done: number }) {
+  const [title, setTitle] = useState("");
+  function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!title.trim()) return;
+    addProjectStep(project.id, title);
+    setTitle("");
+  }
   return (
-    <div className="space-y-6">
-      <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-xl border border-wine/40 bg-marbleDim/40 p-4">
-          <p className="font-ui text-[14px] text-wine opacity-60">Invoiced</p>
-          <p className="mt-1 font-display text-[26px] text-wine">${income.toLocaleString()}</p>
-        </div>
-        <div className="rounded-xl border border-wine/40 bg-marbleDim/40 p-4">
-          <p className="font-ui text-[14px] text-wine opacity-60">Owed to you</p>
-          <p className="mt-1 font-display text-[26px] text-wine">${owed.toLocaleString()}</p>
-        </div>
-        <div className="rounded-xl border border-wine/40 bg-marbleDim/40 p-4">
-          <p className="font-ui text-[14px] text-wine opacity-60">Costs</p>
-          <p className="mt-1 font-display text-[26px] text-wine">${expense.toLocaleString()}</p>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between gap-3">
-        <h3 className="font-ui text-[15px] uppercase tracking-[0.12em] text-wine opacity-65">
-          Invoices
-        </h3>
-        <button
-          type="button"
-          onClick={() => setShowInvoice((v) => !v)}
-          className="rounded-pill border border-wine bg-wine px-4 py-1.5 font-ui text-[15px] text-marble"
-        >
-          {showInvoice ? "Close" : "+ Invoice"}
-        </button>
-      </div>
-
-      {showInvoice && (
-        <form
-          onSubmit={submit}
-          className="glass-card space-y-3 p-4"
-        >
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Client">
-              <input
-                className="field py-2.5"
-                placeholder="Client or company"
-                value={client}
-                onChange={(e) => setClient(e.target.value)}
-                autoFocus
-                required
-              />
-            </Field>
-            <Field label="Amount">
-              <input
-                type="number"
-                min="1"
-                className="field py-2.5"
-                placeholder="e.g. 2400"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                required
-              />
-            </Field>
-          </div>
-          <div className="flex gap-3">
-            <AtlasHoldButton submit>Hold to add invoice</AtlasHoldButton>
-            <button
-              type="button"
-              onClick={() => setShowInvoice(false)}
-              className="rounded-pill border border-wine/45 px-4 py-2 font-ui text-[15px] text-wine"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      )}
-
-      <ul className="divide-y-2 divide-wine/15">
-        {invoices.length === 0 ? (
-          <li className="py-6 text-center font-body text-[20px] text-wine opacity-65">
-            No invoices yet.
-          </li>
-        ) : (
-          invoices.map((l) => (
-            <li key={l.id} className="flex flex-wrap items-center gap-4 py-3.5">
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-body text-[19.5px] text-wine">{l.label}</p>
-                <p className="font-ui text-[14px] text-wine opacity-60">
-                  {l.client} · {prettyDate(l.date)}
-                </p>
-              </div>
-              <Badge tone={l.status === "paid" ? "gold" : "wine"}>{l.status}</Badge>
-              <span className="font-display text-[21px] text-wine">
-                ${l.amount.toLocaleString()}
-              </span>
-              {l.status === "sent" && (
-                <span className="font-ui text-[14px] text-wine opacity-70">owed</span>
-              )}
-            </li>
-          ))
-        )}
-      </ul>
-
-      <div>
-        <h3 className="font-ui text-[15px] uppercase tracking-[0.12em] text-wine opacity-65">
-          Costs
-        </h3>
-        <ul className="divide-y-2 divide-wine/15">
-          {costs.length === 0 ? (
-            <li className="py-4 text-center font-body text-[19px] text-wine opacity-65">
-              No costs recorded.
-            </li>
-          ) : (
-            costs.map((l) => (
-              <li key={l.id} className="flex flex-wrap items-center gap-4 py-2.5">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-body text-[19px] text-wine">{l.label}</p>
-                  <p className="font-ui text-[14px] text-wine opacity-60">
-                    {l.bucket} · {prettyDate(l.date)}
-                  </p>
-                </div>
-                <span className="font-ui text-[16px] text-wine opacity-75">
-                  −${l.amount.toLocaleString()}
-                </span>
-              </li>
-            ))
-          )}
-        </ul>
-      </div>
+    <div className="mt-4">
+      <h4 className="font-ui text-sm uppercase tracking-[0.1em] text-wine">Project steps <span className="opacity-65">· {done}/{project.tasks.length} done</span></h4>
+      {project.tasks.length > 0 && <ul className="mt-3 space-y-2">
+        {project.tasks.map((step) => <li key={step.id} className="flex flex-wrap items-center gap-2 rounded-lg border border-wine/30 bg-marbleDim/45 p-2">
+          <label className="flex min-w-0 flex-1 basis-full cursor-pointer items-center gap-2 text-left sm:basis-auto">
+            <input type="checkbox" checked={step.done} onChange={() => toggleTask(project.id, step.id)} aria-label={`${step.title} for ${project.name}`} className="h-5 w-5 shrink-0 accent-[#36454F]" />
+            <span className={`break-words font-body text-lg text-wine ${step.done ? "opacity-55 line-through" : ""}`}>{step.title}</span>
+            {step.due && <span className="font-ui text-xs text-wine/70">{relativeDue(step.due)}</span>}
+          </label>
+          <AtlasHoldButton label={`Delete step ${step.title} from ${project.name}`} action={() => removeProjectStep(project.id, step.id)}>Delete</AtlasHoldButton>
+        </li>)}
+      </ul>}
+      <form onSubmit={submit} className="mt-3 flex flex-wrap items-end gap-2">
+        <label className="min-w-[120px] flex-1 font-ui text-sm text-wine">New step
+          <input aria-label={`New step for ${project.name}`} className="field mt-1 py-2" placeholder="What needs to be done?" value={title} onChange={(event) => setTitle(event.target.value)} required />
+        </label>
+        <AtlasHoldButton submit disabled={!title.trim()}>Add step</AtlasHoldButton>
+      </form>
     </div>
   );
 }
@@ -825,6 +657,7 @@ function DeadlinesSection({ assignments }: { assignments: Assignment[] }) {
                     <span className="font-ui text-[14px] text-wine">overdue</span>
                   )}
                 </button>
+                <div className="pb-3"><AtlasHoldButton label={`Delete deadline ${a.title}`} action={() => removeDeadline(a.id)}>Delete deadline</AtlasHoldButton></div>
               </li>
             );
           })}
@@ -981,6 +814,7 @@ function SubjectsSection({ courses }: { courses: Course[] }) {
                   {c.notes}
                 </p>
               )}
+              <div className="mt-4"><AtlasHoldButton label={`Delete subject ${c.title}`} action={() => removeSubject(c.id)}>Delete subject</AtlasHoldButton></div>
             </article>
           ))
         )}
@@ -1066,8 +900,8 @@ function SessionsSection({
             <Field label="Duration (minutes)">
               <input
                 type="number"
-                min="10"
-                step="5"
+                min="1"
+                step="1"
                 className="field py-2.5"
                 placeholder="e.g. 50"
                 value={duration}
@@ -1101,7 +935,7 @@ function SessionsSection({
       ) : (
         <ul className="divide-y-2 divide-wine/15">
           {sessions.map((s) => (
-            <li key={s.id} className="flex items-center gap-4 py-3">
+            <li key={s.id} className="flex flex-wrap items-center gap-3 py-3">
               <span className="w-24 shrink-0 font-ui text-[15px] text-wine opacity-70">
                 {prettyDate(s.date)}
               </span>
@@ -1111,6 +945,7 @@ function SessionsSection({
               <span className="font-ui text-[16px] text-wine opacity-75">
                 {fmtDuration(s.durationMin)}
               </span>
+              <AtlasHoldButton label={`Delete study session ${s.subject} on ${s.date}`} action={() => removeStudySession(s.id)}>Delete</AtlasHoldButton>
             </li>
           ))}
         </ul>

@@ -6,13 +6,22 @@ import { AtlasHoldButton } from "@/components/AtlasHoldButton";
 import { Timetable } from "@/components/Timetable";
 import { Panel, Stat, Bar, Badge, Tabs, Ring } from "@/components/ui";
 import { MeanderWine } from "@/components/Ornaments";
-import { useAtlas, setState, relativeDue, prettyDate } from "@/lib/store";
+import { useAtlas, setState, addStudySession, removeStudySession, relativeDue, prettyDate } from "@/lib/store";
 
 export default function StudyPage() {
   const s = useAtlas();
   const [tab, setTab] = useState("timetable");
   const [skillName, setSkillName] = useState("");
   const [skillStatus, setSkillStatus] = useState("Just started");
+  const [sessionSubject, setSessionSubject] = useState("");
+  const [sessionMinutes, setSessionMinutes] = useState("");
+  const submitSession = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const minutes = Number(sessionMinutes);
+    if (!sessionSubject.trim() || !Number.isInteger(minutes) || minutes < 1) return;
+    addStudySession(sessionSubject, minutes);
+    setSessionSubject(""); setSessionMinutes("");
+  };
   const addSkill = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const name = skillName.trim();
@@ -32,7 +41,7 @@ export default function StudyPage() {
   }, []);
 
   const open = s.assignments.filter((a) => a.status === "open");
-  const avg = Math.round(s.courses.reduce((a, c) => a + c.progress, 0) / s.courses.length);
+  const avg = s.courses.length ? Math.round(s.courses.reduce((a, c) => a + c.progress, 0) / s.courses.length) : 0;
 
   return (
     <PageShell
@@ -142,35 +151,18 @@ export default function StudyPage() {
         )}
 
         {tab === "sessions" && (
-          <Panel title="Session log" hint="What you sat with, for how long, and what it gave you">
-            <ul className="divide-y-2 divide-wine/20">
-              {[
-                { d: 0, subj: "Greek II — aorist drills", mins: 50, note: "Paradigm finally stuck." },
-                { d: 0, subj: "Type design — lowercase g", mins: 75, note: "Three variants, none right yet." },
-                { d: -1, subj: "Statistics reading", mins: 40, note: "Regression chapter, again." },
-                { d: -2, subj: "Greek II — Odyssey IX", mins: 60, note: "Read aloud; rhythm helped." },
-                { d: -3, subj: "Speaking practice", mins: 20, note: "Recorded, re-listened, cringed." },
-              ].map((x, i) => {
-                const date = new Date();
-                date.setDate(date.getDate() + x.d);
-                return (
-                  <li key={i} className="flex items-start gap-4 py-3.5">
-                    <div className="w-20 shrink-0 font-ui text-[17px] uppercase tracking-[0.12em] text-wine opacity-65">
-                      {date.toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-body text-[21px] text-wine">{x.subj}</p>
-                      <p className="mt-0.5 font-body text-[19.5px] italic text-wine opacity-60">{x.note}</p>
-                    </div>
-                    <span className="font-ui text-[18px] tracking-[0.1em] text-wine opacity-75">{x.mins}m</span>
-                  </li>
-                );
-              })}
-            </ul>
-            <div className="mt-4 flex flex-wrap items-center gap-3 border-t-2 border-wine/20 pt-4">
-              <input className="field flex-1" placeholder="Log a session — subject, minutes, one line" />
-              <button className="btn-wine shrink-0">Log</button>
-            </div>
+          <Panel title="Session log" hint="Time spent learning, shared with Work">
+            {s.studySessions.length === 0 ? <p className="font-body text-lg italic text-wine/70">No sessions logged yet.</p> : <ul className="divide-y-2 divide-wine/20">
+              {s.studySessions.map((session) => <li key={session.id} className="flex flex-wrap items-center gap-3 py-3.5">
+                <div className="min-w-[120px] flex-1"><p className="break-words font-body text-xl text-wine">{session.subject}</p><p className="font-ui text-sm text-wine/70">{prettyDate(session.date)} · {session.durationMin} min</p></div>
+                <AtlasHoldButton label={`Delete study session ${session.subject} on ${session.date}`} action={() => removeStudySession(session.id)}>Delete</AtlasHoldButton>
+              </li>)}
+            </ul>}
+            <form onSubmit={submitSession} className="mt-4 flex flex-wrap items-end gap-3 border-t border-wine/20 pt-4">
+              <label className="min-w-[130px] flex-1 font-ui text-sm text-wine">Subject<input className="field mt-1" placeholder="Subject" value={sessionSubject} onChange={(e) => setSessionSubject(e.target.value)} required /></label>
+              <label className="w-24 font-ui text-sm text-wine">Minutes<input className="field mt-1" type="number" min="1" step="1" value={sessionMinutes} onChange={(e) => setSessionMinutes(e.target.value)} required /></label>
+              <AtlasHoldButton submit disabled={!sessionSubject.trim()}>Add session</AtlasHoldButton>
+            </form>
           </Panel>
         )}
       </div>

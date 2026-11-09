@@ -13,7 +13,7 @@ Built with Next.js (App Router), Tailwind, and a hand-made Greek design language
 
 | Sphere | Greek | Page(s) |
 |---|---|---|
-| **Work** | Ἔργον | `/work` (projects, tasks, time, income, ventures) → `/study` |
+| **Work** | Ἔργον | `/work` (projects, steps, clock tools) → `/study` |
 | **Study** | Μάθησις | `/study` (timetable, courses, assignments/exams, self-learning, session log) |
 | **People** | Ἄνθρωποι | `/people` (profiles, dates, promises, gifts, check-ins) |
 | **Life** | Βίος | `/life` (health, money, habits, mood 1–5) |
