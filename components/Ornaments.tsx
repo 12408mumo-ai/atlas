@@ -1,7 +1,7 @@
 "use client";
 
 /* Flat, two-colour Greek ornament library.
-   Warm cream (#F5E8D3) · Charcoal (#28282A). No gradients. */
+   Warm cream (var(--atlas-sand)) · Charcoal (var(--atlas-charcoal)). No gradients. */
 
 export function Meander({ className = "", height = 18 }: { className?: string; height?: number }) {
   return (
@@ -9,7 +9,7 @@ export function Meander({ className = "", height = 18 }: { className?: string; h
       <svg viewBox="0 0 240 18" preserveAspectRatio="none" className="h-full w-full">
         <defs>
           <pattern id="meanderFlat" width="24" height="18" patternUnits="userSpaceOnUse">
-            <path d="M2 16V5h13v8H7v-4h5" fill="none" stroke="#F5E8D3" strokeWidth="2" strokeLinecap="square" />
+            <path d="M2 16V5h13v8H7v-4h5" fill="none" stroke="var(--atlas-sand)" strokeWidth="2" strokeLinecap="square" />
           </pattern>
         </defs>
         <rect width="240" height="18" fill="url(#meanderFlat)" />
@@ -24,7 +24,7 @@ export function MeanderWine({ className = "", height = 18 }: { className?: strin
       <svg viewBox="0 0 240 18" preserveAspectRatio="none" className="h-full w-full">
         <defs>
           <pattern id="meanderWine" width="24" height="18" patternUnits="userSpaceOnUse">
-            <path d="M2 16V5h13v8H7v-4h5" fill="none" stroke="#28282A" strokeWidth="2" strokeLinecap="square" />
+            <path d="M2 16V5h13v8H7v-4h5" fill="none" stroke="var(--atlas-charcoal)" strokeWidth="2" strokeLinecap="square" />
           </pattern>
         </defs>
         <rect width="240" height="18" fill="url(#meanderWine)" />

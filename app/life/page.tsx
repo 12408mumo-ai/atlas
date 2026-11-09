@@ -159,7 +159,7 @@ export default function LifePage() {
                     <div
                       key={i}
                       className="aspect-square rounded-[2px]"
-                      style={{ background: on ? "#28282A" : "#E6D5BA" }}
+                      style={{ background: on ? "var(--atlas-charcoal)" : "var(--atlas-sand)" }}
                     />
                   );
                 })}

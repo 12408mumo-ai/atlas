@@ -14,11 +14,11 @@
     font-size:18px; letter-spacing:.24em; text-transform:uppercase;
     padding: 10px 16px; border: var(--glass-border); border-radius: var(--glass-control-radius);
     background: var(--glass-bg); box-shadow: var(--glass-highlight);
-    color: #d9f8e5; pointer-events:none; user-select:none;
-    text-shadow: 0 0 18px rgba(10,255,127,.25);
+    color: #e8dfc3; pointer-events:none; user-select:none;
+    text-shadow: 0 0 18px rgba(194,178,128,.25);
     transition: opacity .6s ease;
   }
-  @media (prefers-reduced-transparency: reduce) { #scroll-hint { background: #18382a; } }
+  @media (prefers-reduced-transparency: reduce) { #scroll-hint { background: #36454F; } }
   @media (prefers-reduced-motion: reduce) { #scroll-hint { transition: none; } }
 </style>
 <script type="importmap">
@@ -47,16 +47,16 @@ import { CopyShader } from 'three/addons/shaders/CopyShader.js'
 /* ------------------------------------------------------------------ */
 /*  Fixed parameters                                                  */
 /* ------------------------------------------------------------------ */
-const bgColor     = '#02160c'   // FinalPass background tint
-const flameColor  = '#0aff7f'   // corner-flame A
-const flameColor2 = '#aef0c0'   // corner-flame B
+const bgColor     = '#27333b'   // FinalPass background tint
+const flameColor  = '#C2B280'   // corner-flame A
+const flameColor2 = '#eee6cd'   // corner-flame B
 const flameAmt    = 0.2         // corner-flame intensity
-const atmoColor   = '#7affbf'   // ambient motes color
+const atmoColor   = '#C2B280'   // ambient motes color
 const atmoCount   = 300         // mote count
 const atmoSize    = 24          // mote base size
 const atmoSpeed   = 1.0         // mote warp speed
-const colorLow    = '#02160c'   // points low color
-const colorHigh   = '#34e89a'   // points high color
+const colorLow    = '#27333b'   // points low color
+const colorHigh   = '#C2B280'   // points high color
 const opacity     = 0.26        // point opacity
 const pointSize   = 5.5         // point base size
 const brightness  = 0.45        // point color multiplier

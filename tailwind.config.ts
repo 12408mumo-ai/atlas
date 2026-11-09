@@ -5,13 +5,13 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        marble: "#F5E8D3",
-        marbleDim: "#E6D5BA",
-        wine: "#28282A",
-        wineDeep: "#1D1D1F",
-        gold: "#F5E8D3",
-        goldSoft: "#DFCEB4",
-        ink: "#1D1D1F",
+        marble: "rgb(var(--atlas-sand-rgb) / <alpha-value>)",
+        marbleDim: "rgb(var(--atlas-light-rgb) / <alpha-value>)",
+        wine: "rgb(var(--atlas-charcoal-rgb) / <alpha-value>)",
+        wineDeep: "rgb(var(--atlas-deep-rgb) / <alpha-value>)",
+        gold: "rgb(var(--atlas-sand-rgb) / <alpha-value>)",
+        goldSoft: "rgb(var(--atlas-light-rgb) / <alpha-value>)",
+        ink: "rgb(var(--atlas-deep-rgb) / <alpha-value>)",
       },
       fontFamily: {
         display: ["var(--font-display)", "Georgia", "serif"],

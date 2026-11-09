@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Flow Wave — Three.js",
-  description: "A dark-emerald sea of glowing particles rolling under simplex noise.",
+  description: "A charcoal and sand sea of glowing particles rolling under simplex noise.",
 };
 
 export default function FlowWavePage() {

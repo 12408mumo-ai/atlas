@@ -122,7 +122,7 @@ function createPillarOrbTextures(
     }
     ctx.restore();
 
-    ctx.strokeStyle = "rgba(40, 40, 42, 0.34)";
+    ctx.strokeStyle = "rgba(54, 69, 79, 0.34)";
     bCtx.strokeStyle = "#303030";
     ctx.lineWidth = 1.6;
     bCtx.lineWidth = 2.4;
@@ -153,9 +153,9 @@ function createPillarOrbTextures(
       bCtx.stroke();
     }
 
-    ctx.fillStyle = "rgba(40, 40, 42, 0.16)";
+    ctx.fillStyle = "rgba(54, 69, 79, 0.16)";
     ctx.fillRect(0, ch * 0.44, cw, ch * 0.12);
-    ctx.strokeStyle = "rgba(40, 40, 42, 0.58)";
+    ctx.strokeStyle = "rgba(54, 69, 79, 0.58)";
     ctx.lineWidth = 2.8;
     ctx.beginPath();
     ctx.moveTo(0, ch * 0.44);
@@ -170,12 +170,12 @@ function createPillarOrbTextures(
       ctx.save();
       ctx.beginPath();
       ctx.arc(cx, cy, rMed + 6, 0, Math.PI * 2);
-      ctx.fillStyle = "#28282A";
+      ctx.fillStyle = "#36454F";
       ctx.fill();
 
       ctx.beginPath();
       ctx.arc(cx, cy, rMed + 2, 0, Math.PI * 2);
-      ctx.strokeStyle = "#F5E8D3";
+      ctx.strokeStyle = "#C2B280";
       ctx.lineWidth = 2;
       ctx.stroke();
 
@@ -183,7 +183,7 @@ function createPillarOrbTextures(
         ctx.beginPath();
         ctx.arc(cx, cy, rMed, 0, Math.PI * 2);
         ctx.clip();
-        ctx.fillStyle = "#F5E8D3";
+        ctx.fillStyle = "#C2B280";
         ctx.fillRect(cx - rMed, cy - rMed, rMed * 2, rMed * 2);
         ctx.drawImage(emblem, cx - rMed, cy - rMed, rMed * 2, rMed * 2);
       }
@@ -505,7 +505,7 @@ export default function AtlasStage() {
     camera.lookAt(0, 0.1, 0);
 
     /* ---- Sculptural 3D Lighting ---- */
-    const ambient = new THREE.AmbientLight("#F5E8D3", 0.36);
+    const ambient = new THREE.AmbientLight("#C2B280", 0.36);
     scene.add(ambient);
 
     const hemiLight = new THREE.HemisphereLight("#FFF3DC", "#1D1D1F", 0.38);
@@ -519,7 +519,7 @@ export default function AtlasStage() {
     rimLightLeft.position.set(-6.2, 2.8, -3.6);
     scene.add(rimLightLeft);
 
-    const rimLightRight = new THREE.DirectionalLight("#F5E8D3", 0.68);
+    const rimLightRight = new THREE.DirectionalLight("#C2B280", 0.68);
     rimLightRight.position.set(5.8, -1.5, -4.0);
     scene.add(rimLightRight);
 
@@ -609,7 +609,7 @@ export default function AtlasStage() {
         bumpScale: 0.024,
         roughness: 0.42,
         metalness: 0.08,
-        emissive: new THREE.Color("#F5E8D3"),
+        emissive: new THREE.Color("#C2B280"),
         emissiveIntensity: 0.0,
         transparent: true,
       });
@@ -878,7 +878,7 @@ export default function AtlasStage() {
   return (
     <div className="glass-page-dark relative h-[100svh] w-screen overflow-hidden select-none">
       {/* Set behind the transparent WebGL scene; never intercept sphere clicks. */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden font-display font-medium uppercase tracking-[0.14em] text-[#f5e8d3]/55" aria-label="Veni, vidi, vici">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden font-display font-medium uppercase tracking-[0.14em] text-marbleDim/90" aria-label="Veni, vidi, vici">
         <span className="absolute left-[4%] top-[62%] -translate-y-1/2 text-[clamp(20px,4.2vw,64px)] sm:left-[8%]">Veni</span>
         <span className="absolute left-1/2 top-[6%] -translate-x-1/2 text-[clamp(20px,4.2vw,64px)]">Vidi</span>
         <span className="absolute right-[4%] top-[62%] -translate-y-1/2 text-[clamp(20px,4.2vw,64px)] sm:right-[8%]">Vici</span>

@@ -201,7 +201,7 @@ export default function AtlasAssistantPage() {
                     cx="12"
                     cy="12"
                     r="8"
-                    stroke="#F5E8D3"
+                    stroke="var(--atlas-sand)"
                     strokeWidth="2"
                   />
                   <ellipse
@@ -209,7 +209,7 @@ export default function AtlasAssistantPage() {
                     cy="12"
                     rx="8"
                     ry="3.4"
-                    stroke="#F5E8D3"
+                    stroke="var(--atlas-sand)"
                     strokeWidth="1.4"
                   />
                 </svg>

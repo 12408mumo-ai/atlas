@@ -124,7 +124,7 @@ export function MemorySphere({
         ctx.beginPath();
         ctx.arc(0, 0, r * 0.92, 0, Math.PI * 2);
         ctx.clip();
-        ctx.fillStyle = "#F5E8D3";
+        ctx.fillStyle = "#C2B280";
         ctx.fillRect(-r, -r, r * 2, r * 2);
         ctx.drawImage(emblemImg, -r * 0.88, -r * 0.88, r * 1.76, r * 1.76);
       } else if (glyph === "projects") {
@@ -309,15 +309,15 @@ export function MemorySphere({
       const tiltX = 0.24;
       const tiltZ = -0.18;
 
-      const bgFill = darkCore ? "#28282A" : "#F5E8D3";
-      const lineRgb = darkCore ? "245, 232, 211" : "40, 40, 42";
-      const solidStroke = darkCore ? "#F5E8D3" : "#28282A";
+      const bgFill = darkCore ? "#36454F" : "#C2B280";
+      const lineRgb = darkCore ? "194, 178, 128" : "54, 69, 79";
+      const solidStroke = darkCore ? "#C2B280" : "#36454F";
 
       // 1. Drop shadow halo for 3D depth on page
       ctx.save();
       ctx.beginPath();
       ctx.arc(cx, cy + 4, R, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(40, 40, 42, 0.22)";
+      ctx.fillStyle = "rgba(54, 69, 79, 0.22)";
       ctx.fill();
       ctx.restore();
 
@@ -334,12 +334,12 @@ export function MemorySphere({
       ctx.clip();
       ctx.beginPath();
       ctx.arc(cx - R * 0.24, cy - R * 0.24, R * 0.96, 0, Math.PI * 2);
-      ctx.fillStyle = darkCore ? "rgba(245, 232, 211, 0.07)" : "rgba(245, 232, 211, 0.55)";
+      ctx.fillStyle = darkCore ? "rgba(194, 178, 128, 0.07)" : "rgba(194, 178, 128, 0.55)";
       ctx.fill();
 
       ctx.beginPath();
       ctx.arc(cx + R * 0.42, cy + R * 0.42, R * 1.02, 0, Math.PI * 2);
-      ctx.fillStyle = darkCore ? "rgba(0, 0, 0, 0.26)" : "rgba(40, 40, 42, 0.11)";
+      ctx.fillStyle = darkCore ? "rgba(0, 0, 0, 0.26)" : "rgba(54, 69, 79, 0.11)";
       ctx.fill();
       ctx.restore();
 
@@ -402,12 +402,12 @@ export function MemorySphere({
       ctx.save();
       ctx.beginPath();
       ctx.arc(cx + medOffsetX, cy, medR + 3.5, 0, Math.PI * 2);
-      ctx.fillStyle = darkCore ? "#F5E8D3" : "#28282A";
+      ctx.fillStyle = darkCore ? "#C2B280" : "#36454F";
       ctx.fill();
 
       ctx.beginPath();
       ctx.arc(cx + medOffsetX, cy, medR, 0, Math.PI * 2);
-      ctx.fillStyle = darkCore ? "#28282A" : "#F5E8D3";
+      ctx.fillStyle = darkCore ? "#36454F" : "#C2B280";
       ctx.fill();
 
       if (initial) {
@@ -415,24 +415,24 @@ export function MemorySphere({
         ctx.font = `600 ${medR * 0.82}px Georgia, "Times New Roman", serif`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillStyle = darkCore ? "#F5E8D3" : "#28282A";
+        ctx.fillStyle = darkCore ? "#C2B280" : "#36454F";
         ctx.fillText(initial.toUpperCase(), cx + medOffsetX, cy + medR * 0.02);
       } else {
-        drawGlyphIcon(cx + medOffsetX, cy, medR * 0.82, darkCore ? "#F5E8D3" : "#28282A");
+        drawGlyphIcon(cx + medOffsetX, cy, medR * 0.82, darkCore ? "#C2B280" : "#36454F");
       }
       ctx.restore();
 
       // 6. Crisp outer sphere border (+ active outer ring)
       ctx.beginPath();
       ctx.arc(cx, cy, R, 0, Math.PI * 2);
-      ctx.strokeStyle = "#28282A";
+      ctx.strokeStyle = "#36454F";
       ctx.lineWidth = darkCore ? 3.2 : 2.8;
       ctx.stroke();
 
       if (darkCore) {
         ctx.beginPath();
         ctx.arc(cx, cy, R - 2.6, 0, Math.PI * 2);
-        ctx.strokeStyle = "#F5E8D3";
+        ctx.strokeStyle = "#C2B280";
         ctx.lineWidth = 1.6;
         ctx.stroke();
       }
@@ -440,7 +440,7 @@ export function MemorySphere({
       if (isAct) {
         ctx.beginPath();
         ctx.arc(cx, cy, R + 5.5, 0, Math.PI * 2);
-        ctx.strokeStyle = solidStroke === "#F5E8D3" ? "#28282A" : solidStroke;
+        ctx.strokeStyle = solidStroke === "#C2B280" ? "#36454F" : solidStroke;
         ctx.setLineDash([6, 5]);
         ctx.lineDashOffset = -dt * 14;
         ctx.lineWidth = 2.2;

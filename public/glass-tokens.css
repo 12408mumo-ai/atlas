@@ -1,11 +1,17 @@
-/* Shared by the Next.js app and the standalone Flow Wave scene. */
+/* Shared palette and glass tokens for the app and the standalone scene. */
 :root {
-  --glass-bg: rgba(255, 255, 255, 0.08);
-  --glass-text-bg: rgba(255, 255, 255, 0.68);
-  --glass-blur: blur(12px) saturate(160%);
-  --glass-border: 1px solid rgba(255, 255, 255, 0.25);
+  --atlas-charcoal: #36454F;
+  --atlas-sand: #C2B280;
+  --atlas-charcoal-rgb: 54 69 79;
+  --atlas-sand-rgb: 194 178 128;
+  --atlas-light-rgb: 238 233 217;
+  --atlas-deep-rgb: 39 51 59;
+  --glass-bg: rgba(194, 178, 128, 0.12);
+  --glass-text-bg: rgba(238, 233, 217, 0.86);
+  --glass-blur: blur(12px) saturate(130%);
+  --glass-border: 1px solid rgba(194, 178, 128, 0.36);
   --glass-radius: 20px;
   --glass-control-radius: 14px;
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  --glass-shadow: 0 8px 32px rgba(39, 51, 59, 0.16);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }

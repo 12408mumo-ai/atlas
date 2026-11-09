@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { GreekKeyCorner } from "./Ornaments";
 
-/* Flat two-colour UI kit: warm cream (#F5E8D3) surface, charcoal (#28282A) structure.
+/* Flat two-colour UI kit: warm cream (var(--atlas-sand)) surface, charcoal (var(--atlas-charcoal)) structure.
    No gradients anywhere — every fill is a single solid colour. */
 
 export function Panel({
@@ -39,7 +39,7 @@ export function Panel({
           <div>
             <h2 className={`font-ui text-[18px] uppercase tracking-[0.2em] ${wine ? "text-marble" : "text-wine"}`}>{title}</h2>
             {hint && (
-              <p className={`mt-1.5 font-body text-[20px] italic leading-snug ${wine ? "text-marble opacity-75" : "text-wine opacity-65"}`}>
+              <p className={`mt-1.5 font-body text-[20px] italic leading-snug ${wine ? "text-marbleDim" : "text-wine opacity-85"}`}>
                 {hint}
               </p>
             )}
@@ -67,9 +67,9 @@ export function Stat({
   const ink = tone === "wine" ? "text-marble" : "text-wine";
   return (
     <div className={`px-4 py-4 sm:px-5 ${bg}`}>
-      <p className={`font-ui text-[17px] uppercase tracking-[0.18em] ${ink} opacity-70`}>{label}</p>
+      <p className={`font-ui text-[17px] uppercase tracking-[0.18em] ${tone === "wine" ? "text-marbleDim" : "text-wine opacity-85"}`}>{label}</p>
       <p className={`mt-2 font-display text-[34px] leading-none tracking-[0.02em] ${ink}`}>{value}</p>
-      {sub && <p className={`mt-2 font-body text-[19px] italic ${ink} opacity-65`}>{sub}</p>}
+      {sub && <p className={`mt-2 font-body text-[19px] italic ${tone === "wine" ? "text-marbleDim" : "text-wine opacity-85"}`}>{sub}</p>}
     </div>
   );
 }
@@ -118,13 +118,13 @@ export function Ring({
     <div className="flex flex-col items-center gap-2">
       <div className="relative" style={{ width: size, height: size }}>
         <svg width={size} height={size} className="-rotate-90">
-          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#E6D5BA" strokeWidth={stroke} />
+          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgb(var(--atlas-light-rgb))" strokeWidth={stroke} />
           <circle
             cx={size / 2}
             cy={size / 2}
             r={r}
             fill="none"
-            stroke="#28282A"
+            stroke="var(--atlas-charcoal)"
             strokeOpacity={color === "gold" ? 0.72 : 1}
             strokeWidth={stroke}
             strokeLinecap="round"
