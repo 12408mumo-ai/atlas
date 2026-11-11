@@ -8,6 +8,7 @@ export function EntryScreen() {
   const router = useRouter();
 
   function enter() {
+    window.dispatchEvent(new Event("atlas:enter"));
     enterAsGuest();
     router.push("/hub");
   }

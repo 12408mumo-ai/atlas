@@ -4,6 +4,7 @@ import { ServiceWorkerRegister } from "@/components/PwaInstall";
 import { AtlasGlowCursor } from "@/components/AtlasGlowCursor";
 import { WavesBackground } from "@/components/WavesBackground";
 import { AssistantOrb } from "@/components/AssistantOrb";
+import { EntryMusic } from "@/components/EntryMusic";
 
 export const metadata: Metadata = {
   title: "Atlas — the world you carry",
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AtlasGlowCursor />
         <ServiceWorkerRegister />
         <AssistantOrb />
+        <EntryMusic />
         {children}
       </body>
     </html>
