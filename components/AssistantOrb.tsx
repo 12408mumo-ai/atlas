@@ -40,7 +40,7 @@ export function AssistantOrb() {
     if (current) { current.onend = null; current.onerror = null; current.onresult = null; try { current.abort(); } catch {} }
   }, [clearWake]);
   useEffect(() => () => { active.current = false; if (restartTimer.current) clearTimeout(restartTimer.current); if (wakeTimer.current) clearTimeout(wakeTimer.current); request.current?.abort(); try { recognition.current?.abort(); } catch {} }, []);
-  const entry = pathname === "/" || pathname === "/login" || pathname === "/clock";
+  const entry = pathname === "/" || pathname === "/login" || pathname === "/clock" || pathname === "/pin";
   useEffect(() => { if (entry) stop(); }, [entry, stop]);
 
   const run = useCallback(async (text: string) => {

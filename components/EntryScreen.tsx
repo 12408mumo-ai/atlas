@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { enterAsGuest } from "@/lib/store";
 
 /** Both entry routes lead into the same browser-local world. */
 export function EntryScreen() {
@@ -9,8 +8,7 @@ export function EntryScreen() {
 
   function enter() {
     window.dispatchEvent(new Event("atlas:enter"));
-    enterAsGuest();
-    router.push("/hub");
+    router.push("/pin");
   }
 
   return (

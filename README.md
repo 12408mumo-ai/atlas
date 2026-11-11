@@ -6,7 +6,7 @@ Built with Next.js (App Router), Tailwind, and a hand-made Greek design language
 
 ## The journey
 
-1. **`/` and `/login`** — Enter Atlas without an account. Your world is stored
+1. **`/` and `/login`** — Tap Zeus, then enter your PIN. Your world is stored
    locally in this browser.
 2. **`/hub`** — A simple home page with links to each part of your world.
 3. Choose a section to open it:
@@ -30,6 +30,22 @@ Work and Study are the same pillar's two chambers — linked both ways.
 - **Ornaments**: `components/Ornaments.tsx` — meander borders, laurel dividers,
   twinkling starfield, Greek-key corners.
 - **Home**: `app/hub/page.tsx` — accessible links to the six sections.
+
+## PIN access
+
+Set server-only environment variables `ATLAS_PIN` (8–12 randomly chosen digits)
+and `ATLAS_SESSION_SECRET` (at least 32 random characters) in Vercel, then
+redeploy. Never use a `NEXT_PUBLIC_` prefix. Both must be set or Atlas stays
+locked. The PIN gate issues an HTTP-only 12-hour session cookie. Changing the
+session secret invalidates existing sessions. For local development use an
+untracked `.env.local` and restart the server.
+
+This gate protects app routes when online but is not encryption: browser-local
+world data remains accessible to someone with access to the browser/device.
+The built-in login attempt brake is per server instance, not a distributed rate
+limit. Configure a shared rate limit or Vercel WAF and stronger authentication
+before exposing a paid voice API or relying on this PIN against brute force.
+PIN-protected navigation requires a network connection.
 
 ## AI
 
