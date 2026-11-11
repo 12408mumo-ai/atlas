@@ -11,6 +11,7 @@ const sections = [
   { title: "People", href: "/people", detail: "The people who matter", number: "03" },
   { title: "Life", href: "/life", detail: "Goals, dreams and possibilities", number: "04" },
   { title: "Memories", href: "/memories", detail: "Moments worth keeping", number: "05" },
+  { title: "Atlas AI", href: "/atlas", detail: "Connect and control Atlas", number: "06" },
 ];
 type Controls = { next: () => void; prev: () => void };
 type SwapProps = { children: ReactNode; width: number; height: number; cardDistance: number; verticalDistance: number; depth: number; visibleCards: number; skewAmount: number; parallax: number; delay: number; autoplay: boolean; onChange: (index: number) => void; onCardClick: (index: number) => void; className: string };

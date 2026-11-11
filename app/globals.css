@@ -264,3 +264,8 @@ body {
   --swap-ink: #eee9d9 !important;
   --swap-shade: #27333b !important;
 }
+
+@media (prefers-reduced-motion: no-preference) {
+  .atlas-assistant-spinning { animation: atlas-assistant-spin 2s linear infinite; }
+  @keyframes atlas-assistant-spin { to { transform: rotate(360deg); } }
+}

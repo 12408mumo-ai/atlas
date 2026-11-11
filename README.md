@@ -33,12 +33,21 @@ Work and Study are the same pillar's two chambers — linked both ways.
 
 ## AI
 
-The previous assistant, voice-command interface and provider integrations have
-been removed while a replacement is planned. Existing chat, plans and settings
-remain in browser storage; they are not shown or sent to a provider. The old
-AI settings may include an API key in localStorage under `atlas.ai.v1`; the old
-voice key may remain in sessionStorage under `atlas.voice.test.v1`. Remove those
-entries using browser developer tools if you no longer need them.
+Connect an OpenRouter API key and model on `/atlas`. The key is stored in this
+browser tab's sessionStorage and sent directly to OpenRouter with the command;
+only the command, not the saved world, is sent. The model ID is kept in
+localStorage. Provider usage may incur charges. The orb stays at the side of
+the page: enable wake listening explicitly, then say “Atlas” followed by a
+command (or type one). Supported actions are opening pages and Life categories,
+and proposing additions to Life lists. Approve or cancel additions via voice or
+the on-screen buttons. Other edits and deletions are not supported.
+
+Wake listening needs microphone permission, a supported browser, and an open
+tab; browser speech recognition may use a remote speech service. It is not a
+system-wide wake word. Turn it off with “Stop listening”. The previous
+assistant's data and settings are untouched; old keys may remain in browser
+storage under `atlas.ai.v1` (localStorage) and `atlas.voice.test.v1`
+(sessionStorage). Remove them in browser developer tools if no longer needed.
 
 ## Life
 
@@ -48,7 +57,7 @@ in the saved world even though it is no longer displayed on the Life page.
 
 ## State
 
-Local-first. World data, Memories, assistant settings, and chat live in browser
+Local-first. World data, Memories, and the assistant model setting live in browser
 `localStorage`, seeded with example data. Clearing browser data can erase them.
 Life images, gallery photos and videos are stored in the browser too and are subject to its
 limited storage quota. Previously uploaded remote media may no longer be available.
