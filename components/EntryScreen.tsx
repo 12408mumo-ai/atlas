@@ -13,7 +13,8 @@ export function EntryScreen() {
   }
 
   return (
-    <main className="flex min-h-[100svh] w-full flex-col items-center justify-center overflow-hidden px-5 py-8 text-marble">
+    <main className="relative isolate flex min-h-[100svh] w-full flex-col items-center justify-center overflow-hidden px-5 py-8 text-marble">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-cover bg-center" style={{ backgroundImage: "linear-gradient(rgba(20, 29, 33, 0.57), rgba(20, 29, 33, 0.68)), url('/assets/greek-corridor.jpg')" }} />
       <p className="font-ui text-[11px] uppercase tracking-[0.42em] text-marbleDim sm:text-xs">The world you carry</p>
       <h1 className="mt-3 font-display text-[clamp(32px,7vw,52px)] tracking-[0.18em]">ATLAS</h1>
       <button type="button" onClick={enter} aria-label="Enter Atlas" className="group relative mt-3 block w-[min(78vw,440px)] rounded-full outline-none focus-visible:ring-2 focus-visible:ring-marble focus-visible:ring-offset-4 focus-visible:ring-offset-wine">
