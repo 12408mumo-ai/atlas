@@ -48,7 +48,7 @@ export function EntryMusic() {
   }
 
   return <>
-    <audio ref={audioRef} src="/audio/mellow-corridor.wav" preload="none" onPlay={() => { started.current = true; setPlaying(true); setFailed(false); }} onPause={() => setPlaying(false)} onEnded={() => setPlaying(false)} onError={() => { setPlaying(false); setFailed(true); }} />
+    <audio ref={audioRef} src="/audio/kiss-of-life.mp3" preload="none" onPlay={() => { started.current = true; setPlaying(true); setFailed(false); }} onPause={() => setPlaying(false)} onEnded={() => setPlaying(false)} onError={() => { setPlaying(false); setFailed(true); }} />
     {(entry || playing) && <div className="fixed bottom-4 right-4 z-[960] flex flex-col items-end gap-1">
       <button type="button" onClick={toggle} className="rounded-full border border-[#C2B280]/70 bg-[#27333b]/95 px-4 py-2 font-ui text-xs text-[#eee9d9] shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C2B280]">{playing ? "Stop entrance music" : "Play entrance music"}</button>
       {failed && <span role="status" className="rounded bg-[#27333b] px-2 py-1 font-ui text-xs text-[#eee9d9]">Music unavailable</span>}
