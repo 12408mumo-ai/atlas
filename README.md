@@ -6,7 +6,7 @@ Built with Next.js (App Router), Tailwind, and a hand-made Greek design language
 
 ## The journey
 
-1. **`/` and `/login`** — Tap the face of Zeus to enter Atlas without an account. Your world is stored
+1. **`/` and `/login`** — Enter Atlas without an account. Your world is stored
    locally in this browser.
 2. **`/hub`** — A simple home page with links to each part of your world.
 3. Choose a section to open it:
@@ -31,38 +31,26 @@ Work and Study are the same pillar's two chambers — linked both ways.
   twinkling starfield, Greek-key corners.
 - **Home**: `app/hub/page.tsx` — accessible links to the six sections.
 
-## Atlas AI — the awakened Titan
+## AI
 
-The world now has a mind and a body.
+The previous assistant, voice-command interface and provider integrations have
+been removed while a replacement is planned. Existing chat, plans and settings
+remain in browser storage; they are not shown or sent to a provider. The old
+AI settings may include an API key in localStorage under `atlas.ai.v1`; the old
+voice key may remain in sessionStorage under `atlas.voice.test.v1`. Remove those
+entries using browser developer tools if you no longer need them.
 
-- **`/atlas`** — the assistant temple. A marble **Greek-god body**
-  (`public/assets/atlas-god.png`) stands at the left; the oracle chat at the right.
-  Atlas can **analyse** the whole world, **add** to it (tasks, habits, people,
-  journal, ledger, assignments), **remove** from it, and **lay plans** (staircases
-  of steps kept in `state.plans`). Commands come back as ```atlas action edicts
-  that `lib/atlas-ai.ts` parses and executes against the store.
-- **`/atlas/settings`** — Atlas Assistant Settings. **Bring your own key**:
-  OpenAI, Anthropic (Claude), Google Gemini, or any OpenAI-compatible endpoint
-  (Groq, OpenRouter, Ollama…). Pick a model, hit **Test the key** to probe which
-  model answers, and the key powers every reply. The key lives only in this
-  browser's localStorage; calls go straight from browser to provider.
+## Life
 
-### Entering Atlas
-
-Open `/` or `/login` and choose **Enter Atlas**. No account is required.
-Your world is stored in this browser on this device; it does not sync between devices.
-
-### The written assistant
-
-- **The docked orb** — once inside, the spinning orb sits on the left edge of
-  app page. Press it to open the conversation.
-- **The entry face** — tap the face of Zeus to open your locally stored world.
+Keep goals, places, things to do and the person you want to become. Things to do
+can include an image. Entries are stored locally; the previous Life data remains
+in the saved world even though it is no longer displayed on the Life page.
 
 ## State
 
 Local-first. World data, Memories, assistant settings, and chat live in browser
 `localStorage`, seeded with example data. Clearing browser data can erase them.
-Gallery photos and videos are stored in the browser too and are subject to its
+Life images, gallery photos and videos are stored in the browser too and are subject to its
 limited storage quota. Previously uploaded remote media may no longer be available.
 Existing account-specific browser caches are not automatically imported into the
 local world, and previously cloud-synced data is not automatically downloaded.

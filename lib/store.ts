@@ -560,7 +560,7 @@ export function removeProjectStep(projectId: string, taskId: string) {
     : project) }));
 }
 
-/** Match Atlas AI's project deletion: its steps and linked hours go with it. */
+/** Delete a project along with its steps and linked hours. */
 export function removeProject(id: string) {
   setState((s) => ({ projects: s.projects.filter((project) => project.id !== id), hoursLogs: s.hoursLogs.filter((log) => log.projectId !== id) }));
 }

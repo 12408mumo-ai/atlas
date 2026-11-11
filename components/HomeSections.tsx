@@ -11,7 +11,6 @@ const sections = [
   { title: "People", href: "/people", detail: "The people who matter", number: "03" },
   { title: "Life", href: "/life", detail: "Goals, dreams and possibilities", number: "04" },
   { title: "Memories", href: "/memories", detail: "Moments worth keeping", number: "05" },
-  { title: "Atlas AI", href: "/atlas", detail: "A little help with your world", number: "06" },
 ];
 type Controls = { next: () => void; prev: () => void };
 type SwapProps = { children: ReactNode; width: number; height: number; cardDistance: number; verticalDistance: number; depth: number; visibleCards: number; skewAmount: number; parallax: number; delay: number; autoplay: boolean; onChange: (index: number) => void; onCardClick: (index: number) => void; className: string };
@@ -43,7 +42,7 @@ export function HomeSections() {
             {sections.map((section) => (
               <Tile key={section.href}>
                 <div className="flex h-full flex-col justify-between p-7 text-marble sm:p-9">
-                  <div className="flex items-center justify-between font-ui text-xs uppercase tracking-[0.2em] text-marbleDim"><span>Atlas</span><span>{section.number} / 06</span></div>
+                  <div className="flex items-center justify-between font-ui text-xs uppercase tracking-[0.2em] text-marbleDim"><span>Atlas</span><span>{section.number} / {String(sections.length).padStart(2, "0")}</span></div>
                   <div><h2 className={`font-display leading-tight tracking-[0.04em] ${compact ? "text-[32px]" : "text-[38px]"}`}>{section.title}</h2><p className={`mt-2 font-body italic text-marbleDim ${compact ? "text-[17px]" : "text-xl"}`}>{section.detail}</p></div>
                   <p className="font-ui text-xs uppercase tracking-[0.18em] text-marbleDim">Tap to open <span aria-hidden="true">↗</span></p>
                 </div>

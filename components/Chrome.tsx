@@ -17,7 +17,7 @@ export function PageShell({
   backHref?: string;
 }) {
   const pathname = usePathname();
-  const resolvedBack = backHref ?? (pathname === "/atlas/settings" ? "/atlas" : "/hub");
+  const resolvedBack = backHref ?? "/hub";
 
   return (
     <div className="glass-page relative min-h-screen">

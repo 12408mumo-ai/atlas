@@ -529,7 +529,7 @@ function DeadlinesSection({ assignments }: { assignments: Assignment[] }) {
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    // Add through the store shape used by Atlas AI (kept simple here)
+    // Add a new project to the shared store.
     addDeadline(title, kind, subject, due);
     setTitle("");
     setSubject("");
