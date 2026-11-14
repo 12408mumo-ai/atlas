@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Tabs } from "@/components/ui";
 
 const STORAGE_KEY = "atlas.work.clock.v1";
@@ -28,6 +29,28 @@ export function WorkClock() {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
   const audio = useRef<AudioContext | null>(null);
+  const fullscreen = mode !== "clock";
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!fullscreen) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    closeRef.current?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") { event.preventDefault(); setMode("clock"); return; }
+      if (event.key !== "Tab" || !dialogRef.current) return;
+      const controls = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), [href], [tabindex]:not([tabindex="-1"])')).filter((item) => item.getClientRects().length > 0);
+      if (!controls.length) { event.preventDefault(); return; }
+      const first = controls[0], last = controls[controls.length - 1];
+      if (event.shiftKey && (document.activeElement === first || !dialogRef.current.contains(document.activeElement))) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && (document.activeElement === last || !dialogRef.current.contains(document.activeElement))) { event.preventDefault(); first.focus(); }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => { document.removeEventListener("keydown", onKeyDown); document.body.style.overflow = previousOverflow; if (previousFocus?.isConnected) previousFocus.focus(); };
+  }, [fullscreen]);
 
   useEffect(() => {
     try {
@@ -110,10 +133,11 @@ export function WorkClock() {
 
   const actionClass = "rounded-full bg-wine px-6 py-3 font-ui text-sm uppercase tracking-[0.12em] text-marble hover:bg-wineDeep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine disabled:opacity-50";
   const secondaryClass = "rounded-full border border-wine/60 px-6 py-3 font-ui text-sm uppercase tracking-[0.12em] text-wine hover:bg-wine/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine";
-  return (
-    <div className="space-y-5">
+  const content = (
+    <div className={fullscreen ? "flex min-h-full w-full flex-col items-center justify-center gap-6 px-4 py-8 sm:px-8" : "space-y-5"}>
+      {fullscreen && <button ref={closeRef} type="button" onClick={() => setMode("clock")} className="absolute right-4 top-4 rounded-full border border-wine/60 bg-marble px-4 py-2 font-ui text-sm text-wine focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wine" aria-label="Close full screen and return to clock">✕ <span className="ml-1">Close</span></button>}
       <Tabs label="Clock tools" value={mode} onChange={(key) => setMode(key as Mode)} tabs={[{ key: "clock", label: "Clock" }, { key: "timer", label: "Timer" }, { key: "stopwatch", label: "Stopwatch" }]} />
-      <section className="glass-card p-5 text-center sm:p-8" aria-label={`${mode[0].toUpperCase()}${mode.slice(1)}`}>
+      <section className={fullscreen ? "w-full max-w-4xl px-2 py-8 text-center sm:p-8" : "glass-card p-5 text-center sm:p-8"} aria-label={`${mode[0].toUpperCase()}${mode.slice(1)}`}>
         {mode === "clock" && <>
           <p className="font-ui text-xs uppercase tracking-[0.2em] text-wine/70">Your local time</p>
           <p className="mt-5 whitespace-nowrap font-display text-[clamp(32px,6vw,68px)] tabular-nums leading-none text-wine" aria-label="Current time">{time ? time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" }) : "--:--:--"}</p>
@@ -121,7 +145,7 @@ export function WorkClock() {
         </>}
         {mode === "timer" && <>
           <p className="font-ui text-xs uppercase tracking-[0.2em] text-wine/70">Countdown</p>
-          <p className="mt-5 font-display text-[clamp(30px,6vw,64px)] tabular-nums leading-none text-wine" aria-label="Time remaining" aria-live="off">{formatDuration(Math.ceil(remaining / 1000) * 1000)}</p>
+          <p className="mt-5 font-display text-[clamp(42px,12vw,120px)] tabular-nums leading-none text-wine" aria-label="Time remaining" aria-live="off">{formatDuration(Math.ceil(remaining / 1000) * 1000)}</p>
           <div className="mx-auto mt-6 grid max-w-xs grid-cols-3 gap-2 text-left">
             {([ ["Hours", hours, setHours, 99], ["Minutes", minutes, setMinutes, 59], ["Seconds", seconds, setSeconds, 59] ] as const).map(([label, value, change, max]) => <label key={label} className="font-ui text-xs uppercase tracking-[0.1em] text-wine/75">{label === "Hours" ? "Hrs" : label === "Minutes" ? "Min" : "Sec"}<input aria-label={label} type="number" inputMode="numeric" min={0} max={max} step={1} value={value} disabled={timer.endAt !== null || (timer.remaining !== null && !timer.finished)} onChange={(event) => { change(event.target.value); if (timer.finished) resetTimer(); setError(""); }} className="field mt-1 w-full px-2 py-2 text-center text-lg disabled:opacity-60" /></label>)}
           </div>
@@ -135,7 +159,7 @@ export function WorkClock() {
         </>}
         {mode === "stopwatch" && <>
           <p className="font-ui text-xs uppercase tracking-[0.2em] text-wine/70">Elapsed time</p>
-          <p className="mt-5 font-display text-[clamp(28px,5.5vw,60px)] tabular-nums leading-none text-wine" aria-label="Stopwatch elapsed time" aria-live="off">{formatDuration(watchElapsed, true)}</p>
+          <p className="mt-5 font-display text-[clamp(36px,10vw,110px)] tabular-nums leading-none text-wine" aria-label="Stopwatch elapsed time" aria-live="off">{formatDuration(watchElapsed, true)}</p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <button type="button" onClick={toggleWatch} className={actionClass}>{watch.startedAt === null ? (watch.elapsed > 0 ? "Resume stopwatch" : "Start stopwatch") : "Pause stopwatch"}</button>
             <button type="button" onClick={() => setWatch({ elapsed: 0, startedAt: null })} className={secondaryClass}>Reset stopwatch</button>
@@ -144,5 +168,12 @@ export function WorkClock() {
         </>}
       </section>
     </div>
+  );
+  if (!fullscreen) return content;
+  return createPortal(
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label={mode === "timer" ? "Full-screen timer" : "Full-screen stopwatch"} className="fixed inset-0 z-[1200] overflow-y-auto bg-[#eee9d9] text-wine">
+      {content}
+    </div>,
+    document.body
   );
 }
