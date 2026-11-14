@@ -43,7 +43,7 @@ export function AssistantOrb() {
     try { sessionStorage.removeItem("atlas.assistant.key.v2"); localStorage.removeItem("atlas.assistant.model.v2"); } catch { /* Storage may be unavailable. */ }
   }, []);
   useEffect(() => () => { active.current = false; if (restartTimer.current) clearTimeout(restartTimer.current); if (wakeTimer.current) clearTimeout(wakeTimer.current); request.current?.abort(); try { recognition.current?.abort(); } catch {} }, []);
-  const entry = pathname === "/" || pathname === "/login" || pathname === "/clock" || pathname === "/pin";
+  const entry = pathname === "/" || pathname === "/login" || pathname === "/clock";
   useEffect(() => { if (entry) stop(); }, [entry, stop]);
 
   const run = useCallback(async (text: string) => {

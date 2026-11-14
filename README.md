@@ -6,7 +6,7 @@ Built with Next.js (App Router), Tailwind, and a hand-made Greek design language
 
 ## The journey
 
-1. **`/` and `/login`** — Tap Zeus, then enter your PIN. Your world is stored
+1. **`/` and `/login`** — Tap Zeus to enter Atlas. Your world is stored
    locally in this browser.
 2. **`/hub`** — A simple home page with links to each part of your world.
 3. Choose a section to open it:
@@ -31,70 +31,16 @@ Work and Study are the same pillar's two chambers — linked both ways.
   twinkling starfield, Greek-key corners.
 - **Home**: `app/hub/page.tsx` — accessible links to the six sections.
 
-## PIN access
-
-Set server-only environment variables `ATLAS_PIN` (8–12 randomly chosen digits)
-and `ATLAS_SESSION_SECRET` (at least 32 random characters) in Vercel, then
-redeploy. Never use a `NEXT_PUBLIC_` prefix. Both must be set or Atlas stays
-locked. The PIN gate issues an HTTP-only 12-hour session cookie. Changing the
-session secret invalidates existing sessions. For local development use an
-untracked `.env.local` and restart the server.
-
-This gate protects app routes when online but is not encryption: browser-local
-world data remains accessible to someone with access to the browser/device.
-The built-in login attempt brake is per server instance, not a distributed rate
-limit. Configure a shared rate limit or Vercel WAF and stronger authentication
-before exposing a paid voice API or relying on this PIN against brute force.
-PIN-protected navigation requires a network connection.
-
 ## AI
 
-Atlas can use `smallthinker:3b` in Ollama on your computer through an
-authenticated ngrok gateway. The browser sends only your command to the Atlas
-server, which sends it to the gateway; no saved world data or gateway secret is
-sent to the browser. Model output is validated against a fixed set of actions;
-Life additions need approval. Without gateway settings, exact local commands
-such as “open Life” and “add visit Kyoto to places” continue to work.
-
-### Set up the gateway (Windows)
-
-1. Install Ollama and ngrok, sign in to ngrok and configure its authtoken
-   directly on your computer following ngrok's instructions. Do not share tokens.
-   Run `ollama run smallthinker:3b` once to download the model and use `/bye`
-   to exit the chat; Ollama must remain running.
-2. Make a private traffic policy file **outside this repository**, such as
-   `%USERPROFILE%\atlas-ngrok-policy.yml`, with the following structure. Replace
-   the example values with your own username (letters, digits, `_` or `-`) and
-   a strong random password of at least 16 printable characters. Never share it:
-
-   ```yaml
-   on_http_request:
-     - actions:
-         - type: basic-auth
-           config:
-             credentials:
-               - 'YOUR_USERNAME:YOUR_LONG_RANDOM_PASSWORD'
-   ```
-
-3. Start the tunnel with the policy enabled:
-   `ngrok http 11434 --host-header=rewrite --traffic-policy-file "%USERPROFILE%\atlas-ngrok-policy.yml"`.
-   Never start a public Ollama tunnel without its authentication policy. The
-   gateway gives access to Ollama to anyone who knows the credentials. Confirm
-   an unauthenticated request receives HTTP 401 before proceeding.
-4. In Vercel's project environment settings, set `OLLAMA_GATEWAY_URL` to the
-   HTTPS ngrok origin (no path), `OLLAMA_GATEWAY_USER` to your username, and
-   `OLLAMA_GATEWAY_PASSWORD` to the matching password. Mark the credentials
-   sensitive; do not use `NEXT_PUBLIC_` or put values in chat. Save for the
-   required environments and redeploy. ngrok URLs can change; update the URL
-   and redeploy when necessary. Only ngrok-hosted HTTPS origins are accepted.
-5. Keep both Ollama and ngrok running on the laptop. Unlock Atlas and try a
-   command. If the tunnel is offline, Atlas reports an error. The model may
-   misunderstand; check proposed changes before approving.
-
-The existing PIN's per-instance attempt brake is not a shared brute-force
-limit. Configure a distributed limit or Vercel WAF and stronger access control
-before making this gateway available to untrusted users. Basic auth secures the
-ngrok endpoint but is not a replacement for Atlas access control.
+The entrance no longer requires a PIN. The Ollama gateway is available to any
+visitor to the deployed Atlas site. Even though the ngrok tunnel itself uses
+credentials, Atlas forwards requests with those credentials, so the public
+endpoint can consume your laptop's resources. The origin check is not access
+control. Stop ngrok when not in use and add authentication and shared rate
+limits before allowing untrusted visitors. The orb can open pages and propose
+Life additions, which require approval. The gateway falls back to simple exact
+commands when not configured.
 
 Wake listening needs microphone permission, a supported browser, and an open
 tab; browser speech recognition may use a remote speech service. It is not a

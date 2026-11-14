@@ -1,4 +1,4 @@
-const CACHE_NAME = "atlas-pwa-v14";
+const CACHE_NAME = "atlas-pwa-v15";
 const PRECACHE_URLS = [
   "/manifest.webmanifest",
   "/assets/zeus-entry.webp",
@@ -45,7 +45,7 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith("/_next/webpack-hmr")) return;
 
-  // Never serve cached app pages offline: PIN access must be checked on the server.
+  // Fetch navigations from the network so old screens are not served after updates.
   if (req.mode === "navigate") {
     event.respondWith(fetch(req, { cache: "no-cache" }));
     return;

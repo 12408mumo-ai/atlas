@@ -1,5 +1,4 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { ACCESS_COOKIE, validSession } from "@/lib/access";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,7 +17,7 @@ function gateway(): URL | null {
   } catch { return null; }
 }
 export async function POST(request: NextRequest) {
-  if (!validSession(request.cookies.get(ACCESS_COOKIE)?.value)) return reply("Unlock Atlas first.", 401);
+  // Atlas is public by user choice. The same-origin check is not authentication.
   try { const origin = request.headers.get("origin"); if (!origin || new URL(origin).host !== request.headers.get("host")) return reply("Invalid request origin.", 403); } catch { return reply("Invalid request origin.", 403); }
   const url = gateway(), user = process.env.OLLAMA_GATEWAY_USER || "", password = process.env.OLLAMA_GATEWAY_PASSWORD || "";
   if (!url || !/^[a-zA-Z0-9_-]{1,64}$/.test(user) || password.length < 16 || password.length > 128 || /[^\x21-\x7e]/.test(password)) return reply("Ollama gateway is not configured. See the Atlas setup guide.", 503);

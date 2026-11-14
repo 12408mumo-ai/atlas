@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 /** Try a single entrance tune, falling back to the user's entry gesture. */
 export function EntryMusic() {
   const pathname = usePathname();
-  const entry = pathname === "/" || pathname === "/login" || pathname === "/pin";
+  const entry = pathname === "/" || pathname === "/login";
   const audioRef = useRef<HTMLAudioElement>(null);
   const started = useRef(false);
   const stoppedByUser = useRef(false);
