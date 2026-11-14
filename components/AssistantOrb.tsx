@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { applyAddition, DEFAULT_MODEL, destination, interpret, KEY_KEY, MODEL_KEY, type AssistantAction } from "@/lib/assistant";
+import { applyAddition, destination, interpret, type AssistantAction } from "@/lib/assistant";
 
 const Orb = lazy(() => import("@/components/Orb"));
 type RecognitionResult = { isFinal: boolean; 0: { transcript: string } };
@@ -39,6 +39,9 @@ export function AssistantOrb() {
     const current = recognition.current; recognition.current = null;
     if (current) { current.onend = null; current.onerror = null; current.onresult = null; try { current.abort(); } catch {} }
   }, [clearWake]);
+  useEffect(() => {
+    try { sessionStorage.removeItem("atlas.assistant.key.v2"); localStorage.removeItem("atlas.assistant.model.v2"); } catch { /* Storage may be unavailable. */ }
+  }, []);
   useEffect(() => () => { active.current = false; if (restartTimer.current) clearTimeout(restartTimer.current); if (wakeTimer.current) clearTimeout(wakeTimer.current); request.current?.abort(); try { recognition.current?.abort(); } catch {} }, []);
   const entry = pathname === "/" || pathname === "/login" || pathname === "/clock" || pathname === "/pin";
   useEffect(() => { if (entry) stop(); }, [entry, stop]);
@@ -48,7 +51,7 @@ export function AssistantOrb() {
     busyRef.current = true; setBusy(true); clearWake(); setPanel(true); setMessage(`Heard: “${command}” — thinking…`);
     const controller = new AbortController(); request.current = controller;
     try {
-      const action = await interpret(command, sessionStorage.getItem(KEY_KEY) || "", localStorage.getItem(MODEL_KEY) || DEFAULT_MODEL, controller.signal);
+      const action = await interpret(command, controller.signal);
       if (controller.signal.aborted) return;
       if (action.type === "open") {
         const url = destination(action.target)!;
@@ -121,7 +124,7 @@ export function AssistantOrb() {
       <button type="button" onClick={() => { if (enabled) { stop(); setMessage("Wake listening is off."); } else start(); }} className="mt-3 rounded-full border border-[#C2B280] px-4 py-2 font-ui text-sm">{enabled ? "Stop listening" : "Enable wake listening"}</button>
       {pending && <div className="mt-3 rounded-xl border border-[#C2B280]/50 p-3 font-body"><p>Add <strong>{pending.title}</strong> to {categoryLabel[pending.category]}?</p><p className="mt-1 text-sm">Say “Atlas, approve” or “Atlas, cancel”, or use the buttons.</p>{pending.notes && <p className="mt-1 whitespace-pre-wrap">Notes: {pending.notes}</p>}<div className="mt-3 flex gap-2"><button type="button" onClick={() => finish(true)} className="rounded-full bg-[#C2B280] px-4 py-2 font-ui text-sm text-[#27333b]">Approve</button><button type="button" onClick={() => finish(false)} className="rounded-full border border-[#C2B280] px-4 py-2 font-ui text-sm">Cancel</button></div></div>}
       <form onSubmit={e => { e.preventDefault(); const text = draft; setDraft(""); void run(text); }} className="mt-3 flex gap-2"><label className="sr-only" htmlFor="atlas-command">Type a command</label><input id="atlas-command" className="min-w-0 flex-1 rounded-lg bg-[#eee9d9] px-3 py-2 font-ui text-sm text-[#27333b]" placeholder="Type a command" maxLength={1000} value={draft} onChange={e => setDraft(e.target.value)} /><button type="submit" disabled={busy || !!pending || !draft.trim()} className="rounded-lg bg-[#C2B280] px-3 font-ui text-sm text-[#27333b] disabled:opacity-50">Send</button></form>
-      <Link href="/atlas" onClick={() => setPanel(false)} className="mt-3 inline-block font-ui text-xs underline">Connection settings &amp; help</Link>
+      <Link href="/atlas" onClick={() => setPanel(false)} className="mt-3 inline-block font-ui text-xs underline">Assistant help</Link>
     </div>}
   </aside>;
 }
